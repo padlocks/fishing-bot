@@ -1,7 +1,8 @@
 const { ChannelType, Message } = require("discord.js");
 const config = require("../../config");
-const { log } = require("../../functions");
+const { log, generateXP, generateCash } = require("../../functions");
 const GuildSchema = require("../../schemas/GuildSchema");
+const { User } = require('../../schemas/UserSchema');
 const ExtendedClient = require("../../class/ExtendedClient");
 
 const cooldown = new Map();
@@ -16,6 +17,18 @@ module.exports = {
      */
     run: async (client, message) => {
         if (message.author.bot || message.channel.type === ChannelType.DM) return;
+
+        let userData = (await User.findOne({ userId: message.author.id }));
+            if (!userData) {
+                userData = new User({
+                    userId: message.author.id,
+                    xp: 0
+                });
+            } else {
+                userData.xp += generateXP()
+                userData.inventory.money += generateCash()
+            }
+        userData.save()
 
         if (!config.handler.commands.prefix) return;
 

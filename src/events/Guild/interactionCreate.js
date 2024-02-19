@@ -1,6 +1,7 @@
 const config = require("../../config");
 const { log } = require("../../functions");
 const ExtendedClient = require("../../class/ExtendedClient");
+const { User } = require('../../schemas/UserSchema');
 
 const cooldown = new Map();
 
@@ -132,6 +133,19 @@ module.exports = {
             }
 
             command.run(client, interaction);
+
+            let data = (await User.findOne({ userId: interaction.user.id }));
+            if (!data) {
+                data = new User({
+                    userId: interaction.user.id,
+                    commands: 1
+                });
+            } else {
+                data.commands += 1
+            }
+
+            data.save();
+
         } catch (error) {
             log(error, "err");
         }
