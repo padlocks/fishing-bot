@@ -11,6 +11,7 @@ module.exports = {
      * @param {ButtonInteraction} interaction 
      */
     run: async (client, interaction) => {
+        if (interaction.message.interaction.user.id !== interaction.user.id) return;
 
         let user = await User.findOne({ userId: interaction.user.id })
         if (!user) return;

@@ -31,7 +31,7 @@ module.exports = {
             interaction.isMessageContextMenuCommand()
         )
             return;
-
+        
         const command = client.collection.interactioncommands.get(
             interaction.commandName
         );
