@@ -17,9 +17,6 @@ module.exports = {
                 .setDescription("Rarity of the fishes you wish to sell.")
                 .setRequired(true)
         ),
-    options: {
-        developers: true,
-    },
     /**
      * @param {ExtendedClient} client
      * @param {ChatInputCommandInteraction<true>} interaction

@@ -23,8 +23,9 @@ module.exports = {
         let f = await fish("");
         let user = await User.findOne({ userId: interaction.user.id })
         if (user) {
-            user.inventory.fish.push(f)
-            user.stats.fishCaught++
+            user.inventory.fish.push(f);
+            user.stats.fishCaught++;
+            user.stats.latestFish = f;
             user.save()
         }
 

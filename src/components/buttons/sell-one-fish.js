@@ -18,12 +18,17 @@ module.exports = {
         let fish = user.inventory.fish[user.inventory.fish.length - 1];
         let fishData = await Fish.findById(fish.valueOf());
         let value = fishData.value;
-        user.inventory.fish.pop()
         
         try {
             const updatedUser = await User.findOneAndUpdate(
               { userId: user.userId },
-              { $set: { 'inventory.fish': user.inventory.fish, 'inventory.money': user.inventory.money + value } },
+              { $set: { 
+                'inventory.fish': user.inventory.fish.filter(x => {
+                    return x._id != fishData._id;
+                }), 
+                'inventory.money': user.inventory.money + value,
+                'stats.latestFish': {}
+            } },
               { new: true }
             );
         

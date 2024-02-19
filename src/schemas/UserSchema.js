@@ -17,6 +17,10 @@ const UserSchema = new Schema ({
             fishCaught: {
                 type: Number,
                 default: 0
+            },
+            latestFish: {
+                type: Schema.Types.ObjectId,
+                ref: 'Fish'
             }
         },
         inventory: {
