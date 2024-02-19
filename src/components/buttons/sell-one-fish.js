@@ -15,21 +15,31 @@ module.exports = {
         let user = await User.findOne({ userId: interaction.user.id })
         if (!user) return;
 
-        let fish = user.inventory.fish[user.inventory.fish.length - 1];
+        let fish = user.stats.latestFish;
         let fishData = await Fish.findById(fish.valueOf());
         let value = fishData.value;
+        let newFish = user.inventory.fish.filter(x => {
+            return x._id.valueOf() != fishData._id.valueOf();
+        });
+
+        if (user.stats.soldLatestFish) {
+            await interaction.reply({
+                content: 'You already sold this fish!',
+                ephemeral: true
+            });
+            return;
+        }
         
         try {
             const updatedUser = await User.findOneAndUpdate(
-              { userId: user.userId },
-              { $set: { 
-                'inventory.fish': user.inventory.fish.filter(x => {
-                    return x._id != fishData._id;
-                }), 
-                'inventory.money': user.inventory.money + value,
-                'stats.latestFish': {}
-            } },
-              { new: true }
+                { userId: user.userId },
+                { $set: { 
+                    'inventory.fish': newFish, 
+                    'inventory.money': user.inventory.money + value,
+                    'stats.soldLatestFish': true
+                } },
+                { $unset: { 'stats.latestFish': "" } },
+                { new: true }
             );
         
             if (!updatedUser) {
@@ -44,6 +54,7 @@ module.exports = {
                 ephemeral: true
             });
           } catch (err) {
+            console.log(err)
             await interaction.reply({
                 content: 'There was an error updating your userdata!',
                 ephemeral: true

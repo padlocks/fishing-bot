@@ -1,7 +1,7 @@
 const { ChatInputCommandInteraction, SlashCommandBuilder, EmbedBuilder, ButtonStyle, ActionRowBuilder, ButtonBuilder } = require('discord.js');
 const ExtendedClient = require('../../../class/ExtendedClient');
 const config = require('../../../config');
-const { fish } = require('../../../functions')
+const { fish, generateXP } = require('../../../functions')
 const GuildSchema = require('../../../schemas/GuildSchema');
 const { User } = require('../../../schemas/UserSchema');
 
@@ -10,7 +10,7 @@ module.exports = {
         .setName('fish')
         .setDescription('Fish!'),
     options: {
-        cooldown: 15000
+        cooldown: 5000
     },
     /**
      * @param {ExtendedClient} client 
@@ -26,6 +26,8 @@ module.exports = {
             user.inventory.fish.push(f);
             user.stats.fishCaught++;
             user.stats.latestFish = f;
+            user.stats.soldLatestFish = false
+            user.xp += generateXP()
             user.save()
         }
 
