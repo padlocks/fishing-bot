@@ -64,8 +64,12 @@ function getWeightedChoice(choices, weights) {
   throw new Error('This shouldn’t happen');
 }
 
-const generateFish = async () => {
-  let draw = getWeightedChoice(["Common", "Uncommon", "Rare", "Ultra", "Giant", "Legendary"], [500, 250, 50, 10, 5, 1])
+const fish = async (rod) => {
+  return await generateFish(["Common", "Uncommon", "Rare", "Ultra", "Giant", "Legendary"], [500, 250, 50, 10, 5, 1])
+}
+
+const generateFish = async (choices, weights) => {
+  let draw = getWeightedChoice(choices, weights)
   let count = await Fish.find().count({ rarity: draw });
   let random = Math.floor(Math.random() * count);
   let choice = await Fish.findOne({ rarity: draw }).skip(random);
@@ -117,5 +121,6 @@ module.exports = {
   generateXP,
   generateCash,
   generateFish,
+  fish,
   sellFishByRarity
 };

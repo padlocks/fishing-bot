@@ -1,7 +1,7 @@
-const { ChatInputCommandInteraction, SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { ChatInputCommandInteraction, SlashCommandBuilder, EmbedBuilder, ButtonStyle, ActionRowBuilder, ButtonBuilder } = require('discord.js');
 const ExtendedClient = require('../../../class/ExtendedClient');
 const config = require('../../../config');
-const { generateFish } = require('../../../functions')
+const { fish } = require('../../../functions')
 const GuildSchema = require('../../../schemas/GuildSchema');
 const { User } = require('../../../schemas/UserSchema');
 
@@ -20,10 +20,10 @@ module.exports = {
 
         await interaction.deferReply();
 
-        let fish = await generateFish();
+        let f = await fish("");
         let user = await User.findOne({ userId: interaction.user.id })
         if (user) {
-            user.inventory.fish.push(fish)
+            user.inventory.fish.push(f)
             user.stats.fishCaught++
             user.save()
         }
@@ -33,7 +33,16 @@ module.exports = {
                 new EmbedBuilder()
                     .setTitle('Fished!')
                     .addFields(
-                        { name: 'Congratulations!', value: `You caught **${fish.rarity}** ${fish.name}!` },
+                        { name: 'Congratulations!', value: `You caught **${f.rarity}** ${f.name}!` },
+                    )
+            ],
+            components: [
+                new ActionRowBuilder()
+                    .addComponents(
+                        new ButtonBuilder()
+                            .setCustomId('sell-one-fish')
+                            .setLabel('Sell')
+                            .setStyle(ButtonStyle.Danger)
                     )
             ]
         });
