@@ -12,6 +12,16 @@ const FishSchema = new Schema({
     value: {
         type: Number,
         default: 10
+    },
+    icon: {
+        animated: {
+            type: Boolean,
+            default: false
+        },
+        data: {
+            type: String,
+            default: "rawfish:1209352519726276648"
+        }
     }
 });
 
