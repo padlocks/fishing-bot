@@ -55,13 +55,12 @@ if (user.inventory.fish && Array.isArray(user.inventory.fish)) {
         if (counter > 1) {
             fish.value += (fish.value * (counter - 1));
         }
-
-					return {
-						name: `<${fish.icon?.animated ? 'a' : ''}:${fish.icon.data}> ${fish.name}`,
-						value: `Rarity: ${fish.rarity}\nValue: ${fish.value}`,
-						inline: true,
-					};
-				});
+			return {
+				name: `${fish.name}`,
+				value: `Rarity: ${fish.rarity}\nValue: $${fish.value}`,
+				inline: true,
+			};
+		});
 
     // Wait for all promises to resolve
     fields = await Promise.all(fishPromises);
