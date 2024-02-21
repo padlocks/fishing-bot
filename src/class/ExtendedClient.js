@@ -1,48 +1,53 @@
-const { Client, Partials, Collection, GatewayIntentBits } = require("discord.js");
+const {Client, Partials, Collection, GatewayIntentBits} = require('discord.js');
 const config = require('../config');
-const commands = require("../handlers/commands");
-const events = require("../handlers/events");
-const deploy = require("../handlers/deploy");
-const mongoose = require("../handlers/mongoose");
-const components = require("../handlers/components");
+const commands = require('../handlers/commands');
+const events = require('../handlers/events');
+const deploy = require('../handlers/deploy');
+const mongoose = require('../handlers/mongoose');
+const components = require('../handlers/components');
 
 module.exports = class extends Client {
-    collection = {
-        interactioncommands: new Collection(),
-        prefixcommands: new Collection(),
-        aliases: new Collection(),
-        components: {
-            buttons: new Collection(),
-            selects: new Collection(),
-            modals: new Collection(),
-            autocomplete: new Collection()
-        }
-    };
-    applicationcommandsArray = [];
+	collection = {
+		interactioncommands: new Collection(),
+		prefixcommands: new Collection(),
+		aliases: new Collection(),
+		components: {
+			buttons: new Collection(),
+			selects: new Collection(),
+			modals: new Collection(),
+			autocomplete: new Collection(),
+		},
+	};
 
-    constructor() {
-        super({
-            intents: [Object.keys(GatewayIntentBits)],
-            partials: [Object.keys(Partials)],
-            presence: {
-                activities: [{
-                    name: 'fishing',
-                    type: 4,
-                    state: 'fishing'
-                }]
-            }
-        });
-    };
+	applicationcommandsArray = [];
 
-    start = async () => {
-        commands(this);
-        events(this);
-        components(this);
+	constructor() {
+		super({
+			intents: [Object.keys(GatewayIntentBits)],
+			partials: [Object.keys(Partials)],
+			presence: {
+				activities: [{
+					name: 'fishing',
+					type: 4,
+					state: 'fishing',
+				}],
+			},
+		});
+	}
 
-        if (config.handler.mongodb.enabled) mongoose();
+	start = async () => {
+		commands(this);
+		events(this);
+		components(this);
 
-        await this.login(process.env.CLIENT_TOKEN || config.client.token);
+		if (config.handler.mongodb.enabled) {
+			mongoose();
+		}
 
-        if (config.handler.deploy) deploy(this, config);
-    };
+		await this.login(process.env.CLIENT_TOKEN || config.client.token);
+
+		if (config.handler.deploy) {
+			deploy(this, config);
+		}
+	};
 };
