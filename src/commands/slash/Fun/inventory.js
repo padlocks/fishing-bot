@@ -57,7 +57,7 @@ if (user.inventory.fish && Array.isArray(user.inventory.fish)) {
         }
 
 					return {
-						name: `${fish.name}`,
+						name: `<${fish.icon?.animated ? 'a' : ''}:${fish.icon.data}> ${fish.name}`,
 						value: `Rarity: ${fish.rarity}\nValue: ${fish.value}`,
 						inline: true,
 					};
