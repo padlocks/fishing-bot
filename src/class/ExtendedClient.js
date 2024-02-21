@@ -1,53 +1,48 @@
-const {Client, Partials, Collection, GatewayIntentBits} = require('discord.js');
+const { Client, Partials, Collection, GatewayIntentBits } = require("discord.js");
 const config = require('../config');
-const commands = require('../handlers/commands');
-const events = require('../handlers/events');
-const deploy = require('../handlers/deploy');
-const mongoose = require('../handlers/mongoose');
-const components = require('../handlers/components');
+const commands = require("../handlers/commands");
+const events = require("../handlers/events");
+const deploy = require("../handlers/deploy");
+const mongoose = require("../handlers/mongoose");
+const components = require("../handlers/components");
 
 module.exports = class extends Client {
-	collection = {
-		interactioncommands: new Collection(),
-		prefixcommands: new Collection(),
-		aliases: new Collection(),
-		components: {
-			buttons: new Collection(),
-			selects: new Collection(),
-			modals: new Collection(),
-			autocomplete: new Collection(),
-		},
-	};
+    collection = {
+        interactioncommands: new Collection(),
+        prefixcommands: new Collection(),
+        aliases: new Collection(),
+        components: {
+            buttons: new Collection(),
+            selects: new Collection(),
+            modals: new Collection(),
+            autocomplete: new Collection()
+        }
+    };
+    applicationcommandsArray = [];
 
-	applicationcommandsArray = [];
+    constructor() {
+        super({
+            intents: [Object.keys(GatewayIntentBits)],
+            partials: [Object.keys(Partials)],
+            presence: {
+                activities: [{
+                    name: 'fishing',
+                    type: 4,
+                    state: 'fishing'
+                }]
+            }
+        });
+    };
 
-	constructor() {
-		super({
-			intents: [Object.keys(GatewayIntentBits)],
-			partials: [Object.keys(Partials)],
-			presence: {
-				activities: [{
-					name: 'fishing',
-					type: 4,
-					state: 'fishing',
-				}],
-			},
-		});
-	}
+    start = async () => {
+        commands(this);
+        events(this);
+        components(this);
 
-	start = async () => {
-		commands(this);
-		events(this);
-		components(this);
+        if (config.handler.mongodb.enabled) mongoose();
 
-		if (config.handler.mongodb.enabled) {
-			mongoose();
-		}
+        await this.login(process.env.CLIENT_TOKEN || config.client.token);
 
-		await this.login(process.env.CLIENT_TOKEN || config.client.token);
-
-		if (config.handler.deploy) {
-			deploy(this, config);
-		}
-	};
+        if (config.handler.deploy) deploy(this, config);
+    };
 };

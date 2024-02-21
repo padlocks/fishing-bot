@@ -1,15 +1,20 @@
-module.exports = {
-	customId: 'modal-example',
-	/**
-     *
-     * @param {ExtendedClient} client
-     * @param {ModalSubmitInteraction} interaction
-     */
-	async run(client, interaction) {
-		const nameInput = interaction.fields.getTextInputValue('name');
+const { ModalSubmitInteraction } = require('discord.js');
+const ExtendedClient = require('../../class/ExtendedClient');
 
-		await interaction.reply({
-			content: `Hey **${nameInput}**, what's up?`,
-		});
-	},
+module.exports = {
+    customId: 'modal-example',
+    /**
+     * 
+     * @param {ExtendedClient} client 
+     * @param {ModalSubmitInteraction} interaction 
+     */
+    run: async (client, interaction) => {
+
+        const nameInput = interaction.fields.getTextInputValue('name');
+
+        await interaction.reply({
+            content: `Hey **${nameInput}**, what's up?`
+        });
+
+    }
 };

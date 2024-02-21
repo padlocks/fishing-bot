@@ -1,163 +1,153 @@
-const config = require('../../config');
-const {log} = require('../../functions');
-const ExtendedClient = require('../../class/ExtendedClient');
-const {User} = require('../../schemas/UserSchema');
+const config = require("../../config");
+const { log } = require("../../functions");
+const ExtendedClient = require("../../class/ExtendedClient");
+const { User } = require('../../schemas/UserSchema');
 
 const cooldown = new Map();
 
 module.exports = {
-	event: 'interactionCreate',
-	/**
+    event: "interactionCreate",
+    /**
      *
      * @param {ExtendedClient} client
      * @param {import('discord.js').Interaction} interaction
      * @returns
      */
-	async run(client, interaction) {
-		if (!interaction.isCommand()) {
-			return;
-		}
+    run: async (client, interaction) => {
+        if (!interaction.isCommand()) return;
 
-		if (
-			config.handler.commands.slash === false
-            && interaction.isChatInputCommand()
-		) {
-			return;
-		}
+        if (
+            config.handler.commands.slash === false &&
+            interaction.isChatInputCommand()
+        )
+            return;
+        if (
+            config.handler.commands.user === false &&
+            interaction.isUserContextMenuCommand()
+        )
+            return;
+        if (
+            config.handler.commands.message === false &&
+            interaction.isMessageContextMenuCommand()
+        )
+            return;
+        
+        const command = client.collection.interactioncommands.get(
+            interaction.commandName
+        );
 
-		if (
-			config.handler.commands.user === false
-            && interaction.isUserContextMenuCommand()
-		) {
-			return;
-		}
+        if (!command) return;
 
-		if (
-			config.handler.commands.message === false
-            && interaction.isMessageContextMenuCommand()
-		) {
-			return;
-		}
+        try {
+            if (command.options?.developers) {
+                if (
+                    config.users?.developers?.length > 0 &&
+                    !config.users?.developers?.includes(interaction.user.id)
+                ) {
+                    await interaction.reply({
+                        content:
+                            config.messageSettings.developerMessage !== undefined &&
+                                config.messageSettings.developerMessage !== null &&
+                                config.messageSettings.developerMessage !== ""
+                                ? config.messageSettings.developerMessage
+                                : "You are not authorized to use this command",
+                        ephemeral: true,
+                    });
 
-		const command = client.collection.interactioncommands.get(
-			interaction.commandName,
-		);
+                    return;
+                } else if (config.users?.developers?.length <= 0) {
+                    await interaction.reply({
+                        content:
+                            config.messageSettings.missingDevIDsMessage !== undefined &&
+                                config.messageSettings.missingDevIDsMessage !== null &&
+                                config.messageSettings.missingDevIDsMessage !== ""
+                                ? config.messageSettings.missingDevIDsMessage
+                                : "This is a developer only command, but unable to execute due to missing user IDs in configuration file.",
 
-		if (!command) {
-			return;
-		}
+                        ephemeral: true,
+                    });
 
-		try {
-			if (command.options?.developers) {
-				if (
-					config.users?.developers?.length > 0
-                    && !config.users?.developers?.includes(interaction.user.id)
-				) {
-					await interaction.reply({
-						content:
-                            config.messageSettings.developerMessage !== undefined
-                                && config.messageSettings.developerMessage !== null
-                                && config.messageSettings.developerMessage !== ''
-                            	? config.messageSettings.developerMessage
-                            	: 'You are not authorized to use this command',
-						ephemeral: true,
-					});
+                    return;
+                }
+            }
 
-					return;
-				}
+            if (command.options?.nsfw && !interaction.channel.nsfw) {
+                await interaction.reply({
+                    content:
+                        config.messageSettings.nsfwMessage !== undefined &&
+                            config.messageSettings.nsfwMessage !== null &&
+                            config.messageSettings.nsfwMessage !== ""
+                            ? config.messageSettings.nsfwMessage
+                            : "The current channel is not a NSFW channel",
 
-				if (config.users?.developers?.length <= 0) {
-					await interaction.reply({
-						content:
-                            config.messageSettings.missingDevIDsMessage !== undefined
-                                && config.messageSettings.missingDevIDsMessage !== null
-                                && config.messageSettings.missingDevIDsMessage !== ''
-                            	? config.messageSettings.missingDevIDsMessage
-                            	: 'This is a developer only command, but unable to execute due to missing user IDs in configuration file.',
+                    ephemeral: true,
+                });
 
-						ephemeral: true,
-					});
+                return;
+            }
 
-					return;
-				}
-			}
+            if (command.options?.cooldown) {
+                const isGlobalCooldown = command.options.globalCooldown;
+                const cooldownKey = isGlobalCooldown ? 'global_' + command.structure.name : interaction.user.id;
+                const cooldownFunction = () => {
+                    let data = cooldown.get(cooldownKey);
 
-			if (command.options?.nsfw && !interaction.channel.nsfw) {
-				await interaction.reply({
-					content:
-                        config.messageSettings.nsfwMessage !== undefined
-                            && config.messageSettings.nsfwMessage !== null
-                            && config.messageSettings.nsfwMessage !== ''
-                        	? config.messageSettings.nsfwMessage
-                        	: 'The current channel is not a NSFW channel',
+                    data.push(interaction.commandName);
 
-					ephemeral: true,
-				});
+                    cooldown.set(cooldownKey, data);
 
-				return;
-			}
+                    setTimeout(() => {
+                        let data = cooldown.get(cooldownKey);
 
-			if (command.options?.cooldown) {
-				const isGlobalCooldown = command.options.globalCooldown;
-				const cooldownKey = isGlobalCooldown ? 'global_' + command.structure.name : interaction.user.id;
-				const cooldownFunction = () => {
-					const data = cooldown.get(cooldownKey);
+                        data = data.filter((v) => v !== interaction.commandName);
 
-					data.push(interaction.commandName);
+                        if (data.length <= 0) {
+                            cooldown.delete(cooldownKey);
+                        } else {
+                            cooldown.set(cooldownKey, data);
+                        }
+                    }, command.options.cooldown);
+                };
 
-					cooldown.set(cooldownKey, data);
+                if (cooldown.has(cooldownKey)) {
+                    let data = cooldown.get(cooldownKey);
 
-					setTimeout(() => {
-						let data = cooldown.get(cooldownKey);
+                    if (data.some((v) => v === interaction.commandName)) {
+                        const cooldownMessage = (isGlobalCooldown
+                            ? config.messageSettings.globalCooldownMessage ?? "Slow down buddy! This command is on a global cooldown ({cooldown}s)."
+                            : config.messageSettings.cooldownMessage ?? "Slow down buddy! You're too fast to use this command ({cooldown}s).").replace(/{cooldown}/g, command.options.cooldown / 1000);
 
-						data = data.filter(v => v !== interaction.commandName);
+                        await interaction.reply({
+                            content: cooldownMessage,
+                            ephemeral: true,
+                        });
 
-						if (data.length <= 0) {
-							cooldown.delete(cooldownKey);
-						} else {
-							cooldown.set(cooldownKey, data);
-						}
-					}, command.options.cooldown);
-				};
+                        return;
+                    } else {
+                        cooldownFunction();
+                    }
+                } else {
+                    cooldown.set(cooldownKey, [interaction.commandName]);
+                    cooldownFunction();
+                }
+            }
 
-				if (cooldown.has(cooldownKey)) {
-					const data = cooldown.get(cooldownKey);
+            command.run(client, interaction);
 
-					if (data.some(v => v === interaction.commandName)) {
-						const cooldownMessage = (isGlobalCooldown
-							? config.messageSettings.globalCooldownMessage ?? 'Slow down buddy! This command is on a global cooldown ({cooldown}s).'
-							: config.messageSettings.cooldownMessage ?? 'Slow down buddy! You\'re too fast to use this command ({cooldown}s).').replace(/{cooldown}/g, command.options.cooldown / 1000);
+            let data = (await User.findOne({ userId: interaction.user.id }));
+            if (!data) {
+                data = new User({
+                    userId: interaction.user.id,
+                    commands: 1
+                });
+            } else {
+                data.commands += 1
+            }
 
-						await interaction.reply({
-							content: cooldownMessage,
-							ephemeral: true,
-						});
+            data.save();
 
-						return;
-					}
-
-					cooldownFunction();
-				} else {
-					cooldown.set(cooldownKey, [interaction.commandName]);
-					cooldownFunction();
-				}
-			}
-
-			command.run(client, interaction);
-
-			let data = (await User.findOne({userId: interaction.user.id}));
-			if (!data) {
-				data = new User({
-					userId: interaction.user.id,
-					commands: 1,
-				});
-			} else {
-				data.commands += 1;
-			}
-
-			data.save();
-		} catch (error) {
-			log(error, 'err');
-		}
-	},
+        } catch (error) {
+            log(error, "err");
+        }
+    },
 };

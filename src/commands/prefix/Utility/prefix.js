@@ -1,79 +1,84 @@
+const { Message } = require('discord.js');
+const ExtendedClient = require('../../../class/ExtendedClient');
 const config = require('../../../config');
 const GuildSchema = require('../../../schemas/GuildSchema');
 
 module.exports = {
-	structure: {
-		name: 'prefix',
-		description: 'Get/Set/Default prefix',
-		aliases: [],
-		permissions: 'Administrator',
-	},
-	/**
-     * @param {ExtendedClient} client
-     * @param {Message<true>} message
-     * @param {string[]} args
+    structure: {
+        name: 'prefix',
+        description: 'Get/Set/Default prefix',
+        aliases: [],
+        permissions: 'Administrator'
+    },
+    /**
+     * @param {ExtendedClient} client 
+     * @param {Message<true>} message 
+     * @param {string[]} args 
      */
-	async run(client, message, args) {
-		if (!config.handler?.mongodb?.enabled) {
-			await message.reply({
-				content: 'Database is not ready, this command cannot be executed.',
-			});
+    run: async (client, message, args) => {
 
-			return;
-		}
+        if (!config.handler?.mongodb?.enabled) {
+            await message.reply({
+                content: 'Database is not ready, this command cannot be executed.'
+            });
 
-		const type = args[0];
+            return;
+        };
 
-		switch (type) {
-			case 'set': {
-				let data = await GuildSchema.findOne({guild: message.guildId});
+        const type = args[0];
 
-				data ||= new GuildSchema({
-					guild: message.guildId,
-				});
+        switch (type) {
+            case 'set': {
+                let data = await GuildSchema.findOne({ guild: message.guildId });
 
-				const oldPrefix = data.prefix || config.handler.prefix;
+                if (!data) {
+                    data = new GuildSchema({
+                        guild: message.guildId
+                    });
+                }
 
-				if (!args[1]) {
-					await message.reply({
-						content: 'You need to provide the prefix as a second parameter.',
-					});
+                const oldPrefix = data.prefix || config.handler.prefix;
 
-					return;
-				}
+                if (!args[1]) {
+                    await message.reply({
+                        content: 'You need to provide the prefix as a second parameter.'
+                    });
 
-				data.prefix = args[1];
+                    return;
+                }
 
-				await data.save();
+                data.prefix = args[1];
 
-				await message.reply({
-					content: `The old prefix \`${oldPrefix}\` has been changed to \`${args[1]}\`.`,
-				});
+                await data.save();
 
-				break;
-			}
+                await message.reply({
+                    content: `The old prefix \`${oldPrefix}\` has been changed to \`${args[1]}\`.`
+                });
 
-			case 'reset': {
-				const data = await GuildSchema.findOne({guild: message.guildId});
+                break;
+            }
 
-				if (data) {
-					await GuildSchema.deleteOne({guild: message.guildId});
-				}
+            case 'reset': {
+                let data = await GuildSchema.findOne({ guild: message.guildId });
 
-				await message.reply({
-					content: `The new prefix on this server is: \`${config.handler.prefix}\` (default).`,
-				});
+                if (data) {
+                    await GuildSchema.deleteOne({ guild: message.guildId });
+                }
 
-				break;
-			}
+                await message.reply({
+                    content: `The new prefix on this server is: \`${config.handler.prefix}\` (default).`
+                });
 
-			default: {
-				await message.reply({
-					content: 'Allowed methods: `set`, `reset`',
-				});
+                break;
+            }
 
-				break;
-			}
-		}
-	},
+            default: {
+                await message.reply({
+                    content: 'Allowed methods: `set`, `reset`'
+                });
+
+                break;
+            }
+        }
+    }
 };
