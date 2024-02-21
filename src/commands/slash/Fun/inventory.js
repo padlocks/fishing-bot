@@ -36,6 +36,18 @@ module.exports = {
 			if (user.inventory.fish && Array.isArray(user.inventory.fish)) {
 				// Use map to create an array of promises
 				const fishPromises = user.inventory.fish.map(async fishObject => {
+					if (fishObject === null) {
+						await interaction.editReply({
+							embeds: [
+								new EmbedBuilder()
+									.setTitle('Error')
+									.setDescription('Something went wrong.')
+									.setColor('Red'),
+							],
+						});
+						return;
+					}
+
 					const fish = await Fish.findById(fishObject.valueOf());
 					const {name} = fish;
 
@@ -54,7 +66,7 @@ module.exports = {
 					}
 
 					return {
-						name: `${fish.name}`,
+						name: `<${fish.icon?.animated ? 'a' : ''}:${fish.icon.data}>${fish.name}`,
 						value: `Rarity: ${fish.rarity}\nValue: ${fish.value}`,
 						inline: true,
 					};

@@ -1,3 +1,4 @@
+/* eslint-disable max-depth */
 const {readdirSync} = require('fs');
 const {log} = require('../functions');
 

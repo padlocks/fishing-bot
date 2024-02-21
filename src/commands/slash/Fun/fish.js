@@ -33,7 +33,7 @@ module.exports = {
 				new EmbedBuilder()
 					.setTitle('Fished!')
 					.addFields(
-						{name: 'Congratulations!', value: `<${f.icon?.animated ? 'a:' : ''}:${f.icon.data}> You caught **${f.rarity}** ${f.name}!`},
+						{name: 'Congratulations!', value: `<${f.icon?.animated ? 'a' : ''}:${f.icon.data}> You caught **${f.rarity}** ${f.name}!`},
 					),
 			],
 			components: [
