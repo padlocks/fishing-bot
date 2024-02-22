@@ -97,8 +97,12 @@ const generateFish = async (capabilities, choices, weights) => {
 
   let filteredChoices = f.filter(fish => {
     // Check if all capabilities match the fish's qualities
-    return capabilities.every(capability => fish.qualities.includes(capability));
+    return capabilities.some(capability => fish.qualities.includes(capability));
   });
+
+  if (filteredChoices.length === 0) {
+    return await generateFish(capabilities, choices, weights)
+  }
 
   let random = Math.floor(Math.random() * filteredChoices.length);
   let choice = filteredChoices[random];
@@ -149,6 +153,25 @@ const getEquippedRod = async (userId) => {
   return rod;
 }
 
+const setEquippedRod = async (userId, rodId) => {
+  const user = await User.findOne({ userId: userId });
+  // Find the rod in user's inventory by name
+  const rod = user.inventory.rods.find((r) => r.valueOf() === rodId);
+
+  if (!rod) {
+    throw new Error('Rod not found in inventory');
+  }
+
+  // Set the equippedRod field to the ObjectId of the found rod
+  user.inventory.equippedRod = rod;
+
+  const rodObject = await Rod.findById(rod.valueOf())
+
+  // Save the updated user document
+  await user.save();
+  return rodObject;
+}
+
 
 module.exports = {
   log,
@@ -160,4 +183,5 @@ module.exports = {
   fish,
   sellFishByRarity,
   getEquippedRod,
+  setEquippedRod,
 };
