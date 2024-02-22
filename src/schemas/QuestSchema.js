@@ -12,12 +12,13 @@ const questSchema = new Schema({
 	rewards: {
 		type: [String],
 	},
-	level: {
+	xp: {
 		type: Number,
 		required: true,
+		default: 0,
 	},
 	requirements: {
-		type: String,
+		type: [String],
 	},
 	startDate: {
 		type: Date,
@@ -39,4 +40,4 @@ const questSchema = new Schema({
 });
 
 const Quest = model('Quest', questSchema);
-module.exports = Quest;
+module.exports = { Quest };

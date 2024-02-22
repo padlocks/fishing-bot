@@ -28,6 +28,12 @@ module.exports = {
                 .setName("value")
                 .setDescription("Value of the fish.")
                 .setRequired(true)
+        )
+        .addStringOption((option) =>
+            option
+                .setName("qualities")
+                .setDescription("Qualities of the fish.")
+                .setRequired(false)
         ),
     options: {
         developers: true,
@@ -42,6 +48,7 @@ module.exports = {
         let name = interaction.options.getString("name");
             let rarity = interaction.options.getString("rarity");
             let value = interaction.options.getInteger("value");
+            let qualities = interaction.options.getString("qualities")?.split(",");
 
         try {
             let fishData = (await Fish.findOne({ name: name }));
@@ -49,7 +56,8 @@ module.exports = {
                 fishData = new Fish({
                     name: name,
                     rarity: rarity,
-                    value: value
+                    value: value,
+                    qualities: qualities
                 });
                 fishData.save()
             } else {

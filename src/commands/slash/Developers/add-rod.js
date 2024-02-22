@@ -3,40 +3,40 @@ const {
 	SlashCommandBuilder,
 	EmbedBuilder,
 } = require('discord.js');
-const {Quest} = require('../../../schemas/QuestSchema');
+const { Rod } = require("../../../schemas/RodSchema");
 
 module.exports = {
 	structure: new SlashCommandBuilder()
-		.setName('add-quest')
-		.setDescription('Adds quest to questing pool.')
+		.setName('add-rod')
+		.setDescription('Adds a rod to the bot.')
 		.addStringOption(option =>
 			option
-				.setName('title')
-				.setDescription('Title of the quest')
+				.setName('name')
+				.setDescription('Name of the rod.')
 				.setRequired(true),
 		)
 		.addStringOption(option =>
 			option
 				.setName('description')
-				.setDescription('Description for the quest.')
+				.setDescription('Description for the rod.')
 				.setRequired(true),
-		)
-		.addIntegerOption(option =>
-			option
-				.setName('xp')
-				.setDescription('XP value for the quest')
-				.setRequired(false),
 		)
 		.addStringOption(option =>
 			option
-				.setName('rewards')
-				.setDescription('Rewards for the quest.')
+				.setName('rarity')
+				.setDescription('Rarity of the rod.')
+				.setRequired(true),
+		)
+		.addStringOption(option =>
+			option
+				.setName('capabilities')
+				.setDescription('Capabilities of the rod.')
 				.setRequired(false),
 		)
 		.addStringOption(option =>
 			option
 				.setName('requirements')
-				.setDescription('Requirements for the quest.')
+				.setDescription('Requirements to use the rod.')
 				.setRequired(false),
 		),
 	options: {
@@ -49,27 +49,29 @@ module.exports = {
 	async run(client, interaction) {
 		await interaction.deferReply();
 
-		const title = interaction.options.getString('title');
+		const name = interaction.options.getString('name');
 		const description = interaction.options.getString('description');
-		const xp = interaction.options.getInteger('xp');
-		const rewards = interaction.options.getString('rewards');
-		const requirements = interaction.options.getString('requirements');
+		const rarity = interaction.options.getString('rarity');
+		const capabilities = interaction.options.getString('capabilities')?.split(",");
+		const requirements = interaction.options.getString('requirements')?.split(",");
 
 		try {
-			let fishData = (await Quest.findOne({title}));
-			if (!fishData) {
-				fishData = new Fish({
-					name,
-					rarity,
-					value,
+			let rodData = (await Rod.findOne({name: name}));
+			if (!rodData) {
+				rodData = new Rod({
+					name: name,
+					description: description,
+					rarity: rarity,
+					capabilities: capabilities,
+					requirements: requirements,
 				});
-				fishData.save();
+				rodData.save();
 			} else {
 				await interaction.editReply({
 					embeds: [
 						new EmbedBuilder()
 							.setTitle('Error')
-							.setDescription('Fish with name already exists.')
+							.setDescription('Rod with name already exists.')
 							.setColor('Red'),
 					],
 				});
@@ -78,12 +80,13 @@ module.exports = {
 			await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()
-						.setTitle('Fish Added')
-						.setDescription('Successfully added the fish to the registry.')
+						.setTitle('Rod Added')
+						.setDescription('Successfully added the rod to the registry.')
 						.setColor('Green'),
 				],
 			});
-		} catch (_) {
+		} catch (err) {
+			console.error(err)
 			await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()

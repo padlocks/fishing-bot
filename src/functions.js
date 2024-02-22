@@ -1,6 +1,8 @@
 const chalk = require("chalk");
 const { Fish } = require("./schemas/FishSchema")
 const { User } = require("./schemas/UserSchema")
+const { Rod } = require("./schemas/RodSchema")
+
 
 /**
  * Logs a message with optional styling.
@@ -61,18 +63,45 @@ function getWeightedChoice(choices, weights) {
       return choices[index];
     }
   }
-  throw new Error('This shouldn’t happen');
 }
 
 const fish = async (rod) => {
-  return await generateFish(["Common", "Uncommon", "Rare", "Ultra", "Giant", "Legendary"], [500, 250, 50, 10, 5, 1])
+  let generation;
+  let rodObject = await Rod.findOne({name: rod});
+  let capabilities = rodObject.capabilities;
+  switch (rod) {
+    case "Old Rod": {
+      generation = [capabilities, ["Common", "Uncommon", "Rare", "Ultra", "Giant", "Legendary", "Lucky"], [700, 250, 50, 20, 10, 2, 1]];
+      break;
+    }
+    case "Lucky Rod": {
+      generation = [capabilities, ["Common", "Uncommon", "Rare", "Ultra", "Giant", "Legendary", "Lucky"], [700, 50, 250, 20, 10, 2, 1]];
+      break;
+    }
+    default: {
+      generation = [capabilities, ["Common", "Uncommon", "Rare", "Ultra", "Giant", "Legendary", "Lucky"], [700, 250, 50, 10, 5, 2, 1]];
+    }
+  }
+  return await generateFish(...generation);
 }
 
-const generateFish = async (choices, weights) => {
-  let draw = getWeightedChoice(choices, weights)
-  let count = await Fish.find().count({ rarity: draw });
-  let random = Math.floor(Math.random() * count);
-  let choice = await Fish.findOne({ rarity: draw }).skip(random);
+const generateFish = async (capabilities, choices, weights) => {
+  let draw = getWeightedChoice(choices, weights);
+
+  if (draw === "Lucky") {
+    let luckyRod = await Rod.findOne({name: "Lucky Rod"})
+    return luckyRod
+  }
+
+  let f = await Fish.find({ rarity: { $in: draw } })
+
+  let filteredChoices = f.filter(fish => {
+    // Check if all capabilities match the fish's qualities
+    return capabilities.every(capability => fish.qualities.includes(capability));
+  });
+
+  let random = Math.floor(Math.random() * filteredChoices.length);
+  let choice = filteredChoices[random];
   return choice;
 };
 
@@ -113,6 +142,13 @@ const sellFishByRarity = async (userId, targetRarity) => {
   }
 };
 
+const getEquippedRod = async (userId) => {
+  const user = await User.findOne({ userId: userId });
+  const rodId = user.inventory.equippedRod.valueOf();
+  const rod = await Rod.findById(rodId);
+  return rod;
+}
+
 
 module.exports = {
   log,
@@ -122,5 +158,6 @@ module.exports = {
   generateCash,
   generateFish,
   fish,
-  sellFishByRarity
+  sellFishByRarity,
+  getEquippedRod,
 };

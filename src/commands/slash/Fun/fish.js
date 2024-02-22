@@ -1,17 +1,24 @@
 const {SlashCommandBuilder, EmbedBuilder, ButtonStyle, ActionRowBuilder, ButtonBuilder, ComponentType} = require('discord.js');
-const {fish, generateXP} = require('../../../functions');
+const {fish, generateXP, getEquippedRod} = require('../../../functions');
 const {User} = require('../../../schemas/UserSchema');
 
 const updateUserWithFish = async (userId) => {
-	const f = await fish('');
+	const rod = await getEquippedRod(userId)
+	const f = await fish(rod.name);
 	const user = await User.findOne({userId: userId});
 	if (user) {
-		user.inventory.fish.push(f);
+		if (f.name == "Lucky Rod") {
+			user.inventory.rods.push(f);
+		} else {
+			user.inventory.fish.push(f);
+		}
+		rod.fishCaught++;
 		user.stats.fishCaught++;
 		user.stats.latestFish = f;
 		user.stats.soldLatestFish = false;
 		user.xp += generateXP();
 		user.save();
+		rod.save();
 	};
 
 	return f;
@@ -23,7 +30,7 @@ const followUpMessage = async (interaction, user, f) => {
 			new EmbedBuilder()
 				.setTitle('Fished!')
 				.addFields(
-					{name: 'Congratulations!', value: `<${f.icon?.animated ? 'a' : ''}:${f.icon.data}> ${user.globalName} caught **${f.rarity}** ${f.name}!`},
+					{name: 'Congratulations!', value: `<${f.icon?.animated ? 'a' : ''}:${f.icon?.data}> ${user.globalName} caught **${f.rarity}** ${f.name}!`},
 				),
 		],
 		components: [

@@ -2,6 +2,8 @@ const config = require("../../config");
 const { log } = require("../../functions");
 const ExtendedClient = require("../../class/ExtendedClient");
 const { User } = require('../../schemas/UserSchema');
+const { Rod } = require('../../schemas/RodSchema');
+
 
 const cooldown = new Map();
 
@@ -136,11 +138,27 @@ module.exports = {
 
             let data = (await User.findOne({ userId: interaction.user.id }));
             if (!data) {
+                let rod = await Rod.findOne({ name: "Old Rod" })
+                rod.obtained = Date.now()
                 data = new User({
                     userId: interaction.user.id,
-                    commands: 1
+                    commands: 1,
+                    inventory: {
+                        equippedRod: null,
+                        rods: []
+                    },
                 });
+                data.inventory.rods.push(rod)
+                data.inventory.equippedRod = data.inventory.rods[0]
             } else {
+                if (!data.inventory.equippedRod) {
+                    let rod = await Rod.findOne({ name: "Old Rod" })
+                    rod.obtained = Date.now()
+                    data.inventory.rods = []
+                    data.inventory.rods.push(rod)
+                    data.inventory.equippedRod = data.inventory.rods[0]
+                }
+
                 data.commands += 1
             }
 

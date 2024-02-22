@@ -32,9 +32,17 @@ const UserSchema = new Schema ({
                 type: Number,
                 default: 0
             },
+            equippedRod: {
+                type: Schema.Types.ObjectId,
+                ref: 'Rod'
+            },
             fish: [{
                 type: Schema.Types.ObjectId,
                 ref: 'Fish'
+            }],
+            rods: [{
+                type: Schema.Types.ObjectId,
+                ref: 'Rod'
             }]
         }
     });

@@ -17,6 +17,10 @@ const FishSchema = new Schema({
         type: Boolean,
         default: false
     },
+    qualities: [{
+        type: String,
+        default: "weak"
+    }],
     icon: {
         animated: {
             type: Boolean,
