@@ -3,7 +3,7 @@ const {
 	SlashCommandBuilder,
 	EmbedBuilder,
 } = require('discord.js');
-const { Rod } = require("../../../schemas/RodSchema");
+const { Rod } = require('../../../schemas/RodSchema');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -52,11 +52,11 @@ module.exports = {
 		const name = interaction.options.getString('name');
 		const description = interaction.options.getString('description');
 		const rarity = interaction.options.getString('rarity');
-		const capabilities = interaction.options.getString('capabilities')?.split(",");
-		const requirements = interaction.options.getString('requirements')?.split(",");
+		const capabilities = interaction.options.getString('capabilities')?.split(',');
+		const requirements = interaction.options.getString('requirements')?.split(',');
 
 		try {
-			let rodData = (await Rod.findOne({name: name}));
+			let rodData = (await Rod.findOne({ name: name }));
 			if (!rodData) {
 				rodData = new Rod({
 					name: name,
@@ -66,7 +66,8 @@ module.exports = {
 					requirements: requirements,
 				});
 				rodData.save();
-			} else {
+			}
+			else {
 				await interaction.editReply({
 					embeds: [
 						new EmbedBuilder()
@@ -85,8 +86,9 @@ module.exports = {
 						.setColor('Green'),
 				],
 			});
-		} catch (err) {
-			console.error(err)
+		}
+		catch (err) {
+			console.error(err);
 			await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()

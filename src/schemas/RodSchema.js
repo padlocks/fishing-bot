@@ -1,4 +1,4 @@
-const {model, Schema} = require('mongoose');
+const { model, Schema } = require('mongoose');
 
 const rodSchema = new Schema({
 	name: {
@@ -32,15 +32,15 @@ const rodSchema = new Schema({
 		default: 'mint',
 	},
 	icon: {
-        animated: {
-            type: Boolean,
-            default: false
-        },
-        data: {
-            type: String,
-            default: "rawfish:1209352519726276648"
-        }
-    }
+		animated: {
+			type: Boolean,
+			default: false,
+		},
+		data: {
+			type: String,
+			default: 'rawfish:1209352519726276648',
+		},
+	},
 });
 
 const Rod = model('Rod', rodSchema);

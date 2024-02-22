@@ -1,15 +1,16 @@
-const {SlashCommandBuilder, EmbedBuilder, ButtonStyle, ActionRowBuilder, ButtonBuilder, ComponentType} = require('discord.js');
-const {fish, generateXP, getEquippedRod} = require('../../../functions');
-const {User} = require('../../../schemas/UserSchema');
+const { SlashCommandBuilder, EmbedBuilder, ButtonStyle, ActionRowBuilder, ButtonBuilder, ComponentType } = require('discord.js');
+const { fish, generateXP, getEquippedRod } = require('../../../functions');
+const { User } = require('../../../schemas/UserSchema');
 
 const updateUserWithFish = async (userId) => {
-	const rod = await getEquippedRod(userId)
+	const rod = await getEquippedRod(userId);
 	const f = await fish(rod.name);
-	const user = await User.findOne({userId: userId});
+	const user = await User.findOne({ userId: userId });
 	if (user) {
-		if (f.name == "Lucky Rod") {
+		if (f.name == 'Lucky Rod') {
 			user.inventory.rods.push(f);
-		} else {
+		}
+		else {
 			user.inventory.fish.push(f);
 		}
 		rod.fishCaught++;
@@ -19,10 +20,10 @@ const updateUserWithFish = async (userId) => {
 		user.xp += generateXP();
 		user.save();
 		rod.save();
-	};
+	}
 
 	return f;
-}
+};
 
 const followUpMessage = async (interaction, user, f) => {
 	return await interaction.followUp({
@@ -30,7 +31,7 @@ const followUpMessage = async (interaction, user, f) => {
 			new EmbedBuilder()
 				.setTitle('Fished!')
 				.addFields(
-					{name: 'Congratulations!', value: `<${f.icon?.animated ? 'a' : ''}:${f.icon?.data}> ${user.globalName} caught **${f.rarity}** ${f.name}!`},
+					{ name: 'Congratulations!', value: `<${f.icon?.animated ? 'a' : ''}:${f.icon?.data}> ${user.globalName} caught **${f.rarity}** ${f.name}!` },
 				),
 		],
 		components: [
@@ -47,7 +48,7 @@ const followUpMessage = async (interaction, user, f) => {
 				),
 		],
 	});
-}
+};
 
 module.exports = {
 	customId: 'fish-again',
@@ -61,28 +62,28 @@ module.exports = {
      * @param {ExtendedClient} client
      * @param {ChatInputCommandInteraction} interaction
      */
-	async run(client, interaction, user=null) {
-		if (user === null) user = interaction.user
+	async run(client, interaction, user = null) {
+		if (user === null) user = interaction.user;
 
 		await interaction.deferReply();
 
-		const newFish = await updateUserWithFish(user.id)
+		const newFish = await updateUserWithFish(user.id);
 
-		const followUp = await followUpMessage(interaction, user, newFish)
+		const followUp = await followUpMessage(interaction, user, newFish);
 
-		//const filter = () => interaction.user.id === interaction.message.author.id;
+		// const filter = () => interaction.user.id === interaction.message.author.id;
 
 		const collector = followUp.createMessageComponentCollector({
 			componentType: ComponentType.Button,
-			//filter,
+			// filter,
 			time: 10000,
 		});
 
 		collector.on('collect', async collectionInteraction => {
 			if (collectionInteraction.user.id !== user.id) return;
 			if (collectionInteraction.customId === 'fish-again') {
-				await this.run(client, collectionInteraction, user)
+				await this.run(client, collectionInteraction, user);
 			}
-		})
+		});
 	},
 };

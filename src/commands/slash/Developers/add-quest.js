@@ -3,7 +3,7 @@ const {
 	SlashCommandBuilder,
 	EmbedBuilder,
 } = require('discord.js');
-const {Quest} = require('../../../schemas/QuestSchema');
+const { Quest } = require('../../../schemas/QuestSchema');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
