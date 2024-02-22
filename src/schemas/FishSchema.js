@@ -13,6 +13,10 @@ const FishSchema = new Schema({
         type: Number,
         default: 10
     },
+    locked: {
+        type: Boolean,
+        default: false
+    },
     icon: {
         animated: {
             type: Boolean,

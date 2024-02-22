@@ -52,12 +52,14 @@ if (user.inventory.fish && Array.isArray(user.inventory.fish)) {
         // Update max counter for each unique fish.name
         maxCounterPerName[name] = Math.max(counter, maxCounterPerName[name] || 0);
 
-        if (counter > 1) {
-            fish.value += (fish.value * (counter - 1));
-        }
+        if (counter > 1) fish.value += (fish.value * (counter - 1));
+
+        let valueString = `Rarity: ${fish.rarity}\nValue: $${fish.value}`
+        if (fish.locked) valueString = `LOCKED\nRarity: ${fish.rarity}\nValue: $${fish.value}`
+
 			return {
 				name: `${fish.name}`,
-				value: `Rarity: ${fish.rarity}\nValue: $${fish.value}`,
+				value: valueString,
 				inline: true,
 			};
 		});

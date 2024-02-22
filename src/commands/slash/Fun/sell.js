@@ -35,7 +35,7 @@ module.exports = {
             embeds: [
                 new EmbedBuilder()
                     .setTitle("Fish Sold")
-                    .setDescription(`Successfully sold **${rarity}** fish for ${sold}.`)
+                    .setDescription(`Successfully sold **${rarity}** fish for $${sold}.`)
                     .setColor('Green')
             ]
         });
