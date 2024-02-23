@@ -72,7 +72,7 @@ const fish = async (rod, user) => {
 	const capabilities = rodObject.capabilities;
 	switch (rod) {
 	case 'Old Rod': {
-		generation = [capabilities, ['Legendary', 'Lucky'], [2, 1]];
+		generation = [capabilities, ['Common', 'Uncommon', 'Rare', 'Ultra', 'Giant', 'Legendary', 'Lucky'], [700, 250, 50, 20, 10, 2, 1]];
 		break;
 	}
 	case 'Lucky Rod': {
