@@ -109,6 +109,23 @@ const generateFish = async (capabilities, choices, weights, user) => {
 	const random = Math.floor(Math.random() * filteredChoices.length);
 	const choice = filteredChoices[random];
 	const clonedChoice = await cloneFish(choice.name, user);
+
+	const userData = await User.findOne({ userId: user });
+
+	if (userData) {
+		for (const x of userData.inventory.fish) {
+			const ownedFish = await FishData.findById(x.valueOf());
+
+			if (ownedFish.name === clonedChoice.name && ownedFish.locked) {
+				clonedChoice.locked = true;
+				await clonedChoice.save();
+			}
+		}
+	}
+	else {
+		console.log(userData);
+	}
+
 	return clonedChoice;
 };
 
