@@ -36,6 +36,7 @@ module.exports = {
 					return new StringSelectMenuOptionBuilder()
 						.setLabel(rod.name)
 						.setDescription(rod.description)
+						.setEmoji(rod.icon.data.split(':')[1])
 						.setValue(value);
 				}
 
