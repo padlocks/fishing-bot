@@ -110,20 +110,23 @@ const generateFish = async (capabilities, choices, weights, user) => {
 	const choice = filteredChoices[random];
 	const clonedChoice = await cloneFish(choice.name, user);
 
+	// Check for locked status and update the cloned fish as necessary.
 	const userData = await User.findOne({ userId: user });
 
 	if (userData) {
-		for (const x of userData.inventory.fish) {
-			const ownedFish = await FishData.findById(x.valueOf());
+		const fishIds = userData.inventory.fish;
+		const lockedFishToUpdate = await FishData.find({ _id: { $in: fishIds }, name: clonedChoice.name, locked: true });
 
-			if (ownedFish.name === clonedChoice.name && ownedFish.locked) {
-				clonedChoice.locked = true;
-				await clonedChoice.save();
-			}
+		if (lockedFishToUpdate.length > 0) {
+			const updateOperations = lockedFishToUpdate.map(fishToUpdate => ({
+				updateOne: {
+					filter: { _id: fishToUpdate._id },
+					update: { locked: true },
+				},
+			}));
+
+			await FishData.bulkWrite(updateOperations);
 		}
-	}
-	else {
-		console.log(userData);
 	}
 
 	return clonedChoice;
