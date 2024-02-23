@@ -1,6 +1,6 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const config = require('../../config');
-const { log } = require('../../functions');
+const { log, cloneRod } = require('../../functions');
 const { User } = require('../../schemas/UserSchema');
 const { Rod } = require('../../schemas/RodSchema');
 
@@ -140,7 +140,8 @@ module.exports = {
 			let data = (await User.findOne({ userId: interaction.user.id }));
 			if (!data) {
 				const rod = await Rod.findOne({ name: 'Old Rod' });
-				rod.obtained = Date.now();
+				const clonedRod = await cloneRod(rod._id, interaction.user.id);
+				clonedRod.obtained = Date.now();
 				data = new User({
 					userId: interaction.user.id,
 					commands: 1,
@@ -149,15 +150,16 @@ module.exports = {
 						rods: [],
 					},
 				});
-				data.inventory.rods.push(rod);
+				data.inventory.rods.push(clonedRod);
 				data.inventory.equippedRod = data.inventory.rods[0];
 			}
 			else {
 				if (!data.inventory.equippedRod) {
 					const rod = await Rod.findOne({ name: 'Old Rod' });
-					rod.obtained = Date.now();
+					const clonedRod = await cloneRod(rod._id, interaction.user.id);
+					clonedRod.obtained = Date.now();
 					data.inventory.rods = [];
-					data.inventory.rods.push(rod);
+					data.inventory.rods.push(clonedRod);
 					data.inventory.equippedRod = data.inventory.rods[0];
 				}
 

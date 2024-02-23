@@ -1,7 +1,8 @@
 const chalk = require('chalk');
-const { Fish } = require('./schemas/FishSchema');
+const mongoose = require('mongoose');
+const { Fish, FishData } = require('./schemas/FishSchema');
 const { User } = require('./schemas/UserSchema');
-const { Rod } = require('./schemas/RodSchema');
+const { Rod, RodData } = require('./schemas/RodSchema');
 
 
 /**
@@ -65,9 +66,9 @@ function getWeightedChoice(choices, weights) {
 	}
 }
 
-const fish = async (rod) => {
+const fish = async (rod, user) => {
 	let generation;
-	const rodObject = await Rod.findOne({ name: rod });
+	const rodObject = await RodData.findOne({ name: rod, user: user });
 	const capabilities = rodObject.capabilities;
 	switch (rod) {
 	case 'Old Rod': {
@@ -82,15 +83,16 @@ const fish = async (rod) => {
 		generation = [capabilities, ['Common', 'Uncommon', 'Rare', 'Ultra', 'Giant', 'Legendary', 'Lucky'], [700, 250, 50, 10, 5, 2, 1]];
 	}
 	}
-	return await generateFish(...generation);
+	return await generateFish(...generation, user);
 };
 
-const generateFish = async (capabilities, choices, weights) => {
+const generateFish = async (capabilities, choices, weights, user) => {
 	const draw = getWeightedChoice(choices, weights);
 
 	if (draw === 'Lucky') {
 		const luckyRod = await Rod.findOne({ name: 'Lucky Rod' });
-		return luckyRod;
+		const clonedLuckyRod = await cloneRod(luckyRod._id, user);
+		return clonedLuckyRod;
 	}
 
 	const f = await Fish.find({ rarity: { $in: draw } });
@@ -106,7 +108,8 @@ const generateFish = async (capabilities, choices, weights) => {
 
 	const random = Math.floor(Math.random() * filteredChoices.length);
 	const choice = filteredChoices[random];
-	return choice;
+	const clonedChoice = await cloneFish(choice.name, user);
+	return clonedChoice;
 };
 
 const sellFishByRarity = async (userId, targetRarity) => {
@@ -116,7 +119,7 @@ const sellFishByRarity = async (userId, targetRarity) => {
 
 	// Use map to asynchronously process each fish
 	const updatedFish = await Promise.all(user.inventory.fish.map(async (f) => {
-		const fishToSell = await Fish.findById(f.valueOf());
+		const fishToSell = await FishData.findById(f.valueOf());
 		if (!fishToSell.locked && targetRarity.toLowerCase() === 'all' || fishToSell.rarity.toLowerCase() === targetRarity.toLowerCase()) {
 			totalValue += fishToSell.value;
 			return null;
@@ -150,7 +153,7 @@ const sellFishByRarity = async (userId, targetRarity) => {
 const getEquippedRod = async (userId) => {
 	const user = await User.findOne({ userId: userId });
 	const rodId = user.inventory.equippedRod.valueOf();
-	const rod = await Rod.findById(rodId);
+	const rod = await RodData.findById(rodId);
 	return rod;
 };
 
@@ -166,12 +169,66 @@ const setEquippedRod = async (userId, rodId) => {
 	// Set the equippedRod field to the ObjectId of the found rod
 	user.inventory.equippedRod = rod;
 
-	const rodObject = await Rod.findById(rod.valueOf());
+	const rodObject = await RodData.findById(rod.valueOf());
 
 	// Save the updated user document
 	await user.save();
 	return rodObject;
 };
+
+async function cloneRod(originalRodId, userId) {
+	try {
+	// Find the original rod by ID
+		const originalRod = await Rod.findById(originalRodId);
+
+		if (!originalRod) {
+			throw new Error('Original rod not found');
+		}
+
+		// Create a new rod with the same properties as the original
+		const clonedRod = new RodData({
+			...originalRod.toObject(),
+			_id: new mongoose.Types.ObjectId(),
+			user: userId,
+		});
+
+		// Save the cloned rod
+		await clonedRod.save();
+
+		return clonedRod;
+	}
+	catch (error) {
+		console.error('Error cloning rod:', error.message);
+		throw error;
+	}
+}
+
+async function cloneFish(fishName, userId) {
+	try {
+		const originalFish = await Fish.findOne({ name: fishName });
+
+		if (!originalFish) {
+			throw new Error('Original fish not found');
+		}
+
+		// Create a new fish with the same properties as the original
+		const clonedFish = new FishData({
+			...originalFish.toObject(),
+			_id: new mongoose.Types.ObjectId(),
+			user: userId,
+		});
+
+		// Save the cloned fish
+		clonedFish.obtained = Date.now();
+		await clonedFish.save();
+
+		return clonedFish;
+	}
+	catch (error) {
+		console.error('Error cloning rod:', error.message);
+		throw error;
+	}
+}
 
 
 module.exports = {
@@ -185,4 +242,6 @@ module.exports = {
 	sellFishByRarity,
 	getEquippedRod,
 	setEquippedRod,
+	cloneRod,
+	cloneFish,
 };

@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
 const { setEquippedRod } = require('../../../functions');
 const { User } = require('../../../schemas/UserSchema');
-const { Rod } = require('../../../schemas/RodSchema');
+const { RodData } = require('../../../schemas/RodSchema');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -24,7 +24,7 @@ module.exports = {
 		const rodPromises = userData.inventory.rods.map(async (rodObjectId) => {
 			try {
 				// Assuming you have a model for your rods
-				const rod = await Rod.findById(rodObjectId.valueOf());
+				const rod = await RodData.findById(rodObjectId.valueOf());
 
 				// Assuming rod has a name and description property
 				const value = rod._id.toString();

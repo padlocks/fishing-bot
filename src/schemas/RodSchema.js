@@ -20,11 +20,14 @@ const rodSchema = new Schema({
 		type: [String],
 	},
 	obtained: {
-		type: Date,
+		type: Number,
 	},
 	fishCaught: {
 		type: Number,
 		default: 0,
+	},
+	user: {
+		type: String,
 	},
 	state: {
 		type: String,
@@ -44,4 +47,5 @@ const rodSchema = new Schema({
 });
 
 const Rod = model('Rod', rodSchema);
-module.exports = { Rod };
+const RodData = model('RodData', rodSchema);
+module.exports = { Rod, RodData };

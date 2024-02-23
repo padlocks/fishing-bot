@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { Fish } = require('../../../schemas/FishSchema');
+const { FishData } = require('../../../schemas/FishSchema');
 const { User } = require('../../../schemas/UserSchema');
 
 module.exports = {
@@ -37,7 +37,7 @@ module.exports = {
 			if (user.inventory.fish && Array.isArray(user.inventory.fish)) {
 				// Use map to create an array of promises
 				const fishPromises = user.inventory.fish.map(async (fishObject) => {
-					const fish = await Fish.findById(fishObject.valueOf());
+					const fish = await FishData.findById(fishObject.valueOf());
 					const name = fish.name;
 
 					// Count occurrences of each fish.name

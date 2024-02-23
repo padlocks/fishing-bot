@@ -31,7 +31,14 @@ const FishSchema = new Schema({
 			default: 'rawfish:1209352519726276648',
 		},
 	},
+	user: {
+		type: String,
+	},
+	obtained: {
+		type: Number,
+	},
 });
 
-const Fish = model('Fish', FishSchema, 'fish');
-module.exports = { Fish };
+const Fish = model('Fish', FishSchema);
+const FishData = model('FishData', FishSchema);
+module.exports = { Fish, FishData };

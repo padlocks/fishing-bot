@@ -4,7 +4,7 @@ const { User } = require('../../../schemas/UserSchema');
 
 const updateUserWithFish = async (userId) => {
 	const rod = await getEquippedRod(userId);
-	const f = await fish(rod.name);
+	const f = await fish(rod.name, userId);
 	const user = await User.findOne({ userId: userId });
 	if (user) {
 		if (f.name == 'Lucky Rod') {
