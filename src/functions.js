@@ -299,7 +299,7 @@ async function createUser(userId) {
 	clonedRod.obtained = Date.now();
 	const data = new User({
 		userId: userId,
-		commands: 1,
+		commands: 0,
 		inventory: {
 			equippedRod: null,
 			rods: [],

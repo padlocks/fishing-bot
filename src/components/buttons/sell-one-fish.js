@@ -1,5 +1,5 @@
 const { User } = require('../../schemas/UserSchema');
-const { Fish } = require('../../schemas/FishSchema');
+const { FishData } = require('../../schemas/FishSchema');
 const { log } = require('../../functions');
 
 module.exports = {
@@ -10,13 +10,18 @@ module.exports = {
      * @param {ButtonInteraction} interaction
      */
 	run: async (client, interaction) => {
-		if (interaction.message.interaction.user.id !== interaction.user.id) return;
+		if (interaction.message.interaction.user.id !== interaction.user.id) {
+			return await interaction.reply({
+				content: 'You cannot do that!',
+				ephemeral: true,
+			});
+		}
 
 		const user = await User.findOne({ userId: interaction.user.id });
 		if (!user) return;
 
 		const fish = user.stats.latestFish;
-		const fishData = await Fish.findById(fish.valueOf());
+		const fishData = await FishData.findById(fish.valueOf());
 		const value = fishData.value;
 		const newFish = user.inventory.fish.filter(x => {
 			return x._id.valueOf() != fishData._id.valueOf();
