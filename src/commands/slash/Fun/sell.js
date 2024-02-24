@@ -24,9 +24,7 @@ module.exports = {
 		let sold = 0;
 		const rarity = interaction.options.getString('rarity');
 
-		if (rarity.toLowerCase() == 'all') {
-			sold = await sellFishByRarity(interaction.user.id, rarity);
-		}
+		sold = await sellFishByRarity(interaction.user.id, rarity);
 
 		await interaction.editReply({
 			embeds: [

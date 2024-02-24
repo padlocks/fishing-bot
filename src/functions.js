@@ -178,6 +178,7 @@ const sellFishByRarity = async (userId, targetRarity) => {
 		return totalValue;
 	}
 	catch (err) {
+		console.error(err);
 		return 0;
 	}
 };
