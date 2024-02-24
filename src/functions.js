@@ -188,6 +188,9 @@ const getEquippedRod = async (userId) => {
 	let user = await User.findOne({ userId: userId });
 	if (!user) user = await createUser(userId);
 	const rodId = user.inventory.equippedRod.valueOf();
+	if (!rodId) {
+		rodId = await createUser(userId);
+	}
 	const rod = await ItemData.findById(rodId);
 	return rod;
 };
@@ -300,6 +303,7 @@ async function createUser(userId) {
 	const data = new User({
 		userId: userId,
 		commands: 0,
+		xp: 0,
 		inventory: {
 			equippedRod: null,
 			rods: [],

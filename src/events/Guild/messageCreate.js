@@ -1,7 +1,7 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const { ChannelType } = require('discord.js');
 const config = require('../../config');
-const { log, generateXP, generateCash } = require('../../functions');
+const { log, generateXP, generateCash, createUser } = require('../../functions');
 const GuildSchema = require('../../schemas/GuildSchema');
 const { User } = require('../../schemas/UserSchema');
 
@@ -20,15 +20,11 @@ module.exports = {
 
 		let userData = (await User.findOne({ userId: message.author.id }));
 		if (!userData) {
-			userData = new User({
-				userId: message.author.id,
-				xp: 0,
-			});
+			userData = await createUser(message.author.id);
 		}
-		else {
-			userData.xp += generateXP();
-			userData.inventory.money += generateCash();
-		}
+
+		userData.xp += generateXP();
+		userData.inventory.money += generateCash();
 		userData.save();
 
 		if (!config.handler.commands.prefix) return;
