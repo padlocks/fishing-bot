@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { FishData } = require('../../../schemas/FishSchema');
 const { User } = require('../../../schemas/UserSchema');
+const buttonPagination = require('../../../buttonPagination');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -14,22 +15,11 @@ module.exports = {
      * @param {ChatInputCommandInteraction} interaction
      */
 	run: async (client, interaction) => {
+		try {
+			const embeds = [];
 
-		await interaction.deferReply();
+			const user = await User.findOne({ userId: interaction.user.id });
 
-		const user = await User.findOne({ userId: interaction.user.id });
-
-		if (!user) {
-			await interaction.editReply({
-				embeds: [
-					new EmbedBuilder()
-						.setTitle('Error')
-						.setDescription('Something went wrong.')
-						.setColor('Red'),
-				],
-			});
-		}
-		else {
 			let fields = [];
 			const nameCounter = {};
 			const maxCounterPerName = {};
@@ -76,15 +66,23 @@ module.exports = {
 				});
 			}
 
-			const inventoryEmbed = new EmbedBuilder()
-				.setTitle(`${interaction.user.username}'s Inventory`)
-				.setColor('Green')
-				.addFields(fields);
+			const chunkSize = 6;
 
-			await interaction.editReply({
-				embeds: [inventoryEmbed],
-			});
+			for (let i = 0; i < fields.length; i += chunkSize) {
+				const chunk = fields.slice(i, i + chunkSize);
 
+				embeds.push(new EmbedBuilder()
+					.setFooter({ text: `Page ${Math.floor(i / chunkSize) + 1} / ${Math.ceil(fields.length / chunkSize)} ` })
+					.setTitle(`${interaction.user.username}'s Inventory`)
+					.setColor('Green')
+					.addFields(chunk),
+				);
+			}
+
+			await buttonPagination(interaction, embeds);
+		}
+		catch (err) {
+			console.error(err);
 		}
 	},
 };
