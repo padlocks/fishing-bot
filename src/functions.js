@@ -179,7 +179,7 @@ const sellFishByRarity = async (userId, targetRarity) => {
 		return totalValue;
 	}
 	catch (err) {
-		console.error(err);
+		log('Error updating user:' + err, 'err');
 		return 0;
 	}
 };
@@ -234,7 +234,7 @@ async function cloneRod(originalRodId, userId) {
 		return clonedRod;
 	}
 	catch (error) {
-		console.error('Error cloning rod:', error.message);
+		log('Error cloning rod: ' + error, 'err');
 		throw error;
 	}
 }
@@ -261,7 +261,7 @@ async function cloneItem(itemId, userId) {
 		return clonedItem;
 	}
 	catch (error) {
-		console.error('Error cloning item:', error.message);
+		log('Error cloning item: ' + error, 'err');
 		throw error;
 	}
 }
@@ -288,7 +288,7 @@ async function cloneFish(fishName, userId) {
 		return clonedFish;
 	}
 	catch (error) {
-		console.error('Error cloning rod:', error.message);
+		log('Error cloning fish: ' + error, 'err');
 		throw error;
 	}
 }
@@ -308,7 +308,7 @@ async function createUser(userId) {
 	});
 	data.inventory.rods.push(clonedRod);
 	data.inventory.equippedRod = data.inventory.rods[0];
-	data.save();
+	await data.save();
 
 	return data;
 }

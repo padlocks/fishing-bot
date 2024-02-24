@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
-const { cloneItem, cloneRod } = require('../../../functions');
+const { log, cloneItem, cloneRod } = require('../../../functions');
 const { User } = require('../../../schemas/UserSchema');
 const { Item } = require('../../../schemas/ItemSchema');
 
@@ -37,7 +37,7 @@ module.exports = {
 
 			}
 			catch (error) {
-				console.error(`Error fetching item ${item.name}: ${error}`);
+				log(error, 'err');
 			}
 		});
 
@@ -64,20 +64,22 @@ module.exports = {
 			const userData = await User.findOne({ userId: user.id });
 			const originalItem = await Item.findById(selection);
 
-			let item;
-			if (originalItem.name.toLowerCase().includes('rod')) {
-				item = await cloneRod(selection, user.id);
-				userData.inventory.rods.push(item);
-			}
-			else {
-				item = await cloneItem(selection, user.id);
-				userData.inventory.items.push(item);
-			}
-			if (userData.inventory.money < item.price) {
+			if (userData.inventory.money < originalItem.price) {
 				await i.reply(`${i.user}, you don't have enough money for that!`);
 			}
 			else {
-				userData.inventory.money -= item.price;
+				userData.inventory.money -= originalItem.price;
+
+				let item;
+				if (originalItem.name.toLowerCase().includes('rod')) {
+					item = await cloneRod(selection, user.id);
+					userData.inventory.rods.push(item);
+				}
+				else {
+					item = await cloneItem(selection, user.id);
+					userData.inventory.items.push(item);
+				}
+
 				userData.save();
 				await i.reply(`${i.user} has bought **${item.name}**!`);
 			}

@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { FishData } = require('../../../schemas/FishSchema');
 const { User } = require('../../../schemas/UserSchema');
+const { log } = require('../../../functions');
 const buttonPagination = require('../../../buttonPagination');
 
 module.exports = {
@@ -82,7 +83,7 @@ module.exports = {
 			await buttonPagination(interaction, embeds);
 		}
 		catch (err) {
-			console.error(err);
+			log(err, 'err');
 		}
 	},
 };

@@ -4,6 +4,7 @@ const {
 } = require('discord.js');
 const { FishData } = require('../../../schemas/FishSchema');
 const { User } = require('../../../schemas/UserSchema');
+const { log } = require('../../../functions');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -26,7 +27,7 @@ module.exports = {
 		const user = await User.findOne({ userId: interaction.user.id });
 
 		if (!user) {
-			console.error('User not found');
+			log('User not found.', 'err');
 			await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()
@@ -60,7 +61,7 @@ module.exports = {
 			});
 		}
 		catch (err) {
-			console.error('Error updating fish:', err);
+			log('Error updating fish: ' + err, 'err');
 			await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()

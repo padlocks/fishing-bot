@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
-const { setEquippedRod } = require('../../../functions');
+const { log, setEquippedRod } = require('../../../functions');
 const { User } = require('../../../schemas/UserSchema');
 const { RodData } = require('../../../schemas/RodSchema');
 
@@ -42,7 +42,7 @@ module.exports = {
 
 			}
 			catch (error) {
-				console.error(`Error fetching rod with ObjectId ${rodObjectId}: ${error}`);
+				log(error, 'err');
 			}
 		});
 

@@ -1,4 +1,5 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
+const { log } = require('./functions');
 
 module.exports = async (interaction, pages, time = 30 * 1000) => {
 	try {
@@ -83,6 +84,6 @@ module.exports = async (interaction, pages, time = 30 * 1000) => {
 		});
 	}
 	catch (err) {
-		console.log(err);
+		log(err, 'err');
 	}
 };

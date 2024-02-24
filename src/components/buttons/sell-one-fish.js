@@ -1,5 +1,6 @@
 const { User } = require('../../schemas/UserSchema');
 const { Fish } = require('../../schemas/FishSchema');
+const { log } = require('../../functions');
 
 module.exports = {
 	customId: 'sell-one-fish',
@@ -54,7 +55,7 @@ module.exports = {
 			});
 		}
 		catch (err) {
-			console.log(err);
+			log(err, 'err');
 			await interaction.reply({
 				content: 'There was an error updating your userdata!',
 				ephemeral: true,

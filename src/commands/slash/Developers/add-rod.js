@@ -4,6 +4,7 @@ const {
 	EmbedBuilder,
 } = require('discord.js');
 const { Rod } = require('../../../schemas/RodSchema');
+const { log } = require('../../../functions');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -88,7 +89,7 @@ module.exports = {
 			});
 		}
 		catch (err) {
-			console.error(err);
+			log(err, 'err');
 			await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()
