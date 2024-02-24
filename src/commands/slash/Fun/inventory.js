@@ -41,7 +41,7 @@ module.exports = {
 					const name = fish.name;
 
 					// Count occurrences of each fish.name
-					nameCounter[name] = (nameCounter[name] || 0) + 1;
+					nameCounter[name] = (nameCounter[name] || 0) + fish.count || 1;
 
 					// Add counter to fish.name
 					const counter = nameCounter[name];

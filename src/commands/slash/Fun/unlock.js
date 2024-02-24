@@ -42,7 +42,7 @@ module.exports = {
 		const fishPromises = await user.inventory.fish.map(async x => await FishData.findById(x.valueOf()));
 		const fishList = await Promise.all(fishPromises);
 		fishList.forEach(async fish => {
-			if (fish.name === name) {
+			if (fish.name.toLowerCase() === name.toLowerCase()) {
 				fish.locked = false;
 				await fish.save();
 			}
@@ -52,8 +52,8 @@ module.exports = {
 			await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()
-						.setTitle('Fish Locked')
-						.setDescription(`Successfully locked all **${name}**.`)
+						.setTitle('Fish Unlocked')
+						.setDescription(`Successfully unlocked all **${name}**.`)
 						.setColor('Green'),
 				],
 			});
@@ -63,8 +63,8 @@ module.exports = {
 			await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()
-						.setTitle('Fish Not Locked')
-						.setDescription(`Failed to lock **${name}**. An error occurred.`)
+						.setTitle('Fish Not Unlocked')
+						.setDescription(`Failed to unlock **${name}**. An error occurred.`)
 						.setColor('Red'),
 				],
 			});

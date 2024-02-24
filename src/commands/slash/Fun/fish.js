@@ -31,7 +31,7 @@ const followUpMessage = async (interaction, user, f) => {
 			new EmbedBuilder()
 				.setTitle('Fished!')
 				.addFields(
-					{ name: 'Congratulations!', value: `<${f.icon?.animated ? 'a' : ''}:${f.icon?.data}> ${user.globalName} caught **${f.rarity}** ${f.name}!` },
+					{ name: 'Congratulations!', value: `<${f.icon?.animated ? 'a' : ''}:${f.icon?.data}> ${user.globalName} caught ${f.count} **${f.rarity}** ${f.name}!` },
 				),
 		],
 		components: [

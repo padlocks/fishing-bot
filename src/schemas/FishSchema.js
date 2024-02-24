@@ -37,6 +37,10 @@ const FishSchema = new Schema({
 	obtained: {
 		type: Number,
 	},
+	count: {
+		type: Number,
+		default: 1,
+	},
 });
 
 const Fish = model('Fish', FishSchema);

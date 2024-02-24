@@ -42,7 +42,7 @@ module.exports = {
 		const fishPromises = await user.inventory.fish.map(async x => await FishData.findById(x.valueOf()));
 		const fishList = await Promise.all(fishPromises);
 		fishList.forEach(async fish => {
-			if (fish.name === name) {
+			if (fish.name.toLowerCase() === name.toLowerCase()) {
 				fish.locked = true;
 				await fish.save();
 			}
