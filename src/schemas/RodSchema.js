@@ -1,18 +1,7 @@
-const { model, Schema } = require('mongoose');
+const { Schema } = require('mongoose');
+const { Item, ItemData } = require('./ItemSchema');
 
 const rodSchema = new Schema({
-	name: {
-		type: String,
-		required: true,
-	},
-	description: {
-		type: String,
-		required: true,
-	},
-	rarity: {
-		type: String,
-		required: true,
-	},
 	capabilities: {
 		type: [String],
 	},
@@ -25,9 +14,6 @@ const rodSchema = new Schema({
 	fishCaught: {
 		type: Number,
 		default: 0,
-	},
-	user: {
-		type: String,
 	},
 	state: {
 		type: String,
@@ -46,6 +32,6 @@ const rodSchema = new Schema({
 	},
 });
 
-const Rod = model('Rod', rodSchema);
-const RodData = model('RodData', rodSchema);
+const Rod = Item.discriminator('Rod', rodSchema);
+const RodData = ItemData.discriminator('RodData', rodSchema);
 module.exports = { Rod, RodData };

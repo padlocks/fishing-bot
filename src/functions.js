@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const { Fish, FishData } = require('./schemas/FishSchema');
 const { User } = require('./schemas/UserSchema');
 const { Rod, RodData } = require('./schemas/RodSchema');
+const { ItemData, Item } = require('./schemas/ItemSchema');
 
 
 /**
@@ -68,7 +69,7 @@ function getWeightedChoice(choices, weights) {
 
 const fish = async (rod, user) => {
 	let generation;
-	const rodObject = await RodData.findOne({ name: rod, user: user });
+	const rodObject = await ItemData.findOne({ name: rod, user: user });
 	const capabilities = rodObject.capabilities;
 	switch (rod) {
 	case 'Old Rod': {
@@ -184,9 +185,10 @@ const sellFishByRarity = async (userId, targetRarity) => {
 };
 
 const getEquippedRod = async (userId) => {
-	const user = await User.findOne({ userId: userId });
+	let user = await User.findOne({ userId: userId });
+	if (!user) user = await createUser(userId);
 	const rodId = user.inventory.equippedRod.valueOf();
-	const rod = await RodData.findById(rodId);
+	const rod = await ItemData.findById(rodId);
 	return rod;
 };
 
@@ -202,7 +204,7 @@ const setEquippedRod = async (userId, rodId) => {
 	// Set the equippedRod field to the ObjectId of the found rod
 	user.inventory.equippedRod = rod;
 
-	const rodObject = await RodData.findById(rod.valueOf());
+	const rodObject = await ItemData.findById(rod.valueOf());
 
 	// Save the updated user document
 	await user.save();
@@ -212,7 +214,7 @@ const setEquippedRod = async (userId, rodId) => {
 async function cloneRod(originalRodId, userId) {
 	try {
 	// Find the original rod by ID
-		const originalRod = await Rod.findById(originalRodId);
+		const originalRod = await Item.findById(originalRodId);
 
 		if (!originalRod) {
 			throw new Error('Original rod not found');
@@ -223,6 +225,7 @@ async function cloneRod(originalRodId, userId) {
 			...originalRod.toObject(),
 			_id: new mongoose.Types.ObjectId(),
 			user: userId,
+			obtained: Date.now(),
 		});
 
 		// Save the cloned rod
@@ -232,6 +235,33 @@ async function cloneRod(originalRodId, userId) {
 	}
 	catch (error) {
 		console.error('Error cloning rod:', error.message);
+		throw error;
+	}
+}
+
+async function cloneItem(itemId, userId) {
+	try {
+		const originalItem = await Item.findById(itemId);
+
+		if (!originalItem) {
+			throw new Error('Original item not found');
+		}
+
+		// Create a new item with the same properties as the original
+		const clonedItem = new ItemData({
+			...originalItem.toObject(),
+			_id: new mongoose.Types.ObjectId(),
+			user: userId,
+			obtained: Date.now(),
+		});
+
+		// Save the cloned item
+		await clonedItem.save();
+
+		return clonedItem;
+	}
+	catch (error) {
+		console.error('Error cloning item:', error.message);
 		throw error;
 	}
 }
@@ -263,6 +293,26 @@ async function cloneFish(fishName, userId) {
 	}
 }
 
+async function createUser(userId) {
+	const rod = await Item.findOne({ name: 'Old Rod' });
+	const clonedRod = await cloneRod(rod._id, userId);
+	clonedRod.obtained = Date.now();
+	const data = new User({
+		userId: userId,
+		commands: 1,
+		inventory: {
+			equippedRod: null,
+			rods: [],
+			fish: [],
+		},
+	});
+	data.inventory.rods.push(clonedRod);
+	data.inventory.equippedRod = data.inventory.rods[0];
+	data.save();
+
+	return data;
+}
+
 
 module.exports = {
 	log,
@@ -275,6 +325,8 @@ module.exports = {
 	sellFishByRarity,
 	getEquippedRod,
 	setEquippedRod,
+	cloneItem,
 	cloneRod,
 	cloneFish,
+	createUser,
 };
