@@ -41,7 +41,7 @@ const rodSchema = new Schema({
 		},
 		data: {
 			type: String,
-			default: 'rawfish:1209352519726276648',
+			default: 'old_rod:1210508306662301706',
 		},
 	},
 });

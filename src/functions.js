@@ -79,6 +79,10 @@ const fish = async (rod, user) => {
 		generation = [capabilities, ['Common', 'Uncommon', 'Rare', 'Ultra', 'Giant', 'Legendary', 'Lucky'], [700, 50, 250, 20, 10, 2, 1]];
 		break;
 	}
+	case 'Hefty Rod': {
+		generation = [capabilities, ['Common', 'Uncommon', 'Rare', 'Ultra', 'Giant', 'Legendary', 'Lucky'], [700, 250, 50, 20, 10, 2, 1]];
+		break;
+	}
 	default: {
 		generation = [capabilities, ['Common', 'Uncommon', 'Rare', 'Ultra', 'Giant', 'Legendary', 'Lucky'], [700, 250, 50, 10, 5, 2, 1]];
 	}
@@ -129,8 +133,16 @@ const generateFish = async (capabilities, choices, weights, user) => {
 		}
 	}
 
+	// Check if a number is present in capabilities and update clonedChoice.count
+	const numberCapability = capabilities.find(capability => !isNaN(capability));
+	if (numberCapability !== undefined) {
+		clonedChoice.count = Number(numberCapability);
+		clonedChoice.save();
+	}
+
 	return clonedChoice;
 };
+
 
 const sellFishByRarity = async (userId, targetRarity) => {
 	let totalValue = 0;
