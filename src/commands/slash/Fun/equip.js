@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
-const { log, setEquippedRod } = require('../../../functions');
+const { log, setEquippedRod, createUser } = require('../../../functions');
 const { User } = require('../../../schemas/UserSchema');
 const { RodData } = require('../../../schemas/RodSchema');
 
@@ -17,7 +17,8 @@ module.exports = {
 	async run(client, interaction, user = null) {
 		if (user === null) user = interaction.user;
 
-		const userData = await User.findOne({ userId: user.id });
+		let userData = await User.findOne({ userId: user.id });
+		if (!userData) userData = await createUser(user.id);
 		let options = [];
 		const uniqueValues = new Set();
 

@@ -40,4 +40,5 @@ const questSchema = new Schema({
 });
 
 const Quest = model('Quest', questSchema);
-module.exports = { Quest };
+const QuestData = model('QuestData', questSchema);
+module.exports = { Quest, QuestData };
