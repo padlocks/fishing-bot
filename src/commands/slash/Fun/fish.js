@@ -18,8 +18,8 @@ const updateUserWithFish = async (userId) => {
 		else {
 			user.inventory.fish.push(f);
 		}
-		rod.fishCaught++;
-		user.stats.fishCaught++;
+		rod.fishCaught += f.count || 1;
+		user.stats.fishCaught += f.count || 1;
 		user.stats.latestFish = f;
 		user.stats.soldLatestFish = false;
 		user.xp += generateXP();
