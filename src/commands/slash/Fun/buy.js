@@ -1,6 +1,5 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
-const { log, cloneItem, cloneRod } = require('../../../functions');
-const { User } = require('../../../schemas/UserSchema');
+const { log, getUser, cloneItem, cloneRod } = require('../../../functions');
 const { Item } = require('../../../schemas/ItemSchema');
 
 module.exports = {
@@ -61,7 +60,7 @@ module.exports = {
 
 		collector.on('collect', async i => {
 			const selection = i.values[0];
-			const userData = await User.findOne({ userId: user.id });
+			const userData = await getUser(user.id);
 			const originalItem = await Item.findById(selection);
 
 			if (userData.inventory.money < originalItem.price) {

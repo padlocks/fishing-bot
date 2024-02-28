@@ -2,7 +2,7 @@ const chalk = require('chalk');
 const mongoose = require('mongoose');
 const { Fish, FishData } = require('./schemas/FishSchema');
 const { User } = require('./schemas/UserSchema');
-const { Rod, RodData } = require('./schemas/RodSchema');
+const { RodData, Rod } = require('./schemas/RodSchema');
 const { ItemData, Item } = require('./schemas/ItemSchema');
 
 
@@ -94,13 +94,13 @@ const fish = async (rod, user) => {
 const generateFish = async (capabilities, choices, weights, user) => {
 	const draw = getWeightedChoice(choices, weights);
 
+	let f;
 	if (draw === 'Lucky') {
-		const luckyRod = await Rod.findOne({ name: 'Lucky Rod' });
-		const clonedLuckyRod = await cloneRod(luckyRod._id, user);
-		return clonedLuckyRod;
+		f = await Item.find({ rarity: { $in: draw } });
 	}
-
-	const f = await Fish.find({ rarity: { $in: draw } });
+	else {
+		f = await Fish.find({ rarity: { $in: draw } });
+	}
 
 	const filteredChoices = f.filter(fishObj => {
 		// Check if all capabilities match the fish's qualities
@@ -113,7 +113,7 @@ const generateFish = async (capabilities, choices, weights, user) => {
 
 	const random = Math.floor(Math.random() * filteredChoices.length);
 	const choice = filteredChoices[random];
-	const clonedChoice = await cloneFish(choice.name, user);
+	const clonedChoice = await clone(choice, user);
 
 	// Check for locked status and update the cloned fish as necessary.
 	const userData = await User.findOne({ userId: user });
@@ -211,6 +211,82 @@ const setEquippedRod = async (userId, rodId) => {
 	return rodObject;
 };
 
+async function clone(object, userId) {
+	try {
+		let originalObject;
+
+		switch (object.type) {
+		case 'fish': {
+			originalObject = await Fish.findById(object.id);
+			break;
+		}
+		case 'item': {
+			originalObject = await Item.findById(object.id);
+			break;
+		}
+		case 'rod': {
+			originalObject = await Rod.findById(object.id);
+			break;
+		}
+		case 'user': {
+			originalObject = await User.findById(object.id);
+			break;
+		}
+		}
+
+		if (!originalObject) {
+			throw new Error('Original object not found');
+		}
+
+		let clonedObject;
+
+		switch (object.type) {
+		case 'fish': {
+			clonedObject = new FishData({
+				...originalObject.toObject(),
+				_id: new mongoose.Types.ObjectId(),
+				user: userId,
+				obtained: Date.now(),
+			});
+			break;
+		}
+		case 'item': {
+			clonedObject = new ItemData({
+				...originalObject.toObject(),
+				_id: new mongoose.Types.ObjectId(),
+				user: userId,
+				obtained: Date.now(),
+			});
+			break;
+		}
+		case 'rod': {
+			clonedObject = new RodData({
+				...originalObject.toObject(),
+				_id: new mongoose.Types.ObjectId(),
+				user: userId,
+				obtained: Date.now(),
+			});
+			break;
+		}
+		case 'user': {
+			clonedObject = new User({
+				...originalObject.toObject(),
+				_id: new mongoose.Types.ObjectId(),
+			});
+			break;
+		}
+		}
+
+		await clonedObject.save();
+
+		return clonedObject;
+	}
+	catch (error) {
+		log('Error cloning object: ' + error, 'err');
+		throw error;
+	}
+}
+
 async function cloneRod(originalRodId, userId) {
 	try {
 	// Find the original rod by ID
@@ -293,6 +369,15 @@ async function cloneFish(fishName, userId) {
 	}
 }
 
+async function getUser(userId) {
+	let user = await User.findOne({ userId: userId });
+	if (!user) {
+		user = await createUser();
+	}
+
+	return user;
+}
+
 async function createUser(userId) {
 	const rod = await Item.findOne({ name: 'Old Rod' });
 	const clonedRod = await cloneRod(rod._id, userId);
@@ -306,6 +391,7 @@ async function createUser(userId) {
 			rods: [],
 			fish: [],
 		},
+		type: 'user',
 	});
 	data.inventory.rods.push(clonedRod);
 	data.inventory.equippedRod = data.inventory.rods[0];
@@ -329,5 +415,6 @@ module.exports = {
 	cloneItem,
 	cloneRod,
 	cloneFish,
+	getUser,
 	createUser,
 };

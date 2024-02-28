@@ -20,6 +20,7 @@ const itemSchema = new Schema({
 	},
 	type: {
 		type: String,
+		default: 'item',
 	},
 	user: {
 		type: String,
@@ -27,6 +28,10 @@ const itemSchema = new Schema({
 	shopItem: {
 		type: Boolean,
 		default: false,
+	},
+	qualities: {
+		type: [String],
+		default: ['weak'],
 	},
 });
 

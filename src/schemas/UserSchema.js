@@ -13,6 +13,10 @@ const UserSchema = new Schema ({
 		type: Number,
 		default: 0,
 	},
+	type: {
+		type: String,
+		default: 'user',
+	},
 	stats: {
 		fishCaught: {
 			type: Number,

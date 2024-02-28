@@ -37,6 +37,10 @@ const questSchema = new Schema({
 		enum: ['pending', 'in_progress', 'completed', 'failed'],
 		default: 'pending',
 	},
+	type: {
+		type: String,
+		default: 'quest',
+	},
 });
 
 const Quest = model('Quest', questSchema);

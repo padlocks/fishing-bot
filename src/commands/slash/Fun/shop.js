@@ -17,9 +17,7 @@ module.exports = {
 	run: async (client, interaction) => {
 		try {
 			const embeds = [];
-
 			const shopItems = await Item.find({ shopItem: true });
-			// const user = await User.findOne({ userId: interaction.user.id });
 
 			let fields = [];
 			fields = shopItems.map((item) => ({

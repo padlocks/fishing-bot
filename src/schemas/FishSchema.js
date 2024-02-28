@@ -41,6 +41,10 @@ const FishSchema = new Schema({
 		type: Number,
 		default: 1,
 	},
+	type: {
+		type: String,
+		default: 'fish',
+	},
 });
 
 const Fish = model('Fish', FishSchema);

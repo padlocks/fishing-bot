@@ -30,6 +30,10 @@ const rodSchema = new Schema({
 			default: 'old_rod:1210508306662301706',
 		},
 	},
+	type: {
+		type: String,
+		default: 'quest',
+	},
 });
 
 const Rod = Item.discriminator('Rod', rodSchema);

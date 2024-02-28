@@ -1,6 +1,6 @@
 const { User } = require('../../schemas/UserSchema');
 const { FishData } = require('../../schemas/FishSchema');
-const { log } = require('../../functions');
+const { log, getUser } = require('../../functions');
 
 module.exports = {
 	customId: 'sell-one-fish',
@@ -10,24 +10,17 @@ module.exports = {
      * @param {ButtonInteraction} interaction
      */
 	run: async (client, interaction) => {
-		if (interaction.message.interaction.user.id !== interaction.user.id) {
-			return await interaction.reply({
-				content: 'You cannot do that!',
-				ephemeral: true,
-			});
-		}
+		const userData = await getUser(interaction.user.id);
+		if (!userData) return;
 
-		const user = await User.findOne({ userId: interaction.user.id });
-		if (!user) return;
-
-		const fish = user.stats.latestFish;
+		const fish = userData.stats.latestFish;
 		const fishData = await FishData.findById(fish.valueOf());
 		const value = fishData.value;
-		const newFish = user.inventory.fish.filter(x => {
+		const newFish = userData.inventory.fish.filter(x => {
 			return x._id.valueOf() != fishData._id.valueOf();
 		});
 
-		if (user.stats.soldLatestFish) {
+		if (userData.stats.soldLatestFish) {
 			await interaction.reply({
 				content: 'You already sold this fish!',
 				ephemeral: true,
@@ -37,10 +30,10 @@ module.exports = {
 
 		try {
 			const updatedUser = await User.findOneAndUpdate(
-				{ userId: user.userId },
+				{ userId: userData.userId },
 				{ $set: {
 					'inventory.fish': newFish,
-					'inventory.money': user.inventory.money + value,
+					'inventory.money': userData.inventory.money + value,
 					'stats.soldLatestFish': true,
 				} },
 				{ $unset: { 'stats.latestFish': '' } },

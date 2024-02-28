@@ -1,7 +1,6 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const config = require('../../config');
-const { log, cloneRod, createUser, getEquippedRod } = require('../../functions');
-const { User } = require('../../schemas/UserSchema');
+const { log, cloneRod, getUser, getEquippedRod } = require('../../functions');
 const { Rod } = require('../../schemas/RodSchema');
 
 
@@ -137,11 +136,8 @@ module.exports = {
 
 			command.run(client, interaction);
 
-			let data = (await User.findOne({ userId: interaction.user.id }));
-			if (!data) {
-				data = await createUser(interaction.user.id);
-			}
-			else if (!await getEquippedRod(interaction.user.id)) {
+			const data = (await getUser(interaction.user.id));
+			if (!await getEquippedRod(interaction.user.id)) {
 				const rod = await Rod.findOne({ name: 'Old Rod' });
 				const clonedRod = await cloneRod(rod._id, interaction.user.id);
 				clonedRod.obtained = Date.now();

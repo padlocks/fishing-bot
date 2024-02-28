@@ -1,14 +1,19 @@
 const { SlashCommandBuilder, EmbedBuilder, ButtonStyle, ActionRowBuilder, ButtonBuilder, ComponentType } = require('discord.js');
-const { fish, generateXP, getEquippedRod } = require('../../../functions');
-const { User } = require('../../../schemas/UserSchema');
+const { fish, generateXP, getEquippedRod, getUser } = require('../../../functions');
 
 const updateUserWithFish = async (userId) => {
 	const rod = await getEquippedRod(userId);
 	const f = await fish(rod.name, userId);
-	const user = await User.findOne({ userId: userId });
+
+	if (!f.count) f.count = 1;
+
+	const user = await getUser(userId);
 	if (user) {
-		if (f.name == 'Lucky Rod') {
+		if (f.name.toLowerCase().includes('rod')) {
 			user.inventory.rods.push(f);
+		}
+		else if (f.name.toLowerCase().includes('trophy')) {
+			user.inventory.items.push(f);
 		}
 		else {
 			user.inventory.fish.push(f);
@@ -20,6 +25,7 @@ const updateUserWithFish = async (userId) => {
 		user.xp += generateXP();
 		user.save();
 		rod.save();
+		f.save();
 	}
 
 	return f;
@@ -83,6 +89,9 @@ module.exports = {
 			if (collectionInteraction.user.id !== user.id) return;
 			if (collectionInteraction.customId === 'fish-again') {
 				await this.run(client, collectionInteraction, user);
+			}
+			if (collectionInteraction.customId === 'sell-one-fish') {
+				//
 			}
 		});
 	},

@@ -1,7 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { FishData } = require('../../../schemas/FishSchema');
-const { User } = require('../../../schemas/UserSchema');
-const { log } = require('../../../functions');
+const { log, getUser } = require('../../../functions');
 const buttonPagination = require('../../../buttonPagination');
 
 module.exports = {
@@ -19,7 +18,7 @@ module.exports = {
 		try {
 			const embeds = [];
 
-			const user = await User.findOne({ userId: interaction.user.id });
+			const user = await getUser(interaction.user.id);
 
 			let fields = [];
 			const nameCounter = {};
