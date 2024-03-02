@@ -1,11 +1,11 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
-const { log, getUser, clone } = require('../../../functions');
-const { Item } = require('../../../schemas/ItemSchema');
+const { log, getUser, startQuest } = require('../../../functions');
+const { Quest } = require('../../../schemas/QuestSchema');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
-		.setName('buy')
-		.setDescription('Buy from the shop!'),
+		.setName('start-quest')
+		.setDescription('Start a quest!'),
 	options: {
 		cooldown: 15000,
 	},
@@ -16,21 +16,21 @@ module.exports = {
 	async run(client, interaction, user = null) {
 		if (user === null) user = interaction.user;
 
-		const shopItems = await Item.find({ shopItem: true });
+		const questOptions = await Quest.find();
 		const uniqueValues = new Set();
 
 		let options = [];
-		const itemPromises = shopItems.map(async (item) => {
+		const questPromises = questOptions.map(async (q) => {
 			try {
-				const value = item._id.toString();
+				const value = q._id.toString();
 
 				if (!uniqueValues.has(value)) {
 					uniqueValues.add(value);
 
 					return new StringSelectMenuOptionBuilder()
-						.setLabel(item.name)
-						.setDescription(`$${item.price} | ${item.description}`)
-						.setEmoji(item.toJSON().icon.data.split(':')[1])
+						.setLabel(q.title)
+						.setDescription(`$${q.reward} | ${q.description}`)
+						// .setEmoji(q.toJSON().icon.data.split(':')[1])
 						.setValue(value);
 				}
 
@@ -40,11 +40,11 @@ module.exports = {
 			}
 		});
 
-		options = await Promise.all(itemPromises);
+		options = await Promise.all(questPromises);
 		options = options.filter((option) => option !== undefined);
 
 		const select = new StringSelectMenuBuilder()
-			.setCustomId('buy-item')
+			.setCustomId('start-quest')
 			.setPlaceholder('Make a selection!')
 			.addOptions(options);
 
@@ -52,7 +52,7 @@ module.exports = {
 			.addComponents(select);
 
 		const response = await interaction.reply({
-			content: 'What would you like to buy?',
+			content: 'Which quest would you like to start?',
 			components: [row],
 		});
 
@@ -61,28 +61,13 @@ module.exports = {
 		collector.on('collect', async i => {
 			const selection = i.values[0];
 			const userData = await getUser(user.id);
-			const originalItem = await Item.findById(selection);
+			const originalQuest = await Quest.findById(selection);
 
-			if (userData.inventory.money < originalItem.price) {
-				await i.reply(`${i.user}, you don't have enough money for that!`);
-			}
-			else {
-				userData.inventory.money -= originalItem.price;
+			// Check if user meets quest requirements
+			await startQuest(userData.userId, originalQuest._id);
 
-				let item;
-				if (originalItem.name.toLowerCase().includes('rod')) {
-
-					item = await clone(originalItem, user.id);
-					userData.inventory.rods.push(item);
-				}
-				else {
-					item = await clone(originalItem, user.id);
-					userData.inventory.items.push(item);
-				}
-
-				userData.save();
-				await i.reply(`${i.user} has bought **${item.name}**!`);
-			}
+			userData.save();
+			await i.reply(`${i.user} has started quest **${originalQuest.title}**!`);
 		});
 	},
 };

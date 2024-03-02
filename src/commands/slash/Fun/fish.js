@@ -1,7 +1,8 @@
 const { SlashCommandBuilder, EmbedBuilder, ButtonStyle, ActionRowBuilder, ButtonBuilder, ComponentType } = require('discord.js');
-const { fish, generateXP, getEquippedRod, getUser } = require('../../../functions');
+const { fish, generateXP, getEquippedRod, getUser, clone, findQuests } = require('../../../functions');
+const { Item } = require('../../../schemas/ItemSchema');
 
-const updateUserWithFish = async (userId) => {
+const updateUserWithFish = async (i, userId) => {
 	const rod = await getEquippedRod(userId);
 	const f = await fish(rod.name, userId);
 
@@ -23,21 +24,61 @@ const updateUserWithFish = async (userId) => {
 		user.stats.latestFish = f;
 		user.stats.soldLatestFish = false;
 		user.xp += generateXP();
-		user.save();
-		rod.save();
-		f.save();
-	}
 
-	return f;
+		// quest stuff
+		const quests = await findQuests(f.name.toLowerCase(), rod.name.toLowerCase(), f.qualities.map(q => q.toLowerCase()));
+		quests.forEach(quest => {
+			console.log(quest.title);
+		});
+
+		const completedQuests = [];
+		quests.forEach(async quest => {
+			quest.progress += f.count || 1;
+			if (quest.progress >= quest.progressMax) {
+				quest.status = 'completed';
+				user.xp += quest.xp;
+				quest.reward.forEach(reward => {
+					if (reward.toLowerCase().includes('money')) {
+						user.inventory.money += parseInt(reward.split(' ')[0]) || 0;
+					}
+					else if (reward.toLowerCase().includes('rod')) {
+						user.inventory.rods.push(reward);
+					}
+					else {
+						const item = Item.findOne({ name: reward });
+						if (item) {
+							user.inventory.items.push(clone(item));
+						}
+					}
+				});
+
+				completedQuests.push(quest);
+			}
+			quest.endDate = Date.now();
+			await quest.save();
+		});
+		// end quest stuff
+
+		f.save();
+		rod.save();
+		user.save();
+		return { fish: f, questsCompleted: completedQuests };
+	}
 };
 
-const followUpMessage = async (interaction, user, f) => {
+const followUpMessage = async (interaction, user, f, completedQuests) => {
+	const fields = [{ name: 'Congratulations!', value: `<${f.icon?.animated ? 'a' : ''}:${f.icon?.data}> ${user.globalName} caught ${f.count} **${f.rarity}** ${f.name}!` }];
+
+	completedQuests.forEach(quest => {
+		fields.push({ name: 'Quest Completed!', value: `**${quest.title}** completed!` });
+	});
+
 	return await interaction.followUp({
 		embeds: [
 			new EmbedBuilder()
 				.setTitle('Fished!')
 				.addFields(
-					{ name: 'Congratulations!', value: `<${f.icon?.animated ? 'a' : ''}:${f.icon?.data}> ${user.globalName} caught ${f.count} **${f.rarity}** ${f.name}!` },
+					fields,
 				),
 		],
 		components: [
@@ -73,9 +114,11 @@ module.exports = {
 
 		await interaction.deferReply();
 
-		const newFish = await updateUserWithFish(user.id);
+		const object = await updateUserWithFish(interaction, user.id);
+		const newFish = object.fish;
+		const completedQuests = object.questsCompleted;
 
-		const followUp = await followUpMessage(interaction, user, newFish);
+		const followUp = await followUpMessage(interaction, user, newFish, completedQuests);
 
 		// const filter = () => interaction.user.id === interaction.message.author.id;
 

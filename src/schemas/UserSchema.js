@@ -48,6 +48,10 @@ const UserSchema = new Schema ({
 			type: Schema.Types.ObjectId,
 			ref: 'Rod',
 		}],
+		quests: [{
+			type: Schema.Types.ObjectId,
+			ref: 'Quest',
+		}],
 	},
 });
 

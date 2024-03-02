@@ -1,6 +1,6 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const config = require('../../config');
-const { log, cloneRod, getUser, getEquippedRod } = require('../../functions');
+const { log, clone, getUser, getEquippedRod } = require('../../functions');
 const { Rod } = require('../../schemas/RodSchema');
 
 
@@ -139,7 +139,7 @@ module.exports = {
 			const data = (await getUser(interaction.user.id));
 			if (!await getEquippedRod(interaction.user.id)) {
 				const rod = await Rod.findOne({ name: 'Old Rod' });
-				const clonedRod = await cloneRod(rod._id, interaction.user.id);
+				const clonedRod = await clone(rod, interaction.user.id);
 				clonedRod.obtained = Date.now();
 				data.inventory.rods = [];
 				data.inventory.rods.push(clonedRod);

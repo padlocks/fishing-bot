@@ -1,10 +1,10 @@
 const chalk = require('chalk');
 const mongoose = require('mongoose');
 const { Fish, FishData } = require('./schemas/FishSchema');
+const { Quest, QuestData } = require('./schemas/QuestSchema');
+const { Rod, RodData } = require('./schemas/RodSchema');
+const { Item, ItemData } = require('./schemas/ItemSchema');
 const { User } = require('./schemas/UserSchema');
-const { RodData, Rod } = require('./schemas/RodSchema');
-const { ItemData, Item } = require('./schemas/ItemSchema');
-
 
 /**
  * Logs a message with optional styling.
@@ -232,6 +232,10 @@ async function clone(object, userId) {
 			originalObject = await User.findById(object.id);
 			break;
 		}
+		case 'quest': {
+			originalObject = await Quest.findById(object.id);
+			break;
+		}
 		}
 
 		if (!originalObject) {
@@ -275,6 +279,13 @@ async function clone(object, userId) {
 			});
 			break;
 		}
+		case 'quest': {
+			clonedObject = new QuestData({
+				...originalObject.toObject(),
+				_id: new mongoose.Types.ObjectId(),
+			});
+			break;
+		}
 		}
 
 		await clonedObject.save();
@@ -283,88 +294,6 @@ async function clone(object, userId) {
 	}
 	catch (error) {
 		log('Error cloning object: ' + error, 'err');
-		throw error;
-	}
-}
-
-async function cloneRod(originalRodId, userId) {
-	try {
-	// Find the original rod by ID
-		const originalRod = await Item.findById(originalRodId);
-
-		if (!originalRod) {
-			throw new Error('Original rod not found');
-		}
-
-		// Create a new rod with the same properties as the original
-		const clonedRod = new RodData({
-			...originalRod.toObject(),
-			_id: new mongoose.Types.ObjectId(),
-			user: userId,
-			obtained: Date.now(),
-		});
-
-		// Save the cloned rod
-		await clonedRod.save();
-
-		return clonedRod;
-	}
-	catch (error) {
-		log('Error cloning rod: ' + error, 'err');
-		throw error;
-	}
-}
-
-async function cloneItem(itemId, userId) {
-	try {
-		const originalItem = await Item.findById(itemId);
-
-		if (!originalItem) {
-			throw new Error('Original item not found');
-		}
-
-		// Create a new item with the same properties as the original
-		const clonedItem = new ItemData({
-			...originalItem.toObject(),
-			_id: new mongoose.Types.ObjectId(),
-			user: userId,
-			obtained: Date.now(),
-		});
-
-		// Save the cloned item
-		await clonedItem.save();
-
-		return clonedItem;
-	}
-	catch (error) {
-		log('Error cloning item: ' + error, 'err');
-		throw error;
-	}
-}
-
-async function cloneFish(fishName, userId) {
-	try {
-		const originalFish = await Fish.findOne({ name: fishName });
-
-		if (!originalFish) {
-			throw new Error('Original fish not found');
-		}
-
-		// Create a new fish with the same properties as the original
-		const clonedFish = new FishData({
-			...originalFish.toObject(),
-			_id: new mongoose.Types.ObjectId(),
-			user: userId,
-		});
-
-		// Save the cloned fish
-		clonedFish.obtained = Date.now();
-		await clonedFish.save();
-
-		return clonedFish;
-	}
-	catch (error) {
-		log('Error cloning fish: ' + error, 'err');
 		throw error;
 	}
 }
@@ -380,7 +309,7 @@ async function getUser(userId) {
 
 async function createUser(userId) {
 	const rod = await Item.findOne({ name: 'Old Rod' });
-	const clonedRod = await cloneRod(rod._id, userId);
+	const clonedRod = await clone(rod, userId);
 	clonedRod.obtained = Date.now();
 	const data = new User({
 		userId: userId,
@@ -390,6 +319,7 @@ async function createUser(userId) {
 			equippedRod: null,
 			rods: [],
 			fish: [],
+			quests: [],
 		},
 		type: 'user',
 	});
@@ -398,6 +328,55 @@ async function createUser(userId) {
 	await data.save();
 
 	return data;
+}
+
+async function generateQuest() {
+	const quest = await Quest.aggregate([{ $sample: { size: 1 } }]);
+	return await clone(quest[0]);
+}
+
+async function startQuest(userId, questId) {
+	const user = await User.findOne({ userId: userId });
+	const originalQuest = await Quest.findById(questId);
+	const quest = await clone(originalQuest);
+	if (!user) {
+		throw new Error('User not found');
+	}
+	if (!quest) {
+		throw new Error('Quest not found');
+	}
+	if (user.inventory.quests.includes(questId)) {
+		throw new Error('User already has this quest');
+	}
+
+	quest.status = 'in_progress';
+	quest.user = userId;
+	quest.startDate = Date.now();
+	await quest.save();
+	user.inventory.quests.push(quest._id);
+	await user.save();
+	return quest;
+}
+
+async function getQuests(userId) {
+	const user = await User.findOne({ userId: userId });
+	const questIds = user.inventory.quests;
+	const quests = await QuestData.find({ _id: { $in: questIds } });
+	return quests;
+}
+
+async function findQuests(specificFish, specificRod, specificQualities) {
+	const query = {
+		'status': 'in_progress',
+		$and: [],
+	};
+
+	query.$and.push({ $or: [{ 'progressType.fish': specificFish }, { 'progressType.fish': 'any' }] });
+	query.$and.push({ $or: [{ 'progressType.rod': specificRod }, { 'progressType.rod': 'any' }] });
+	specificQualities.map(quality => query.$and.push({ $or: [{ 'progressType.qualities': quality }, { 'progressType.qualities': 'any' }] }));
+
+	const quests = await QuestData.find(query);
+	return quests;
 }
 
 
@@ -412,9 +391,11 @@ module.exports = {
 	sellFishByRarity,
 	getEquippedRod,
 	setEquippedRod,
-	cloneItem,
-	cloneRod,
-	cloneFish,
 	getUser,
 	createUser,
+	generateQuest,
+	startQuest,
+	getQuests,
+	clone,
+	findQuests,
 };

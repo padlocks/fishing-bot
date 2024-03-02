@@ -9,7 +9,7 @@ const questSchema = new Schema({
 		type: String,
 		required: true,
 	},
-	rewards: {
+	reward: {
 		type: [String],
 	},
 	xp: {
@@ -21,21 +21,40 @@ const questSchema = new Schema({
 		type: [String],
 	},
 	startDate: {
-		type: Date,
-		required: true,
+		type: Number,
 	},
 	endDate: {
-		type: Date,
-		required: true,
+		type: Number,
+	},
+	user: {
+		type: String,
 	},
 	progress: {
 		type: Number,
 		default: 0,
 	},
+	progressMax: {
+		type: Number,
+		default: 1,
+	},
 	status: {
 		type: String,
 		enum: ['pending', 'in_progress', 'completed', 'failed'],
 		default: 'pending',
+	},
+	progressType: {
+		fish: [{
+			type: String,
+			default: 'any',
+		}],
+		rod: {
+			type: String,
+			default: 'any',
+		},
+		qualities: [{
+			type: String,
+			default: 'any',
+		}],
 	},
 	type: {
 		type: String,
