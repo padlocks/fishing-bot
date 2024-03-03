@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
-const { log, getUser, startQuest } = require('../../../functions');
+const { log, getUser, startQuest, getQuests } = require('../../../functions');
 const { Quest } = require('../../../schemas/QuestSchema');
 
 module.exports = {
@@ -64,10 +64,17 @@ module.exports = {
 			const originalQuest = await Quest.findById(selection);
 
 			// Check if user meets quest requirements
-			await startQuest(userData.userId, originalQuest._id);
+			const existingQuest = await getQuests(user.id);
+			const hasExistingQuest = existingQuest.some(quest => quest.title === originalQuest.title);
 
-			userData.save();
-			await i.reply(`${i.user} has started quest **${originalQuest.title}**!`);
+			if (hasExistingQuest) {
+				await i.reply(`You already have a quest with the title **${originalQuest.title}**!`);
+				return;
+			}
+			else {
+				await startQuest(userData.userId, originalQuest._id);
+				await i.reply(`${i.user} has started quest **${originalQuest.title}**!`);
+			}
 		});
 	},
 };

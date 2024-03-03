@@ -2,7 +2,7 @@ const chalk = require('chalk');
 const mongoose = require('mongoose');
 const { Fish, FishData } = require('./schemas/FishSchema');
 const { Quest, QuestData } = require('./schemas/QuestSchema');
-const { Rod, RodData } = require('./schemas/RodSchema');
+const { RodData } = require('./schemas/RodSchema');
 const { Item, ItemData } = require('./schemas/ItemSchema');
 const { User } = require('./schemas/UserSchema');
 
@@ -225,7 +225,7 @@ async function clone(object, userId) {
 			break;
 		}
 		case 'rod': {
-			originalObject = await Rod.findById(object.id);
+			originalObject = await Item.findById(object.id);
 			break;
 		}
 		case 'user': {
@@ -251,6 +251,8 @@ async function clone(object, userId) {
 				_id: new mongoose.Types.ObjectId(),
 				user: userId,
 				obtained: Date.now(),
+				count: 1,
+				__t: 'FishData',
 			});
 			break;
 		}
@@ -260,6 +262,7 @@ async function clone(object, userId) {
 				_id: new mongoose.Types.ObjectId(),
 				user: userId,
 				obtained: Date.now(),
+				__t: 'ItemData',
 			});
 			break;
 		}
@@ -269,6 +272,8 @@ async function clone(object, userId) {
 				_id: new mongoose.Types.ObjectId(),
 				user: userId,
 				obtained: Date.now(),
+				fishCaught: 0,
+				__t: 'RodData',
 			});
 			break;
 		}
@@ -276,6 +281,7 @@ async function clone(object, userId) {
 			clonedObject = new User({
 				...originalObject.toObject(),
 				_id: new mongoose.Types.ObjectId(),
+				__t: 'User',
 			});
 			break;
 		}
@@ -283,6 +289,7 @@ async function clone(object, userId) {
 			clonedObject = new QuestData({
 				...originalObject.toObject(),
 				_id: new mongoose.Types.ObjectId(),
+				__t: 'QuestData',
 			});
 			break;
 		}

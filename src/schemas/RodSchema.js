@@ -32,7 +32,7 @@ const rodSchema = new Schema({
 	},
 	type: {
 		type: String,
-		default: 'quest',
+		default: 'rod',
 	},
 });
 
