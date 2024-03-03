@@ -12,6 +12,11 @@ const questSchema = new Schema({
 	reward: {
 		type: [String],
 	},
+	cash: {
+		type: Number,
+		required: true,
+		default: 0,
+	},
 	xp: {
 		type: Number,
 		required: true,
@@ -41,6 +46,10 @@ const questSchema = new Schema({
 		type: String,
 		enum: ['pending', 'in_progress', 'completed', 'failed'],
 		default: 'pending',
+	},
+	daily: {
+		type: Boolean,
+		default: false,
 	},
 	progressType: {
 		fish: [{

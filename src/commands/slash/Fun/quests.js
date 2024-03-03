@@ -22,9 +22,10 @@ module.exports = {
 			let fields = [];
 			fields = quests.map((q) => ({
 				name: q.title,
-				value: `${q.description}
-					\n**Rewards:** ${q.reward.map((reward, index) => index === 0 ? `$${parseInt(reward.toLowerCase().split(' ')[0]) || 0}` : reward).join(', ')}, ${q.xp} XP
-					\n**Progress:** ${q.progress}/${q.progressMax}`,
+				value: `${q.description}\n
+					**Rewards:** $${q.cash}, ${q.xp} XP ${q.reward.length > 0 ? q.reward.join(', ') : ''}
+					**Progress:** ${q.progress}/${q.progressMax}
+					--------------------------`,
 				inline: true,
 			}));
 

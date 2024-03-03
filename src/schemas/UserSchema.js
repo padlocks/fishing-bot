@@ -26,9 +26,12 @@ const UserSchema = new Schema ({
 			type: Schema.Types.ObjectId,
 			ref: 'Fish',
 		},
-		soldLatestFish : {
+		soldLatestFish: {
 			type: Boolean,
 			default: false,
+		},
+		lastDailyQuest: {
+			type: Number,
 		},
 	},
 	inventory: {

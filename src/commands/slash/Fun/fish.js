@@ -27,9 +27,9 @@ const updateUserWithFish = async (i, userId) => {
 
 		// quest stuff
 		const quests = await findQuests(f.name.toLowerCase(), rod.name.toLowerCase(), f.qualities.map(q => q.toLowerCase()));
-		quests.forEach(quest => {
-			console.log(quest.title);
-		});
+		// quests.forEach(quest => {
+		// 	console.log(quest.title);
+		// });
 
 		const completedQuests = [];
 		quests.forEach(async quest => {
@@ -37,11 +37,9 @@ const updateUserWithFish = async (i, userId) => {
 			if (quest.progress >= quest.progressMax) {
 				quest.status = 'completed';
 				user.xp += quest.xp;
+				user.inventory.money += quest.cash;
 				quest.reward.forEach(reward => {
-					if (reward.toLowerCase().includes('money')) {
-						user.inventory.money += parseInt(reward.split(' ')[0]) || 0;
-					}
-					else if (reward.toLowerCase().includes('rod')) {
+					if (reward.toLowerCase().includes('rod')) {
 						user.inventory.rods.push(reward);
 					}
 					else {

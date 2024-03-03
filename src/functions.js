@@ -289,6 +289,8 @@ async function clone(object, userId) {
 			clonedObject = new QuestData({
 				...originalObject.toObject(),
 				_id: new mongoose.Types.ObjectId(),
+				user: userId,
+				startDate: Date.now(),
 				__t: 'QuestData',
 			});
 			break;
@@ -337,9 +339,39 @@ async function createUser(userId) {
 	return data;
 }
 
-async function generateQuest() {
-	const quest = await Quest.aggregate([{ $sample: { size: 1 } }]);
-	return await clone(quest[0]);
+async function generateDailyQuest(userId) {
+	const user = await User.findOne({ userId: userId });
+
+	const dailies = await Quest.find({ daily: true });
+	const randomIndex = Math.floor(Math.random() * dailies.length);
+	const originalQuest = dailies[randomIndex];
+
+	if (!user) {
+		throw new Error('User not found');
+	}
+	if (user.inventory.quests.includes(originalQuest.id)) {
+		return false;
+	}
+
+	const hasDailyQuest = user.inventory.quests.some(async (questId) => {
+		const quest = await QuestData.findById(questId);
+		return quest.daily;
+	});
+
+	if (hasDailyQuest || Date.now() - user.stats.lastDailyQuest < 864000000) {
+		return false;
+	}
+	else {
+		const quest = await clone(originalQuest);
+		quest.status = 'in_progress';
+		quest.user = userId;
+		quest.startDate = Date.now();
+		await quest.save();
+		user.inventory.quests.push(quest._id);
+		user.stats.lastDailyQuest = Date.now();
+		await user.save();
+		return quest;
+	}
 }
 
 async function startQuest(userId, questId) {
@@ -400,7 +432,7 @@ module.exports = {
 	setEquippedRod,
 	getUser,
 	createUser,
-	generateQuest,
+	generateDailyQuest,
 	startQuest,
 	getQuests,
 	clone,

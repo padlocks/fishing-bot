@@ -16,7 +16,7 @@ module.exports = {
 	async run(client, interaction, user = null) {
 		if (user === null) user = interaction.user;
 
-		const questOptions = await Quest.find();
+		const questOptions = await Quest.find({ daily: false });
 		const uniqueValues = new Set();
 
 		let options = [];
@@ -29,7 +29,7 @@ module.exports = {
 
 					return new StringSelectMenuOptionBuilder()
 						.setLabel(q.title)
-						.setDescription(`$${q.reward} | ${q.description}`)
+						.setDescription(`$${q.cash}, ${q.xp} XP ${q.reward.length > 0 ? q.reward.join(', ') : ''} | ${q.description}`)
 						// .setEmoji(q.toJSON().icon.data.split(':')[1])
 						.setValue(value);
 				}
@@ -64,7 +64,7 @@ module.exports = {
 			const originalQuest = await Quest.findById(selection);
 
 			// Check if user meets quest requirements
-			const existingQuest = await getQuests(user.id);
+			const existingQuest = await getQuests(user.id) || [];
 			const hasExistingQuest = existingQuest.some(quest => quest.title === originalQuest.title);
 
 			if (hasExistingQuest) {
