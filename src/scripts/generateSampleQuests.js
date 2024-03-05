@@ -1,9 +1,10 @@
 // Import the necessary modules
 const mongoose = require('mongoose');
+const config = require('../config');
 const { Quest } = require('../schemas/QuestSchema');
 
 // Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/fishing-bot-test', { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNewUrlParser: true, useUnifiedTopology: true })
 	.then(() => {
 		console.log('Connected to MongoDB');
 		// Generate and publish sample quests

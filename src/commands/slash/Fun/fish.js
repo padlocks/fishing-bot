@@ -4,68 +4,72 @@ const { Item } = require('../../../schemas/ItemSchema');
 
 const updateUserWithFish = async (i, userId) => {
 	const rod = await getEquippedRod(userId);
-	const f = await fish(rod.name, userId);
+	const fishArray = await fish(rod.name, userId);
 
-	if (!f.count) f.count = 1;
-
+	const completedQuests = [];
 	const user = await getUser(userId);
 	if (user) {
-		if (f.name.toLowerCase().includes('rod')) {
-			user.inventory.rods.push(f);
-		}
-		else if (f.name.toLowerCase().includes('trophy')) {
-			user.inventory.items.push(f);
-		}
-		else {
-			user.inventory.fish.push(f);
-		}
-		rod.fishCaught += f.count || 1;
-		user.stats.fishCaught += f.count || 1;
-		user.stats.latestFish = f;
-		user.stats.soldLatestFish = false;
-		user.xp += generateXP();
+		fishArray.forEach(async (f) => {
+			if (!f.count) f.count = 1;
 
-		// quest stuff
-		const quests = await findQuests(f.name.toLowerCase(), rod.name.toLowerCase(), f.qualities.map(q => q.toLowerCase()));
-		// quests.forEach(quest => {
-		// 	console.log(quest.title);
-		// });
-
-		const completedQuests = [];
-		quests.forEach(async quest => {
-			quest.progress += f.count || 1;
-			if (quest.progress >= quest.progressMax) {
-				quest.status = 'completed';
-				user.xp += quest.xp;
-				user.inventory.money += quest.cash;
-				quest.reward.forEach(reward => {
-					if (reward.toLowerCase().includes('rod')) {
-						user.inventory.rods.push(reward);
-					}
-					else {
-						const item = Item.findOne({ name: reward });
-						if (item) {
-							user.inventory.items.push(clone(item));
-						}
-					}
-				});
-
-				completedQuests.push(quest);
+			if (f.name.toLowerCase().includes('rod')) {
+				user.inventory.rods.push(f);
 			}
-			quest.endDate = Date.now();
-			await quest.save();
-		});
-		// end quest stuff
+			else if (f.name.toLowerCase().includes('trophy')) {
+				user.inventory.items.push(f);
+			}
+			else {
+				user.inventory.fish.push(f);
+			}
+			rod.fishCaught += f.count || 1;
+			user.stats.fishCaught += f.count || 1;
+			user.stats.latestFish = f;
+			user.stats.soldLatestFish = false;
+			user.xp += generateXP();
 
-		f.save();
+			// quest stuff
+			const quests = await findQuests(f.name.toLowerCase(), rod.name.toLowerCase(), f.qualities.map(q => q.toLowerCase()));
+
+			quests.forEach(async quest => {
+				quest.progress += f.count || 1;
+				if (quest.progress >= quest.progressMax) {
+					quest.status = 'completed';
+					user.xp += quest.xp;
+					user.inventory.money += quest.cash;
+					quest.reward.forEach(reward => {
+						if (reward.toLowerCase().includes('rod')) {
+							user.inventory.rods.push(reward);
+						}
+						else {
+							const item = Item.findOne({ name: reward });
+							if (item) {
+								user.inventory.items.push(clone(item));
+							}
+						}
+					});
+
+					completedQuests.push(quest);
+				}
+				quest.endDate = Date.now();
+				await quest.save();
+			});
+			// end quest stuff
+
+			f.save();
+		});
+
 		rod.save();
 		user.save();
-		return { fish: f, questsCompleted: completedQuests };
+		return { fish: fishArray, questsCompleted: completedQuests };
 	}
 };
 
-const followUpMessage = async (interaction, user, f, completedQuests) => {
-	const fields = [{ name: 'Congratulations!', value: `<${f.icon?.animated ? 'a' : ''}:${f.icon?.data}> ${user.globalName} caught ${f.count} **${f.rarity}** ${f.name}!` }];
+const followUpMessage = async (interaction, user, fishArray, completedQuests) => {
+	const fields = [];
+
+	fishArray.forEach(f => {
+		fields.push({ name: 'Congratulations!', value: `<${f.icon?.animated ? 'a' : ''}:${f.icon?.data}> ${user.globalName} caught ${f.count} **${f.rarity}** ${f.name}!` });
+	});
 
 	completedQuests.forEach(quest => {
 		fields.push({ name: 'Quest Completed!', value: `**${quest.title}** completed!` });

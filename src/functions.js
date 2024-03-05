@@ -84,11 +84,16 @@ const fish = async (rod, user) => {
 		generation = [capabilities, ['Common', 'Uncommon', 'Rare', 'Ultra', 'Giant', 'Legendary', 'Lucky'], [700, 250, 50, 20, 10, 2, 1]];
 		break;
 	}
+	case 'Triple Rod': {
+		generation = [capabilities, ['Common', 'Uncommon', 'Rare', 'Ultra', 'Giant', 'Legendary', 'Lucky'], [700, 250, 50, 20, 10, 2, 1]];
+		break;
+	}
 	default: {
 		generation = [capabilities, ['Common', 'Uncommon', 'Rare', 'Ultra', 'Giant', 'Legendary', 'Lucky'], [700, 250, 50, 10, 5, 2, 1]];
 	}
 	}
-	return await generateFish(...generation, user);
+	return await sendFishToUser(...generation, user);
+	// generateFish(...generation, user);
 };
 
 const generateFish = async (capabilities, choices, weights, user) => {
@@ -113,6 +118,7 @@ const generateFish = async (capabilities, choices, weights, user) => {
 
 	const random = Math.floor(Math.random() * filteredChoices.length);
 	const choice = filteredChoices[random];
+
 	const clonedChoice = await clone(choice, user);
 
 	// Check for locked status and update the cloned fish as necessary.
@@ -134,14 +140,48 @@ const generateFish = async (capabilities, choices, weights, user) => {
 		}
 	}
 
-	// Check if a number is present in capabilities and update clonedChoice.count
+	return clonedChoice;
+};
+
+const sendFishToUser = async (capabilities, choices, weights, user) => {
+	const fishArray = [];
 	const numberCapability = capabilities.find(capability => !isNaN(capability));
 	if (numberCapability !== undefined) {
-		clonedChoice.count = Number(numberCapability);
-		clonedChoice.save();
+		// clonedChoice.count = Number(numberCapability);
+		// clonedChoice.save();
+		// fishArray.push(clonedChoice);
+
+		for (let i = 0; i < numberCapability; i++) {
+			const nextChoice = await generateFish(capabilities, choices, weights, user);
+			fishArray.push(nextChoice);
+		}
+	}
+	else {
+		const nextChoice = await generateFish(capabilities, choices, weights, user);
+		fishArray.push(nextChoice);
 	}
 
-	return clonedChoice;
+	// remove duplicates, increase count
+	const uniqueFishArray = [];
+	fishArray.forEach(oneFish => {
+		const countCapability = capabilities.find(capability => capability.toLowerCase().includes('count'));
+		if (countCapability !== undefined) {
+			const count = Number(countCapability.split(' ')[0]);
+			oneFish.count = count;
+		}
+
+		const existingFish = uniqueFishArray.find(f => f.name === oneFish.name);
+		if (existingFish) {
+			existingFish.count++;
+		}
+		else {
+			uniqueFishArray.push(oneFish);
+		}
+
+		oneFish.save();
+	});
+
+	return await uniqueFishArray;
 };
 
 
