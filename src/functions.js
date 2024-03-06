@@ -458,6 +458,16 @@ async function findQuests(specificFish, specificRod, specificQualities) {
 	return quests;
 }
 
+async function xpToLevel(xp) {
+	return Math.floor(0.1 * Math.sqrt(xp));
+}
+
+async function xpToNextLevel(xp) {
+	const level = await xpToLevel(xp);
+	const progress = xp - (level ** 2 * 100);
+	const nextLevelProgress = ((level + 1) ** 2 * 100) - (level ** 2 * 100);
+	return `${progress} / ${nextLevelProgress}`;
+}
 
 module.exports = {
 	log,
@@ -477,4 +487,6 @@ module.exports = {
 	getQuests,
 	clone,
 	findQuests,
+	xpToLevel,
+	xpToNextLevel,
 };
