@@ -18,7 +18,15 @@ module.exports = {
 		try {
 			const embeds = [];
 			const fields = [];
-			const fishInventory = [];
+			const fishInventory = {
+				common: [],
+				uncommon: [],
+				rare: [],
+				ultra: [],
+				giant: [],
+				legendary: [],
+				lucky: [],
+			};
 
 			const user = await getUser(interaction.user.id);
 
@@ -30,29 +38,18 @@ module.exports = {
 						if (!fishNames.has(fish.name)) {
 							fishNames.add(fish.name);
 							const fishCount = await getFishCount(user.userId, fish.name);
-							fishInventory.push(`**${fishCount}** ${fish.rarity} ${fish.name} ${fish.locked ? '🔒' : ''}\n`);
+							fishInventory[fish.rarity.toLowerCase()].push(`**${fishCount}** <${fish.icon.animated ? 'a' : ''}:${fish.icon.data}> ${fish.name} ${fish.locked ? '🔒' : ''}\n`);
 						}
 					}),
 				);
 			}
 
 			const chunkSize = 1;
-
-			const rarityOrder = ['Common', 'Uncommon', 'Rare', 'Ultra', 'Giant', 'Legendary', 'Lucky'];
-			const rarityFields = {};
-			fishInventory.forEach((fish) => {
-				const rarity = fish.split(' ')[1];
-				if (!rarityFields[rarity]) {
-					rarityFields[rarity] = [];
+			for (const rarity in fishInventory) {
+				if (fishInventory[rarity].length > 0) {
+					fields.push({ name: `${rarity.charAt(0).toUpperCase() + rarity.slice(1)} fish`, value: fishInventory[rarity].join('') });
 				}
-				rarityFields[rarity].push(fish);
-			});
-
-			rarityOrder.forEach((rarity) => {
-				if (rarityFields[rarity]) {
-					fields.push({ name: `${rarity} Fish:`, value: rarityFields[rarity].join(''), inline: false });
-				}
-			});
+			}
 
 			for (let i = 0; i < fields.length; i += chunkSize) {
 				const chunk = fields.slice(i, i + chunkSize);
