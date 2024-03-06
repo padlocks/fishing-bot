@@ -25,7 +25,7 @@ module.exports = {
 				value: `${q.description}\n
 					**Rewards:** $${q.cash}, ${q.xp} XP ${q.reward.length > 0 ? q.reward.join(', ') : ''}
 					**Progress:** ${q.progress}/${q.progressMax}
-					--------------------------`,
+					---------`,
 				inline: true,
 			}));
 

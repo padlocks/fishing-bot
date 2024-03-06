@@ -78,7 +78,7 @@ function generateSampleQuests() {
 				rod: 'any',
 				qualities: ['any'],
 			},
-			progressMax: 10,
+			progressMax: 30,
 			daily: false,
 			type: 'quest',
 		},
