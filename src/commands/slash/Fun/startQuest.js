@@ -65,7 +65,7 @@ module.exports = {
 
 			// Check if user meets quest requirements
 			const existingQuest = await getQuests(user.id) || [];
-			const hasExistingQuest = existingQuest.some(quest => quest.title === originalQuest.title);
+			const hasExistingQuest = existingQuest.some(quest => quest.title === originalQuest.title && quest.status === 'in_progress');
 
 			if (hasExistingQuest) {
 				await i.reply(`You already have a quest with the title **${originalQuest.title}**!`);
