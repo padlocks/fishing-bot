@@ -33,6 +33,11 @@ const UserSchema = new Schema ({
 		lastDailyQuest: {
 			type: Number,
 		},
+		fishStats: {
+			type: Map,
+			of: Number,
+			default: {},
+		},
 	},
 	inventory: {
 		money: {

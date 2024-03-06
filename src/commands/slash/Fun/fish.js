@@ -14,7 +14,8 @@ const updateUserWithFish = async (userId) => {
 	const completedQuests = [];
 	const user = await getUser(userId);
 	if (user) {
-		await Promise.all(fishArray.map(async (f) => {
+		for (let i = 0; i < fishArray.length; i++) {
+			const f = fishArray[i];
 			if (!f.count) f.count = 1;
 
 			if (f.name.toLowerCase().includes('rod')) {
@@ -30,12 +31,14 @@ const updateUserWithFish = async (userId) => {
 			user.stats.fishCaught += f.count || 1;
 			user.stats.latestFish = f;
 			user.stats.soldLatestFish = false;
+			user.stats.fishStats.set(f.name.toLowerCase(), (user.stats.fishStats.get(f.name.toLowerCase()) || 0) + (f.count || 1));
 			user.xp += xp;
 
 			// quest stuff
 			const quests = await findQuests(f.name.toLowerCase(), rod.name.toLowerCase(), f.qualities.map(q => q.toLowerCase()));
 
-			await Promise.all(quests.map(async quest => {
+			for (let j = 0; j < quests.length; j++) {
+				const quest = quests[j];
 				fishArray.forEach(oneFish => {
 					quest.progress += oneFish.count || 1;
 				});
@@ -59,14 +62,14 @@ const updateUserWithFish = async (userId) => {
 					completedQuests.push(quest);
 				}
 				await quest.save();
-			}));
+			}
 			// end quest stuff
 
-			f.save();
-		}));
+			await f.save();
+		}
 
-		rod.save();
-		user.save();
+		await rod.save();
+		await user.save();
 		return { fish: fishArray, questsCompleted: completedQuests.filter((quest, index, self) => self.findIndex(q => q.title === quest.title) === index), xp: xp };
 	}
 };

@@ -32,6 +32,14 @@ module.exports = {
 				inline: true,
 			})));
 
+			user.stats.fishStats.forEach((value, key) => {
+				fields.push({
+					name: key[0].toUpperCase() + key.slice(1),
+					value: value.toLocaleString(),
+					inline: true,
+				});
+			});
+
 			const chunkSize = 6;
 
 			for (let i = 0; i < fields.length; i += chunkSize) {
