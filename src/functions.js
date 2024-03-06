@@ -466,7 +466,24 @@ async function xpToNextLevel(xp) {
 	const level = await xpToLevel(xp);
 	const progress = xp - (level ** 2 * 100);
 	const nextLevelProgress = ((level + 1) ** 2 * 100) - (level ** 2 * 100);
-	return `${progress} / ${nextLevelProgress}`;
+	return `${progress.toLocaleString()} / ${nextLevelProgress.toLocaleString()}`;
+}
+
+async function getFishCount(userId, fishName) {
+	const user = await User.findOne({ userId: userId });
+	const fishIds = user.inventory.fish;
+	const fishList = await FishData.find({ _id: { $in: fishIds }, name: fishName });
+	return fishList.length;
+}
+
+async function getInventoryValue(userId) {
+	const user = await User.findOne({ userId: userId });
+	const fishIds = user.inventory.fish;
+	const totalValue = await FishData.aggregate([
+		{ $match: { _id: { $in: fishIds } } },
+		{ $group: { _id: null, totalValue: { $sum: '$value' } } },
+	]);
+	return totalValue[0]?.totalValue || 0;
 }
 
 module.exports = {
@@ -489,4 +506,6 @@ module.exports = {
 	findQuests,
 	xpToLevel,
 	xpToNextLevel,
+	getFishCount,
+	getInventoryValue,
 };
