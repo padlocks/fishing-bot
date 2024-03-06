@@ -393,12 +393,12 @@ async function generateDailyQuest(userId) {
 		return false;
 	}
 
-	const hasDailyQuest = user.inventory.quests.some(async (questId) => {
+	const hasDailyQuest = await Promise.all(user.inventory.quests.map(async (questId) => {
 		const quest = await QuestData.findById(questId);
-		return quest.daily;
-	});
+		return (quest.daily && quest.status === 'in_progress');
+	})).then(results => results.some(Boolean));
 
-	if (hasDailyQuest || Date.now() - user.stats.lastDailyQuest < 864000000) {
+	if (hasDailyQuest || Date.now() - user.stats.lastDailyQuest < 86400000) {
 		return false;
 	}
 	else {
