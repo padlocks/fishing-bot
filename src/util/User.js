@@ -1,0 +1,94 @@
+const { clone } = require('./Utils');
+const { FishData } = require('../schemas/FishSchema');
+const { Item, ItemData } = require('../schemas/ItemSchema');
+const { User } = require('../schemas/UserSchema');
+
+const getEquippedRod = async (userId) => {
+	let user = await User.findOne({ userId: userId });
+	if (!user) user = await createUser(userId);
+	const rodId = user.inventory.equippedRod.valueOf();
+	const rod = await ItemData.findById(rodId);
+	return rod;
+};
+
+const setEquippedRod = async (userId, rodId) => {
+	const user = await User.findOne({ userId: userId });
+	// Find the rod in user's inventory by name
+	const rod = user.inventory.rods.find((r) => r.valueOf() === rodId);
+
+	if (!rod) {
+		throw new Error('Rod not found in inventory');
+	}
+
+	// Set the equippedRod field to the ObjectId of the found rod
+	user.inventory.equippedRod = rod;
+
+	const rodObject = await ItemData.findById(rod.valueOf());
+
+	// Save the updated user document
+	await user.save();
+	return rodObject;
+};
+
+const getUser = async (userId) => {
+	let user = await User.findOne({ userId: userId });
+	if (!user) {
+		user = await createUser();
+	}
+
+	return user;
+};
+
+const createUser = async (userId) => {
+	const rod = await Item.findOne({ name: 'Old Rod' });
+	const clonedRod = await clone(rod, userId);
+	clonedRod.obtained = Date.now();
+	const data = new User({
+		userId: userId,
+		commands: 0,
+		xp: 0,
+		inventory: {
+			equippedRod: null,
+			rods: [],
+			fish: [],
+			quests: [],
+		},
+		type: 'user',
+	});
+	data.inventory.rods.push(clonedRod);
+	data.inventory.equippedRod = data.inventory.rods[0];
+	await data.save();
+
+	return data;
+};
+
+const xpToLevel = async (xp) => {
+	return Math.floor(0.1 * Math.sqrt(xp));
+};
+
+const xpToNextLevel = async (xp) => {
+	const level = await xpToLevel(xp);
+	const progress = xp - (level ** 2 * 100);
+	const nextLevelProgress = ((level + 1) ** 2 * 100) - (level ** 2 * 100);
+	return `${progress.toLocaleString()} / ${nextLevelProgress.toLocaleString()}`;
+};
+
+const getInventoryValue = async (userId) => {
+	const user = await User.findOne({ userId: userId });
+	const fishIds = user.inventory.fish;
+	const totalValue = await FishData.aggregate([
+		{ $match: { _id: { $in: fishIds } } },
+		{ $group: { _id: null, totalValue: { $sum: '$value' } } },
+	]);
+	return totalValue[0]?.totalValue || 0;
+};
+
+module.exports = {
+	getEquippedRod,
+	setEquippedRod,
+	getUser,
+	createUser,
+	xpToLevel,
+	xpToNextLevel,
+	getInventoryValue,
+};

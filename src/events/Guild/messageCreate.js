@@ -1,8 +1,9 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const { ChannelType } = require('discord.js');
 const config = require('../../config');
-const { log, generateXP, generateCash, getUser } = require('../../functions');
+const { log, generateXP, generateCash } = require('../../util/Utils');
 const GuildSchema = require('../../schemas/GuildSchema');
+const { getUser } = require('../../util/User');
 
 const cooldown = new Map();
 

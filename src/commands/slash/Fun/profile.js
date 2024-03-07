@@ -1,7 +1,8 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const buttonPagination = require('../../../buttonPagination');
-const { log, getUser, xpToLevel, xpToNextLevel } = require('../../../functions');
 const { RodData } = require('../../../schemas/RodSchema');
+const { getUser, xpToLevel, xpToNextLevel } = require('../../../util/User');
+const { log } = require('../../../util/Utils');
 
 module.exports = {
 	structure: new SlashCommandBuilder()

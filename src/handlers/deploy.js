@@ -1,5 +1,5 @@
 const { REST, Routes } = require('discord.js');
-const { log, isSnowflake } = require('../functions');
+const { log, isSnowflake } = require('../util/Utils');
 const config = require('../config');
 
 /**

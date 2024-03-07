@@ -1,6 +1,6 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const config = require('../../config');
-const { log } = require('../../functions');
+const { log } = require('../../util/Utils');
 
 module.exports = {
 	event: 'interactionCreate',

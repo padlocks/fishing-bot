@@ -1,4 +1,4 @@
-const { log } = require('../../functions');
+const { log } = require('../../util/Utils');
 
 module.exports = {
 	event: 'ready',

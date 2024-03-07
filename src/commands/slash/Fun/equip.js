@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
-const { log, setEquippedRod, getUser } = require('../../../functions');
 const { RodData } = require('../../../schemas/RodSchema');
+const { getUser, setEquippedRod } = require('../../../util/User');
+const { log } = require('../../../util/Utils');
 
 module.exports = {
 	structure: new SlashCommandBuilder()

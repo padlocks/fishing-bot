@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { generateDailyQuest } = require('../../../functions');
+const { generateDailyQuest } = require('../../../util/Quest');
 
 module.exports = {
 	structure: new SlashCommandBuilder()

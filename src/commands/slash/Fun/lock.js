@@ -3,7 +3,8 @@ const {
 	EmbedBuilder,
 } = require('discord.js');
 const { FishData } = require('../../../schemas/FishSchema');
-const { log, getUser } = require('../../../functions');
+const { getUser } = require('../../../util/User');
+const { log } = require('../../../util/Utils');
 
 module.exports = {
 	structure: new SlashCommandBuilder()

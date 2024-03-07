@@ -1,6 +1,6 @@
 const { connect } = require('mongoose');
 const config = require('../config');
-const { log } = require('../functions');
+const { log } = require('../util/Utils');
 
 module.exports = async () => {
 	log('Started connecting to MongoDB...', 'warn');

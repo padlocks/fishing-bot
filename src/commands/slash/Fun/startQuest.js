@@ -1,6 +1,8 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
-const { log, getUser, startQuest, getQuests } = require('../../../functions');
 const { Quest } = require('../../../schemas/QuestSchema');
+const { getUser } = require('../../../util/User');
+const { log } = require('../../../util/Utils');
+const { startQuest, getQuests } = require('../../../util/Quest');
 
 module.exports = {
 	structure: new SlashCommandBuilder()

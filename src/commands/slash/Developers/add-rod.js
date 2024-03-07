@@ -4,7 +4,7 @@ const {
 	EmbedBuilder,
 } = require('discord.js');
 const { Rod } = require('../../../schemas/RodSchema');
-const { log } = require('../../../functions');
+const { log } = require('../../../util/Utils');
 
 module.exports = {
 	structure: new SlashCommandBuilder()

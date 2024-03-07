@@ -1,6 +1,9 @@
 const { SlashCommandBuilder, EmbedBuilder, ButtonStyle, ActionRowBuilder, ButtonBuilder, ComponentType } = require('discord.js');
-const { fish, generateXP, getEquippedRod, getUser, clone, findQuests } = require('../../../functions');
 const { Item } = require('../../../schemas/ItemSchema');
+const { getEquippedRod, getUser } = require('../../../util/User');
+const { fish } = require('../../../util/Fish');
+const { generateXP, clone } = require('../../../util/Utils');
+const { findQuests } = require('../../../util/Quest');
 
 const updateUserWithFish = async (userId) => {
 	const rod = await getEquippedRod(userId);

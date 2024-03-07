@@ -1,7 +1,8 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const config = require('../../config');
-const { log, clone, getUser, getEquippedRod } = require('../../functions');
+const { log, clone } = require('../../util/Utils');
 const { Rod } = require('../../schemas/RodSchema');
+const { getEquippedRod, getUser } = require('../../util/User');
 
 
 const cooldown = new Map();

@@ -2,7 +2,7 @@ const {
 	SlashCommandBuilder,
 	EmbedBuilder,
 } = require('discord.js');
-const { sellFishByRarity } = require('../../../functions');
+const { sellFishByRarity } = require('../../../util/Fish');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
