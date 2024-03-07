@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
 const { Quest } = require('../../../schemas/QuestSchema');
-const { getUser } = require('../../../util/User');
+const { getUser, xpToLevel } = require('../../../util/User');
 const { log } = require('../../../util/Utils');
 const { startQuest, getQuests } = require('../../../util/Quest');
 
@@ -61,19 +61,39 @@ module.exports = {
 		const collector = response.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 15000 });
 
 		collector.on('collect', async i => {
+			let canAccept = true;
 			const selection = i.values[0];
 			const userData = await getUser(user.id);
 			const originalQuest = await Quest.findById(selection);
 
 			// Check if user meets quest requirements
+			originalQuest.requirements.forEach(async (requirement) => {
+				if (requirement.toLowerCase().includes('level')) {
+					const reqLevel = requirement.split(' ')[1];
+					const level = await xpToLevel(userData.xp);
+
+					if (level < reqLevel) {
+						canAccept = false;
+						await i.reply({
+							content: `You need to be level ${reqLevel} to start this quest!`,
+							ephemeral: true,
+						});
+						return;
+					}
+				}
+			});
+
 			const existingQuest = await getQuests(user.id) || [];
 			const hasExistingQuest = existingQuest.some(quest => quest.title === originalQuest.title && quest.status === 'in_progress');
 
 			if (hasExistingQuest) {
-				await i.reply(`You already have a quest with the title **${originalQuest.title}**!`);
+				await i.reply({
+					content: `You already have a quest with the title **${originalQuest.title}**!`,
+					ephemeral: true,
+				});
 				return;
 			}
-			else {
+			else if (canAccept) {
 				await startQuest(userData.userId, originalQuest._id);
 				await i.reply(`${i.user} has started quest **${originalQuest.title}**!`);
 			}

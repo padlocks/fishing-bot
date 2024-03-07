@@ -13,14 +13,16 @@ module.exports = {
      * @param {ChatInputCommandInteraction} interaction
      */
 	run: async (client, interaction) => {
-
-		await interaction.deferReply();
-
 		const quest = await generateDailyQuest(interaction.user.id);
 
-		if (!quest) {return await interaction.followUp('You already have a daily quest!');}
+		if (!quest) {
+			return await interaction.reply({
+				content: 'You have already accepted or completed your daily quest. Come back tomorrow!',
+				ephemeral: true,
+			});
+		}
 		else {
-			await interaction.followUp({
+			await interaction.reply({
 				embeds: [
 					new EmbedBuilder()
 						.setTitle(`Daily Quest: ${quest.title}`)

@@ -24,7 +24,7 @@ module.exports = {
 		await interaction.deferReply();
 
 		const name = interaction.options.getString('name');
-		const user = await await getUser(interaction.user.id);
+		const user = await getUser(interaction.user.id);
 
 		if (!user) {
 			log('User not found.', 'err');

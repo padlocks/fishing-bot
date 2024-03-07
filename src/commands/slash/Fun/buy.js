@@ -65,7 +65,10 @@ module.exports = {
 			const originalItem = await Item.findById(selection);
 
 			if (userData.inventory.money < originalItem.price) {
-				await i.reply(`${i.user}, you don't have enough money for that!`);
+				await i.reply({
+					content: `${i.user}, you don't have enough money for that!`,
+					ephemeral: true,
+				});
 			}
 			else {
 				userData.inventory.money -= originalItem.price;
