@@ -19,6 +19,10 @@ module.exports = {
 			const embeds = [];
 			const quests = await QuestData.find({ status: 'in_progress', user: interaction.user.id });
 
+			if (!quests.length) {
+				return await interaction.reply('You do not have any quests! Accept one using /start-quest or /daily.');
+			}
+
 			let fields = [];
 			fields = quests.map((q) => ({
 				name: q.title,
