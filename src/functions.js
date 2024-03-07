@@ -473,7 +473,13 @@ async function getFishCount(userId, fishName) {
 	const user = await User.findOne({ userId: userId });
 	const fishIds = user.inventory.fish;
 	const fishList = await FishData.find({ _id: { $in: fishIds }, name: fishName });
-	return fishList.length;
+
+	let total = 0;
+	fishList.forEach(f => {
+		total += f.count;
+	});
+
+	return total;
 }
 
 async function getInventoryValue(userId) {
