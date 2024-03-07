@@ -7,7 +7,12 @@ const { log } = require('../../../util/Utils');
 module.exports = {
 	structure: new SlashCommandBuilder()
 		.setName('profile')
-		.setDescription('Check someone\'s profile!'),
+		.setDescription('Check someone\'s profile!')
+		.addUserOption((opt) =>
+			opt.setName('user')
+				.setDescription('The user.')
+				.setRequired(false),
+		),
 	options: {
 		cooldown: 15000,
 	},
@@ -18,7 +23,8 @@ module.exports = {
 	run: async (client, interaction) => {
 		try {
 			const embeds = [];
-			const user = await getUser(interaction.user.id);
+			const target = interaction.options.getUser('user') || interaction.user;
+			const user = await getUser(target.id);
 			const rods = await RodData.find({ user: interaction.user.id });
 
 			let fields = [{
