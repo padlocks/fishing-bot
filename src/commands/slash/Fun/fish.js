@@ -14,6 +14,7 @@ const updateUserWithFish = async (userId) => {
 	const completedQuests = [];
 	const user = await getUser(userId);
 	if (user) {
+		user.stats.latestFish = [];
 		for (let i = 0; i < fishArray.length; i++) {
 			const f = fishArray[i];
 			if (!f.count) f.count = 1;
@@ -29,7 +30,7 @@ const updateUserWithFish = async (userId) => {
 			}
 			rod.fishCaught += f.count || 1;
 			user.stats.fishCaught += f.count || 1;
-			user.stats.latestFish = f;
+			user.stats.latestFish.push(f);
 			user.stats.soldLatestFish = false;
 			user.stats.fishStats.set(f.name.toLowerCase(), (user.stats.fishStats.get(f.name.toLowerCase()) || 0) + (f.count || 1));
 			user.xp += xp;

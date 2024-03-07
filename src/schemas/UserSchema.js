@@ -22,10 +22,10 @@ const UserSchema = new Schema ({
 			type: Number,
 			default: 0,
 		},
-		latestFish: {
+		latestFish: [{
 			type: Schema.Types.ObjectId,
 			ref: 'Fish',
-		},
+		}],
 		soldLatestFish: {
 			type: Boolean,
 			default: false,
