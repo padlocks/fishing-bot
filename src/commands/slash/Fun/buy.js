@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
 const { Item } = require('../../../schemas/ItemSchema');
-const { getUser } = require('../../../util/User');
+const { getUser, xpToLevel } = require('../../../util/User');
 const { log, clone } = require('../../../util/Utils');
 
 module.exports = {
@@ -64,13 +64,28 @@ module.exports = {
 			const userData = await getUser(user.id);
 			const originalItem = await Item.findById(selection);
 
-			if (userData.inventory.money < originalItem.price) {
+			// check if user meets item requirements
+			let canBuy = true;
+			let reqLevel = 0;
+			originalItem.requirements.forEach(async (requirement) => {
+				if (requirement.toLowerCase().includes('level')) {
+					reqLevel = requirement.split(' ')[1];
+					const level = await xpToLevel(userData.xp);
+
+					if (level < reqLevel) {
+						canBuy = false;
+						return;
+					}
+				}
+			});
+
+			if (userData.inventory.money < originalItem.price && canBuy) {
 				await i.reply({
 					content: `${i.user}, you don't have enough money for that!`,
 					ephemeral: true,
 				});
 			}
-			else {
+			else if (canBuy) {
 				userData.inventory.money -= originalItem.price;
 
 				let item;
@@ -86,6 +101,12 @@ module.exports = {
 
 				userData.save();
 				await i.reply(`${i.user} has bought **${item.name}**!`);
+			}
+			else {
+				await i.reply({
+					content: `You need to be level ${reqLevel} to buy this item!`,
+					ephemeral: true,
+				});
 			}
 		});
 	},

@@ -62,10 +62,7 @@ module.exports = {
 					.setFooter({ text: `Page ${Math.floor(i / chunkSize) + 1} / ${Math.ceil(fields.length / chunkSize)} ` })
 					.setTitle(`${interaction.user.username}'s Inventory`)
 					.setDescription(`
-						**Balance:** $${user.inventory.money.toLocaleString()}
-						**Level ${await xpToLevel(user.xp)}**. ${await xpToNextLevel(user.xp)} to next level.
-						**Currently using**: <${equippedRod.icon?.animated ? 'a' : ''}:${equippedRod.icon?.data || ''}> ${equippedRod?.name || 'None'}
-						**Inventory value**: $${await inventoryValue.toLocaleString()}
+						**Balance:** $${user.inventory.money.toLocaleString()}\n**Level ${await xpToLevel(user.xp)}**. ${await xpToNextLevel(user.xp)} to next level.\n**Currently using**: <${equippedRod.icon?.animated ? 'a' : ''}:${equippedRod.icon?.data || ''}> ${equippedRod?.name || 'None'}\n**Inventory value**: $${await inventoryValue.toLocaleString()}\n\n
 					`)
 					.setColor('Green')
 					.addFields(chunk),
