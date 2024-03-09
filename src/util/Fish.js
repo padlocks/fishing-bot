@@ -8,57 +8,55 @@ const fish = async (rod, user) => {
 	const rodObject = await ItemData.findOne({ name: rod, user: user });
 	const capabilities = rodObject.capabilities;
 	switch (rod) {
-	case 'Old Rod': {
-		generation = [capabilities, ['Common', 'Uncommon', 'Rare', 'Ultra', 'Giant', 'Legendary', 'Lucky'], [700, 250, 50, 20, 10, 2, 1]];
-		break;
-	}
 	case 'Lucky Rod': {
-		generation = [capabilities, ['Common', 'Uncommon', 'Rare', 'Ultra', 'Giant', 'Legendary', 'Lucky'], [700, 50, 250, 20, 10, 2, 1]];
-		break;
-	}
-	case 'Hefty Rod': {
-		generation = [capabilities, ['Common', 'Uncommon', 'Rare', 'Ultra', 'Giant', 'Legendary', 'Lucky'], [700, 250, 50, 20, 10, 2, 1]];
-		break;
-	}
-	case 'Triple Rod': {
-		generation = [capabilities, ['Common', 'Uncommon', 'Rare', 'Ultra', 'Giant', 'Legendary', 'Lucky'], [700, 250, 50, 20, 10, 2, 1]];
+		generation = [capabilities, ['Common', 'Uncommon', 'Rare', 'Ultra', 'Giant', 'Legendary', 'Lucky'], [7000, 500, 2500, 200, 100, 40, 1]];
 		break;
 	}
 	default: {
-		generation = [capabilities, ['Common', 'Uncommon', 'Rare', 'Ultra', 'Giant', 'Legendary', 'Lucky'], [700, 250, 50, 10, 5, 2, 1]];
+		generation = [capabilities, ['Common', 'Uncommon', 'Rare', 'Ultra', 'Giant', 'Legendary', 'Lucky'], [7000, 2500, 500, 100, 50, 20, 1]];
 	}
 	}
 	return await sendFishToUser(...generation, user);
 };
 
 const generateFish = async (capabilities, choices, weights, user) => {
-	const draw = getWeightedChoice(choices, weights);
+	const userData = await User.findOne({ userId: user });
+	const draw = await getWeightedChoice(choices, weights);
+	const biome = userData.currentBiome.charAt(0).toUpperCase() + userData.currentBiome.slice(1);
 
-	let f;
+	let f = await Fish.find({ rarity: draw, biome: biome });
 	if (draw === 'Lucky') {
-		f = await Item.find({ rarity: { $in: draw } });
+		const itemFind = await getWeightedChoice(['fish, item'], [80, 20]);
+		if (itemFind === 'item') {
+			f = await Item.find({ rarity: draw });
+		}
 	}
-	else {
-		f = await Fish.find({ rarity: { $in: draw } });
+	const filteredChoices = await Promise.all(f.map(async fishObj => {
+		await new Promise(resolve => setTimeout(resolve, 100));
+
+		const isMatch = capabilities.some(capability => fishObj.qualities.includes(capability));
+
+		if (isMatch) {
+			return fishObj;
+		}
+		else {
+			return null;
+		}
+	}));
+
+	// Remove null values (fish that didn't match the capabilities) from the array
+	const validChoices = filteredChoices.filter(choice => choice !== null);
+
+	if (validChoices.length === 0) {
+		return await generateFish(capabilities, choices, weights, user);
 	}
 
-	const filteredChoices = f.filter(fishObj => {
-		// Check if all capabilities match the fish's qualities
-		return capabilities.some(capability => fishObj.qualities.includes(capability));
-	});
-
-	if (filteredChoices.length === 0) {
-		return await generateFish(capabilities, choices, weights);
-	}
-
-	const random = Math.floor(Math.random() * filteredChoices.length);
-	const choice = filteredChoices[random];
+	const random = Math.floor(Math.random() * validChoices.length);
+	const choice = validChoices[random];
 
 	const clonedChoice = await clone(choice, user);
 
 	// Check for locked status and update the cloned fish as necessary.
-	const userData = await User.findOne({ userId: user });
-
 	if (userData) {
 		const fishIds = userData.inventory.fish;
 		const lockedFishToUpdate = await FishData.find({ _id: { $in: fishIds }, name: clonedChoice.name, locked: true });

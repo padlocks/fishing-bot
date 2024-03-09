@@ -4,6 +4,7 @@ const buttonPagination = require('../../../buttonPagination');
 const { getUser, getEquippedRod, getInventoryValue, xpToLevel, xpToNextLevel } = require('../../../util/User');
 const { getFishCount } = require('../../../util/Fish');
 const { log } = require('../../../util/Utils');
+const { Biome } = require('../../../schemas/BiomeSchema');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -58,11 +59,12 @@ module.exports = {
 
 				const equippedRod = await getEquippedRod(user.userId);
 				const inventoryValue = await getInventoryValue(user.userId);
+				const biome = await Biome.findOne({ name: user.currentBiome });
 				embeds.push(new EmbedBuilder()
 					.setFooter({ text: `Page ${Math.floor(i / chunkSize) + 1} / ${Math.ceil(fields.length / chunkSize)} ` })
 					.setTitle(`${interaction.user.username}'s Inventory`)
 					.setDescription(`
-						**Balance:** $${user.inventory.money.toLocaleString()}\n**Level ${await xpToLevel(user.xp)}**. ${await xpToNextLevel(user.xp)} to next level.\n**Currently using**: <${equippedRod.icon?.animated ? 'a' : ''}:${equippedRod.icon?.data || ''}> ${equippedRod?.name || 'None'}\n**Inventory value**: $${await inventoryValue.toLocaleString()}\n\n
+						**Balance:** $${user.inventory.money.toLocaleString()}\n**Level ${await xpToLevel(user.xp)}**. ${await xpToNextLevel(user.xp)} to next level.\n**Currently using**: <${equippedRod.icon?.animated ? 'a' : ''}:${equippedRod.icon?.data || ''}> ${equippedRod?.name || 'None'}\n**Current biome**: <${biome.icon?.animated ? 'a' : ''}:${biome.icon?.data || ''}> ${biome.name || 'Ocean'}\n**Inventory value**: $${await inventoryValue.toLocaleString()}\n\n
 					`)
 					.setColor('Green')
 					.addFields(chunk),
