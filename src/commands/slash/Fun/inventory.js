@@ -41,7 +41,7 @@ module.exports = {
 						if (!fishNames.has(fish.name)) {
 							fishNames.add(fish.name);
 							const fishCount = await getFishCount(user.userId, fish.name);
-							fishInventory[fish.rarity.toLowerCase()].push(`**${fishCount}** <${fish.icon.animated ? 'a' : ''}:${fish.icon.data}> ${fish.name} ${fish.locked ? '🔒' : ''}\n`);
+							fishInventory[fish.rarity.toLowerCase()].push(`**${fishCount}** <${fish.icon?.animated ? 'a' : ''}:${fish.icon?.data}> ${fish.name} ${fish.locked ? '🔒' : ''}\n`);
 						}
 					}),
 				);
