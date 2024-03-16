@@ -25,7 +25,10 @@ function generateSampleQuests() {
 			reward: [],
 			cash: 500,
 			xp: 450,
-			// requirements: ['Old Rod'],
+			requirements: {
+				level: 0,
+				previous: [],
+			},
 			progressType: {
 				fish: ['rainbow trout', 'golden trout'],
 				rod: 'any',
@@ -41,7 +44,10 @@ function generateSampleQuests() {
 			reward: [],
 			cash: 350,
 			xp: 500,
-			// requirements: ['Old Rod'],
+			requirements: {
+				level: 0,
+				previous: [],
+			},
 			progressType: {
 				fish: ['carp'],
 				rod: 'any',
@@ -57,7 +63,10 @@ function generateSampleQuests() {
 			reward: [],
 			cash: 1000,
 			xp: 2000,
-			// requirements: ['Old Rod'],
+			requirements: {
+				level: 0,
+				previous: [],
+			},
 			progressType: {
 				fish: ['magikarp'],
 				rod: 'any',
@@ -73,7 +82,10 @@ function generateSampleQuests() {
 			reward: [],
 			cash: 3000,
 			xp: 300,
-			// requirements: ['Old Rod'],
+			requirements: {
+				level: 0,
+				previous: [],
+			},
 			progressType: {
 				fish: ['any'],
 				rod: 'any',
@@ -84,12 +96,35 @@ function generateSampleQuests() {
 			type: 'quest',
 		},
 		{
+			title: 'Lucky Fisher',
+			description: 'Catch 25 lucky fish.',
+			reward: ['Lucky Rod'],
+			cash: 3000,
+			xp: 3000,
+			requirements: {
+				level: 0,
+				previous: [],
+			},
+			progressType: {
+				fish: ['any'],
+				rarity: ['lucky'],
+				rod: 'any',
+				qualities: ['any'],
+			},
+			progressMax: 25,
+			daily: false,
+			type: 'quest',
+		},
+		{
 			title: 'Catch 100 Fish',
 			description: 'Catch 100 fish a day.',
 			reward: [],
 			cash: 500,
 			xp: 500,
-			// requirements: ['Old Rod'],
+			requirements: {
+				level: 0,
+				previous: [],
+			},
 			progressType: {
 				fish: ['any'],
 				rod: 'any',
@@ -105,7 +140,10 @@ function generateSampleQuests() {
 			reward: [],
 			cash: 500,
 			xp: 500,
-			// requirements: ['Old Rod'],
+			requirements: {
+				level: 20,
+				previous: ['Catch 100 Fish'],
+			},
 			progressType: {
 				fish: ['any'],
 				rod: 'any',
@@ -121,7 +159,10 @@ function generateSampleQuests() {
 			reward: [],
 			cash: 1000,
 			xp: 1000,
-			// requirements: ['Old Rod'],
+			requirements: {
+				level: 30,
+				previous: ['Catch 250 Fish'],
+			},
 			progressType: {
 				fish: ['any'],
 				rod: 'any',
@@ -137,7 +178,10 @@ function generateSampleQuests() {
 			reward: [],
 			cash: 2000,
 			xp: 2000,
-			// requirements: ['Old Rod'],
+			requirements: {
+				level: 40,
+				previous: ['Catch 500 Fish'],
+			},
 			progressType: {
 				fish: ['any'],
 				rod: 'any',
@@ -153,13 +197,76 @@ function generateSampleQuests() {
 			reward: [],
 			cash: 4000,
 			xp: 4000,
-			// requirements: ['Old Rod'],
+			requirements: {
+				level: 50,
+				previous: ['Catch 750 Fish'],
+			},
 			progressType: {
 				fish: ['any'],
 				rod: 'any',
 				qualities: ['any'],
 			},
 			progressMax: 1000,
+			daily: true,
+			type: 'quest',
+		},
+		{
+			title: 'Catch 1 Legendary Fish',
+			description: 'Catch 1 legendary fish.',
+			reward: [],
+			cash: 3000,
+			xp: 1500,
+			requirements: {
+				level: 0,
+				previous: [],
+			},
+			progressType: {
+				fish: ['any'],
+				rarity: ['legendary'],
+				rod: 'any',
+				qualities: ['any'],
+			},
+			progressMax: 1,
+			daily: true,
+			type: 'quest',
+		},
+		{
+			title: 'Catch 5 Ultra Fish',
+			description: 'Catch 5 Ultra fish.',
+			reward: [],
+			cash: 2000,
+			xp: 1500,
+			requirements: {
+				level: 0,
+				previous: [],
+			},
+			progressType: {
+				fish: ['any'],
+				rarity: ['ultra'],
+				rod: 'any',
+				qualities: ['any'],
+			},
+			progressMax: 5,
+			daily: true,
+			type: 'quest',
+		},
+		{
+			title: 'Catch 15 Rare Fish',
+			description: 'Catch 15 Rare fish.',
+			reward: [],
+			cash: 1000,
+			xp: 1500,
+			requirements: {
+				level: 0,
+				previous: [],
+			},
+			progressType: {
+				fish: ['any'],
+				rarity: ['rare'],
+				rod: 'any',
+				qualities: ['any'],
+			},
+			progressMax: 15,
 			daily: true,
 			type: 'quest',
 		},

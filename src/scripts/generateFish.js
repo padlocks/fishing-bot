@@ -176,7 +176,7 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 						break;
 					}
 					case 'Lucky River strong Fish': {
-						fish.name = 'Noxclate';
+						fish.name = 'Noxclate Fish';
 						break;
 					}
 					case 'Lucky River weak Fish': {
@@ -497,6 +497,19 @@ function generateFishIcon() {
 
 function generateSampleFish() {
 	const sampleFish = [
+		{
+			'name': 'Oarfish',
+			'rarity': 'Ultra',
+			'value': 500,
+			'icon': {
+				'animated': false,
+				'data': 'rawfish:1209352519726276648',
+			},
+			'qualities': [
+				'strong',
+			],
+			'type': 'fish',
+		},
 		{
 			'name': 'Tuna',
 			'rarity': 'Uncommon',

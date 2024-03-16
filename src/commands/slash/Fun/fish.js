@@ -50,9 +50,12 @@ const updateUserWithFish = async (userId) => {
 					quest.status = 'completed';
 					user.xp += quest.xp;
 					user.inventory.money += quest.cash;
-					quest.reward.forEach(reward => {
+					quest.reward.forEach(async reward => {
 						if (reward.toLowerCase().includes('rod')) {
-							user.inventory.rods.push(reward);
+							// find rod in db, clone it, and add to user inventory
+							const originalRod = await Item.findOne({ name: reward });
+							const clonedRod = await clone(originalRod);
+							user.inventory.rods.push(clonedRod);
 						}
 						else {
 							const item = Item.findOne({ name: reward });

@@ -67,21 +67,30 @@ module.exports = {
 			const originalQuest = await Quest.findById(selection);
 
 			// Check if user meets quest requirements
-			originalQuest.requirements.forEach(async (requirement) => {
-				if (requirement.toLowerCase().includes('level')) {
-					const reqLevel = requirement.split(' ')[1];
-					const level = await xpToLevel(userData.xp);
+			const reqLevel = originalQuest.requirements.level;
+			const level = await xpToLevel(userData.xp);
+			if (level < reqLevel) {
+				canAccept = false;
+				await i.reply({
+					content: `You need to be level ${reqLevel} to start this quest!`,
+					ephemeral: true,
+				});
+				return;
+			}
 
-					if (level < reqLevel) {
-						canAccept = false;
-						await i.reply({
-							content: `You need to be level ${reqLevel} to start this quest!`,
-							ephemeral: true,
-						});
-						return;
-					}
+			if (originalQuest.requirements.previous.length > 0) {
+				const existingQuests = await getQuests(user.id) || [];
+				const hasPrevious = existingQuests.some(quest => originalQuest.requirements.previous.includes(quest.title) && quest.status === 'completed');
+
+				if (!hasPrevious) {
+					canAccept = false;
+					await i.reply({
+						content: `You need to complete the previous quest(s) to start this quest!\n\n**Required Quests:**\n${originalQuest.requirements.previous.join('\n')}`,
+						ephemeral: true,
+					});
+					return;
 				}
-			});
+			}
 
 			const existingQuest = await getQuests(user.id) || [];
 			const hasExistingQuest = existingQuest.some(quest => quest.title === originalQuest.title && quest.status === 'in_progress');

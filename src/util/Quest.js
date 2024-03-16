@@ -1,4 +1,5 @@
 const { clone } = require('./Utils');
+const { xpToLevel } = require('./User');
 const { Quest, QuestData } = require('../schemas/QuestSchema');
 const { User } = require('../schemas/UserSchema');
 
@@ -13,7 +14,7 @@ const generateDailyQuest = async (userId) => {
 		throw new Error('User not found');
 	}
 	if (user.inventory.quests.includes(originalQuest.id)) {
-		return false;
+		return await generateDailyQuest(userId);
 	}
 
 	const hasDailyQuest = await Promise.all(user.inventory.quests.map(async (questId) => {
@@ -25,6 +26,20 @@ const generateDailyQuest = async (userId) => {
 		return false;
 	}
 	else {
+		// check requirements
+		const level = await xpToLevel(user.xp);
+		if (originalQuest.requirements.level > level) {
+			return await generateDailyQuest(userId);
+		}
+
+		if (originalQuest.requirements.previous.length > 0) {
+			const existingQuests = await Quest.find({ user: userId }) || [];
+			const hasPrevious = existingQuests.some(quest => originalQuest.requirements.previous.includes(quest.title) && quest.status === 'completed');
+			if (!hasPrevious) {
+				return await generateDailyQuest(userId);
+			}
+		}
+
 		const quest = await clone(originalQuest);
 		quest.status = 'in_progress';
 		quest.user = userId;
