@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { generateDailyQuest } = require('../../../util/Quest');
+const { generateDailyQuest, getQuests } = require('../../../util/Quest');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -13,6 +13,17 @@ module.exports = {
      * @param {ChatInputCommandInteraction} interaction
      */
 	run: async (client, interaction) => {
+		// check if user already has an incomplete daily quest
+		const userQuests = await getQuests(interaction.user.id);
+		const dailyQuests = userQuests.filter((quest) => quest.daily);
+		const incompleteDailyQuests = dailyQuests.filter((quest) => quest.status === 'in_progress');
+		if (incompleteDailyQuests.length > 0) {
+			return await interaction.reply({
+				content: 'You already have a daily quest in progress. Come back tomorrow!',
+				ephemeral: true,
+			});
+		}
+
 		const quest = await generateDailyQuest(interaction.user.id);
 
 		if (!quest) {

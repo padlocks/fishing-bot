@@ -1,12 +1,12 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
-const { Item } = require('../../../schemas/ItemSchema');
 const { getUser, xpToLevel } = require('../../../util/User');
-const { log, clone } = require('../../../util/Utils');
+const { log } = require('../../../util/Utils');
+const { Biome } = require('../../../schemas/BiomeSchema');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
-		.setName('buy')
-		.setDescription('Buy from the shop!'),
+		.setName('biome')
+		.setDescription('Switch to a new biome.'),
 	options: {
 		cooldown: 15000,
 	},
@@ -17,21 +17,21 @@ module.exports = {
 	async run(client, interaction, user = null) {
 		if (user === null) user = interaction.user;
 
-		const shopItems = await Item.find({ shopItem: true });
+		const biomes = await Biome.find({});
 		const uniqueValues = new Set();
 
 		let options = [];
-		const itemPromises = shopItems.map(async (item) => {
+		const biomePromises = biomes.map(async (biome) => {
 			try {
-				const value = item._id.toString();
+				const value = biome._id.toString();
 
 				if (!uniqueValues.has(value)) {
 					uniqueValues.add(value);
 
 					return new StringSelectMenuOptionBuilder()
-						.setLabel(item.name)
-						.setDescription(`$${item.price} | ${item.description}`)
-						.setEmoji(item.toJSON().icon.data.split(':')[1])
+						.setLabel(biome.name)
+						.setDescription(`${biome.requirements}`)
+						.setEmoji(biome.toJSON().icon.data.split(':')[1])
 						.setValue(value);
 				}
 
@@ -41,11 +41,11 @@ module.exports = {
 			}
 		});
 
-		options = await Promise.all(itemPromises);
+		options = await Promise.all(biomePromises);
 		options = options.filter((option) => option !== undefined);
 
 		const select = new StringSelectMenuBuilder()
-			.setCustomId('buy-item')
+			.setCustomId('switch-biome')
 			.setPlaceholder('Make a selection!')
 			.addOptions(options);
 
@@ -53,7 +53,7 @@ module.exports = {
 			.addComponents(select);
 
 		const response = await interaction.reply({
-			content: 'What would you like to buy?',
+			content: 'Which biome would you like to switch to?',
 			components: [row],
 		});
 
@@ -62,49 +62,31 @@ module.exports = {
 		collector.on('collect', async i => {
 			const selection = i.values[0];
 			const userData = await getUser(user.id);
-			const originalItem = await Item.findById(selection);
+			const originalBiome = await Biome.findById(selection);
 
-			// check if user meets item requirements
-			let canBuy = true;
+			// check if user meets biome requirements
+			let unlocked = true;
 			let reqLevel = 0;
-			originalItem.requirements.forEach(async (requirement) => {
+			for (const requirement of originalBiome.requirements) {
 				if (requirement.toLowerCase().includes('level')) {
 					reqLevel = requirement.split(' ')[1];
 					const level = await xpToLevel(userData.xp);
 
 					if (level < reqLevel) {
-						canBuy = false;
-						return;
+						unlocked = false;
+						break;
 					}
 				}
-			});
-
-			if (userData.inventory.money < originalItem.price && canBuy) {
-				await i.reply({
-					content: `${i.user}, you don't have enough money for that!`,
-					ephemeral: true,
-				});
 			}
-			else if (canBuy) {
-				userData.inventory.money -= originalItem.price;
 
-				let item;
-				if (originalItem.name.toLowerCase().includes('rod')) {
-
-					item = await clone(originalItem, user.id);
-					userData.inventory.rods.push(item);
-				}
-				else {
-					item = await clone(originalItem, user.id);
-					userData.inventory.items.push(item);
-				}
-
+			if (unlocked) {
+				userData.currentBiome = originalBiome.name;
 				userData.save();
-				await i.reply(`${i.user} has bought **${item.name}**!`);
+				await i.reply(`${i.user} has switched to the **${originalBiome.name}**!`);
 			}
 			else {
 				await i.reply({
-					content: `You need to be level ${reqLevel} to buy this item!`,
+					content: `You need to be level ${reqLevel} to switch to the ${originalBiome.name}!`,
 					ephemeral: true,
 				});
 			}

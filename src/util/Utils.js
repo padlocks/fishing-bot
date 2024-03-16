@@ -57,7 +57,7 @@ const getRandomInteger = (max) => {
 	return Math.floor(Math.random() * max);
 };
 
-const getWeightedChoice = (choices, weights) => {
+const getWeightedChoice = async (choices, weights) => {
 	const sumOfWeights = weights.reduce((acc, x) => acc + x, 0);
 	let randomInt = getRandomInteger(sumOfWeights) + 1;
 	for (const [index, weight] of weights.entries()) {

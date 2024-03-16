@@ -45,6 +45,10 @@ const FishSchema = new Schema({
 		type: String,
 		default: 'fish',
 	},
+	biome: {
+		type: String,
+		default: 'river',
+	},
 });
 
 const Fish = model('Fish', FishSchema);

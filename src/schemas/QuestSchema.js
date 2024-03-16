@@ -23,7 +23,14 @@ const questSchema = new Schema({
 		default: 0,
 	},
 	requirements: {
-		type: [String],
+		level: {
+			type: Number,
+			default: 0,
+		},
+		previous: [{
+			type: String,
+			default: '',
+		}],
 	},
 	startDate: {
 		type: Number,
@@ -53,6 +60,10 @@ const questSchema = new Schema({
 	},
 	progressType: {
 		fish: [{
+			type: String,
+			default: 'any',
+		}],
+		rarity: [{
 			type: String,
 			default: 'any',
 		}],
