@@ -52,7 +52,7 @@ module.exports = {
 			await buttonPagination(interaction, embeds);
 		}
 		catch (err) {
-			log(err, 'err');
+			console.error(err);
 		}
 	},
 };

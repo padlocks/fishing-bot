@@ -31,9 +31,9 @@ const setEquippedRod = async (userId, rodId) => {
 };
 
 const getUser = async (userId) => {
-	let user = await User.findOne({ userId: userId });
+	let user = await User.findOne({ userId: userId || '0' });
 	if (!user) {
-		user = await createUser();
+		user = await createUser(userId);
 	}
 
 	return user;

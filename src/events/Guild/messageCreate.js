@@ -151,7 +151,7 @@ module.exports = {
 				command.run(client, message, args);
 			}
 			catch (error) {
-				log(error, 'err');
+				console.error(error);
 			}
 		}
 	},

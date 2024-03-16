@@ -89,7 +89,7 @@ module.exports = {
 			});
 		}
 		catch (err) {
-			log(err, 'err');
+			console.error(err);
 			await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()

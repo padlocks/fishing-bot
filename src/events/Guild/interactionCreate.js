@@ -152,7 +152,7 @@ module.exports = {
 
 		}
 		catch (error) {
-			log(error, 'err');
+			console.error(error);
 		}
 	},
 };
