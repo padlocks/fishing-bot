@@ -59,7 +59,8 @@ module.exports = {
 
 				const equippedRod = await getEquippedRod(user.userId);
 				const inventoryValue = await getInventoryValue(user.userId);
-				const biome = await Biome.findOne({ name: user.currentBiome });
+				const userBiome = user.currentBiome.charAt(0).toUpperCase() + user.currentBiome.slice(1);
+				const biome = await Biome.findOne({ name: userBiome });
 				embeds.push(new EmbedBuilder()
 					.setFooter({ text: `Page ${Math.floor(i / chunkSize) + 1} / ${Math.ceil(fields.length / chunkSize)} ` })
 					.setTitle(`${interaction.user.username}'s Inventory`)
