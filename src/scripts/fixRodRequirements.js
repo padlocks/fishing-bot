@@ -9,7 +9,7 @@ const { RodData } = require('../schemas/RodSchema');
 mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNewUrlParser: true, useUnifiedTopology: true })
 	.then(async () => {
 		console.log('Connected to MongoDB');
-		const rods = await ItemData.find({ type: 'quest' });
+		const rods = await ItemData.find({ type: 'rod' });
 		// check if rod.requirements is an array and replace it with an object with a level property
 		try {
 			for (const rod of rods) {
