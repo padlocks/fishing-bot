@@ -4,24 +4,19 @@ const { Item, ItemData } = require('../schemas/ItemSchema');
 const { log, clone, getWeightedChoice } = require('./Utils');
 
 const fish = async (rod, user) => {
-	let generation;
 	const rodObject = await ItemData.findOne({ name: rod, user: user });
 	const capabilities = rodObject.capabilities;
-	switch (rod) {
-	case 'Lucky Rod': {
-		generation = [capabilities, ['Common', 'Uncommon', 'Rare', 'Ultra', 'Giant', 'Legendary', 'Lucky'], [7000, 500, 2500, 200, 100, 40, 1]];
-		break;
-	}
-	default: {
-		generation = [capabilities, ['Common', 'Uncommon', 'Rare', 'Ultra', 'Giant', 'Legendary', 'Lucky'], [7000, 2500, 500, 100, 50, 20, 1]];
-	}
-	}
+	const rarities = Object.keys(rodObject.weights);
+	const weights = Object.values(rodObject.weights);
+	const generation = [capabilities, rarities, weights];
+
 	return await sendFishToUser(...generation, user);
 };
 
 const generateFish = async (capabilities, choices, weights, user) => {
 	const userData = await User.findOne({ userId: user });
-	const draw = await getWeightedChoice(choices, weights);
+	let draw = await getWeightedChoice(choices, weights);
+	draw = draw.charAt(0).toUpperCase() + draw.slice(1);
 	const biome = userData.currentBiome.charAt(0).toUpperCase() + userData.currentBiome.slice(1);
 
 	let f = await Fish.find({ rarity: draw, biome: biome });

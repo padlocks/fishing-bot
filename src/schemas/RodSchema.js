@@ -6,7 +6,10 @@ const rodSchema = new Schema({
 		type: [String],
 	},
 	requirements: {
-		type: [String],
+		level: {
+			type: Number,
+			default: 0,
+		},
 	},
 	obtained: {
 		type: Number,
@@ -20,6 +23,26 @@ const rodSchema = new Schema({
 		enum: ['mint', 'repaired', 'broken', 'destroyed'],
 		default: 'mint',
 	},
+	durability: {
+		type: Number,
+		default: 1000,
+	},
+	maxDurability: {
+		type: Number,
+		default: 1000,
+	},
+	repairs: {
+		type: Number,
+		default: 0,
+	},
+	maxRepairs: {
+		type: Number,
+		default: 3,
+	},
+	repairCost: {
+		type: Number,
+		default: 1000,
+	},
 	icon: {
 		animated: {
 			type: Boolean,
@@ -28,6 +51,36 @@ const rodSchema = new Schema({
 		data: {
 			type: String,
 			default: 'old_rod:1210508306662301706',
+		},
+	},
+	weights: {
+		common: {
+			type: Number,
+			default: 7000,
+		},
+		uncommon: {
+			type: Number,
+			default: 2500,
+		},
+		rare: {
+			type: Number,
+			default: 500,
+		},
+		ultra: {
+			type: Number,
+			default: 100,
+		},
+		giant: {
+			type: Number,
+			default: 50,
+		},
+		legendary: {
+			type: Number,
+			default: 20,
+		},
+		lucky: {
+			type: Number,
+			default: 1,
 		},
 	},
 	type: {

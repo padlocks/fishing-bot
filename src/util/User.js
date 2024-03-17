@@ -83,9 +83,45 @@ const getInventoryValue = async (userId) => {
 	return totalValue[0]?.totalValue || 0;
 };
 
+const decreaseRodDurability = async (userId, amount) => {
+	const user = await User.findOne({ userId: userId });
+	const rod = await ItemData.findById(user.inventory.equippedRod);
+
+	if (rod.durability - amount <= 0) {
+		rod.state = 'broken';
+		rod.durability = 0;
+
+		if (rod.repairs >= rod.maxRepairs) {
+			rod.state = 'destroyed';
+			user.equippedRod = null;
+		}
+	}
+	else {
+		rod.durability -= amount;
+	}
+
+	await rod.save();
+	await user.save();
+	return rod;
+};
+
+const repairRod = async (userId) => {
+	const user = await User.findOne({ userId: userId });
+	const rod = await ItemData.findById(user.inventory.equippedRod);
+
+	rod.repairs += 1;
+	rod.durability = rod.maxDurability;
+	rod.state = 'repaired';
+	await rod.save();
+	return rod;
+};
+
+
 module.exports = {
 	getEquippedRod,
 	setEquippedRod,
+	decreaseRodDurability,
+	repairRod,
 	getUser,
 	createUser,
 	xpToLevel,

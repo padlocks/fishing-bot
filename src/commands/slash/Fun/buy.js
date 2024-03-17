@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
 const { Item } = require('../../../schemas/ItemSchema');
 const { getUser, xpToLevel } = require('../../../util/User');
-const { log, clone } = require('../../../util/Utils');
+const { clone } = require('../../../util/Utils');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -66,18 +66,11 @@ module.exports = {
 
 			// check if user meets item requirements
 			let canBuy = true;
-			let reqLevel = 0;
-			originalItem.requirements.forEach(async (requirement) => {
-				if (requirement.toLowerCase().includes('level')) {
-					reqLevel = requirement.split(' ')[1];
-					const level = await xpToLevel(userData.xp);
 
-					if (level < reqLevel) {
-						canBuy = false;
-						return;
-					}
-				}
-			});
+			const userLevel = await xpToLevel(userData.xp);
+			if (userLevel < originalItem.requirements.level) {
+				canBuy = false;
+			}
 
 			if (userData.inventory.money < originalItem.price && canBuy) {
 				await i.reply({
@@ -104,7 +97,7 @@ module.exports = {
 			}
 			else {
 				await i.reply({
-					content: `You need to be level ${reqLevel} to buy this item!`,
+					content: `You need to be level ${originalItem.requirements.level} to buy this item!`,
 					ephemeral: true,
 				});
 			}
