@@ -148,6 +148,34 @@ const followUpMessage = async (interaction, user, fishArray, completedQuests, xp
 		fishAgainDisabled = true;
 	}
 
+	let components = [
+		new ActionRowBuilder()
+			.addComponents(
+				new ButtonBuilder()
+					.setCustomId('fish-again')
+					.setLabel('Fish again!')
+					.setStyle(ButtonStyle.Primary)
+					.setDisabled(fishAgainDisabled),
+				new ButtonBuilder()
+					.setCustomId('sell-one-fish')
+					.setLabel('Sell')
+					.setStyle(ButtonStyle.Danger)
+					.setDisabled(fishArray.length === 0),
+			),
+	];
+
+	if (rodState === 'broken') {
+		components = [
+			new ActionRowBuilder()
+				.addComponents(
+					new ButtonBuilder()
+						.setCustomId('repair-rod')
+						.setLabel('Repair Rod')
+						.setStyle(ButtonStyle.Primary),
+				),
+		];
+	}
+
 	return await interaction.followUp({
 		embeds: [
 			new EmbedBuilder()
@@ -156,26 +184,7 @@ const followUpMessage = async (interaction, user, fishArray, completedQuests, xp
 					fields,
 				),
 		],
-		components: [
-			new ActionRowBuilder()
-				.addComponents(
-					new ButtonBuilder()
-						.setCustomId('fish-again')
-						.setLabel('Fish again!')
-						.setStyle(ButtonStyle.Primary)
-						.setDisabled(fishAgainDisabled),
-					new ButtonBuilder()
-						.setCustomId('sell-one-fish')
-						.setLabel('Sell')
-						.setStyle(ButtonStyle.Danger)
-						.setDisabled(fishArray.length === 0),
-					new ButtonBuilder()
-						.setCustomId('repair-rod')
-						.setLabel('Repair')
-						.setStyle(ButtonStyle.Secondary)
-						.setDisabled(rodState === 'mint' || rodState === 'repaired' || rodState === 'destroyed'),
-				),
-		],
+		components: components,
 	});
 };
 
