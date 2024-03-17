@@ -60,7 +60,7 @@ module.exports = {
 			});
 		}
 		catch (err) {
-			log(err, 'err');
+			console.error(err);
 			await interaction.reply({
 				content: 'There was an error updating your userdata!',
 				ephemeral: true,

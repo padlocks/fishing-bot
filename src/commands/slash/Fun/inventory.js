@@ -3,7 +3,6 @@ const { FishData } = require('../../../schemas/FishSchema');
 const buttonPagination = require('../../../buttonPagination');
 const { getUser, getEquippedRod, getInventoryValue, xpToLevel, xpToNextLevel } = require('../../../util/User');
 const { getFishCount } = require('../../../util/Fish');
-const { log } = require('../../../util/Utils');
 const { Biome } = require('../../../schemas/BiomeSchema');
 
 module.exports = {
@@ -75,7 +74,7 @@ module.exports = {
 			await buttonPagination(interaction, embeds);
 		}
 		catch (err) {
-			log(err, 'err');
+			console.error(err);
 		}
 	},
 };

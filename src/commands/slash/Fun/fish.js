@@ -1,12 +1,12 @@
 const { SlashCommandBuilder, EmbedBuilder, ButtonStyle, ActionRowBuilder, ButtonBuilder, ComponentType } = require('discord.js');
 const { Item } = require('../../../schemas/ItemSchema');
-const { getEquippedRod, getUser } = require('../../../util/User');
+const { getEquippedRod, getUser, decreaseRodDurability } = require('../../../util/User');
 const { fish } = require('../../../util/Fish');
 const { generateXP, clone } = require('../../../util/Utils');
 const { findQuests } = require('../../../util/Quest');
 
 const updateUserWithFish = async (userId) => {
-	const rod = await getEquippedRod(userId);
+	let rod = await getEquippedRod(userId);
 	const fishArray = await fish(rod.name, userId);
 	let xp = 0;
 
@@ -31,7 +31,29 @@ const updateUserWithFish = async (userId) => {
 			else {
 				user.inventory.fish.push(f);
 			}
+
+			let message = '';
+			switch (rod.state) {
+			case 'broken':
+				message = `Your rod is ${rod.state}! You can't catch any more fish until you repair it.`;
+				break;
+			case 'destroyed':
+				message = `Your rod is ${rod.state}! You can't use it anymore.`;
+				break;
+			default:
+				message = '';
+				break;
+			}
+
+			if (rod.state === 'broken' || rod.state === 'destroyed') {
+				return { fish: [], questsCompleted: [], xp: 0, rodState: rod.state, success: false, message: message };
+			}
+			else {
+				rod = await decreaseRodDurability(userId, f.count || 1);
+			}
+
 			rod.fishCaught += f.count || 1;
+
 			user.stats.fishCaught += f.count || 1;
 			user.stats.latestFish.push(f);
 			user.stats.soldLatestFish = false;
@@ -77,38 +99,81 @@ const updateUserWithFish = async (userId) => {
 
 		await rod.save();
 		await user.save();
-		return { fish: fishArray, questsCompleted: completedQuests.filter((quest, index, self) => self.findIndex(q => q.title === quest.title) === index), xp: xp };
+		return { fish: fishArray, questsCompleted: completedQuests.filter((quest, index, self) => self.findIndex(q => q.title === quest.title) === index), xp: xp, rodState: rod.state, success: true, message: '' };
 	}
 };
 
-const followUpMessage = async (interaction, user, fishArray, completedQuests, xp) => {
+const followUpMessage = async (interaction, user, fishArray, completedQuests, xp, rodState, success, message) => {
 	const fields = [];
 	let fishString = '';
 	let questString = '';
 	let totalQuestXp = 0;
 	let totalQuestCash = 0;
 	const questRewards = [];
+	let fishAgainDisabled = false;
 
-	fishArray.forEach(f => {
-		fishString += `<${f.icon?.animated ? 'a' : ''}:${f.icon?.data}> ${f.count} **${f.rarity}** ${f.name}\n`;
-		// fields.push({ name: 'Congratulations!', value: `<${f.icon?.animated ? 'a' : ''}:${f.icon?.data}> ${user.globalName} caught ${f.count} **${f.rarity}** ${f.name}!` });
-	});
-
-	fishString += `+ ${xp} XP\n`;
-	fields.push({ name: `${user.globalName} Caught:`, value: fishString });
-
-	if (completedQuests.length > 0) {
-		completedQuests.forEach(quest => {
-			questString += `**${quest.title}** completed\n`;
-			totalQuestXp += quest.xp;
-			totalQuestCash += quest.cash;
-			quest.reward.forEach(reward => {
-				questRewards.push(reward);
-			});
-			// fields.push({ name: 'Quest Completed!', value: `**${quest.title}** completed!` });
+	if (success) {
+		fishArray.forEach(f => {
+			fishString += `<${f.icon?.animated ? 'a' : ''}:${f.icon?.data}> ${f.count} **${f.rarity}** ${f.name}\n`;
+			// fields.push({ name: 'Congratulations!', value: `<${f.icon?.animated ? 'a' : ''}:${f.icon?.data}> ${user.globalName} caught ${f.count} **${f.rarity}** ${f.name}!` });
 		});
-		questString += `+ ${totalQuestXp} XP, + $${totalQuestCash}\n ${questRewards.length > 0 ? questRewards.join(', ') : ''}`;
-		fields.push({ name: 'Quest complete:', value: questString });
+
+		fishString += `+ ${xp} XP\n`;
+		fields.push({ name: `${user.globalName} Caught:`, value: fishString });
+
+		if (completedQuests.length > 0) {
+			completedQuests.forEach(quest => {
+				questString += `**${quest.title}** completed\n`;
+				totalQuestXp += quest.xp;
+				totalQuestCash += quest.cash;
+				quest.reward.forEach(reward => {
+					questRewards.push(reward);
+				});
+				// fields.push({ name: 'Quest Completed!', value: `**${quest.title}** completed!` });
+			});
+			questString += `+ ${totalQuestXp} XP, + $${totalQuestCash}\n ${questRewards.length > 0 ? questRewards.join(', ') : ''}`;
+			fields.push({ name: 'Quest complete:', value: questString });
+		}
+		if (rodState === 'broken') {
+			fishAgainDisabled = true;
+			fields.push({ name: 'Uh oh!', value: 'Your fishing rod has broken!' });
+		}
+		else if (rodState === 'destroyed') {
+			fishAgainDisabled = true;
+			fields.push({ name: 'Uh oh!', value: 'Your fishing rod has been destroyed! Looks like you need to buy a new one..' });
+		}
+	}
+	else {
+		fields.push({ name: 'Uh oh!', value: message });
+		fishAgainDisabled = true;
+	}
+
+	let components = [
+		new ActionRowBuilder()
+			.addComponents(
+				new ButtonBuilder()
+					.setCustomId('fish-again')
+					.setLabel('Fish again!')
+					.setStyle(ButtonStyle.Primary)
+					.setDisabled(fishAgainDisabled),
+				new ButtonBuilder()
+					.setCustomId('sell-one-fish')
+					.setLabel('Sell')
+					.setStyle(ButtonStyle.Danger)
+					.setDisabled(fishArray.length === 0),
+			),
+	];
+
+	if (rodState === 'broken') {
+		components = [
+			new ActionRowBuilder()
+				.addComponents(
+					new ButtonBuilder()
+						.setCustomId('repair-rod')
+						.setLabel('Repair Rod')
+						.setStyle(ButtonStyle.Primary),
+				),
+		];
 	}
 
 	return await interaction.followUp({
@@ -119,19 +184,7 @@ const followUpMessage = async (interaction, user, fishArray, completedQuests, xp
 					fields,
 				),
 		],
-		components: [
-			new ActionRowBuilder()
-				.addComponents(
-					new ButtonBuilder()
-						.setCustomId('fish-again')
-						.setLabel('Fish again!')
-						.setStyle(ButtonStyle.Primary),
-					new ButtonBuilder()
-						.setCustomId('sell-one-fish')
-						.setLabel('Sell')
-						.setStyle(ButtonStyle.Danger),
-				),
-		],
+		components: components,
 	});
 };
 
@@ -156,8 +209,11 @@ module.exports = {
 		const newFish = object.fish;
 		const completedQuests = object.questsCompleted;
 		const xp = object.xp;
+		const rodState = object.rodState;
+		const success = object.success;
+		const message = object.message;
 
-		const followUp = await followUpMessage(interaction, user, newFish, completedQuests, xp);
+		const followUp = await followUpMessage(interaction, user, newFish, completedQuests, xp, rodState, success, message);
 
 		// const filter = () => interaction.user.id === interaction.message.author.id;
 
@@ -173,6 +229,9 @@ module.exports = {
 				await this.run(client, collectionInteraction, user);
 			}
 			if (collectionInteraction.customId === 'sell-one-fish') {
+				//
+			}
+			if (collectionInteraction.customId === 'repair-rod') {
 				//
 			}
 		});

@@ -1,6 +1,5 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
 const { getUser, setEquippedRod } = require('../../../util/User');
-const { log } = require('../../../util/Utils');
 const { ItemData } = require('../../../schemas/ItemSchema');
 
 module.exports = {
@@ -23,15 +22,17 @@ module.exports = {
 
 		const rodPromises = userData.inventory.rods.map(async (rodObjectId) => {
 			try {
-				// Assuming you have a model for your rods
 				const rod = await ItemData.findById(rodObjectId.valueOf());
-
-				// Assuming rod has a name and description property
+				const name = rod.name;
 				const value = rod._id.toString();
 
+				if (rod.state === 'destroyed') {
+					return;
+				}
+
 				// Check if the value is unique
-				if (!uniqueValues.has(value)) {
-					uniqueValues.add(value);
+				if (!uniqueValues.has(name)) {
+					uniqueValues.add(name);
 
 					return new StringSelectMenuOptionBuilder()
 						.setLabel(rod.name)
@@ -42,7 +43,7 @@ module.exports = {
 
 			}
 			catch (error) {
-				log(error, 'err');
+				console.error(error);
 			}
 		});
 
