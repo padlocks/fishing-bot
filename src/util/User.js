@@ -116,10 +116,34 @@ const repairRod = async (userId) => {
 	return rod;
 };
 
+const getEquippedBait = async (userId) => {
+	const user = await User.findOne({ userId: userId });
+	const baitId = user.inventory.equippedBait.valueOf();
+	const bait = await ItemData.findById(baitId);
+	return bait;
+};
+
+const setEquippedBait = async (userId, baitId) => {
+	const user = await User.findOne({ userId: userId });
+	const bait = user.inventory.baits.find((r) => r.valueOf() === baitId);
+
+	if (!bait) {
+		throw new Error('Bait not found in inventory');
+	}
+
+	user.inventory.equippedBait = bait;
+	const rodObject = await ItemData.findById(bait.valueOf());
+
+	await user.save();
+	return rodObject;
+};
+
 
 module.exports = {
 	getEquippedRod,
 	setEquippedRod,
+	getEquippedBait,
+	setEquippedBait,
 	decreaseRodDurability,
 	repairRod,
 	getUser,
