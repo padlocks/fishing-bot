@@ -1,7 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { Item } = require('../../../schemas/ItemSchema');
 const buttonPagination = require('../../../buttonPagination');
-const { log } = require('../../../util/Utils');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -18,6 +17,15 @@ module.exports = {
 		try {
 			const embeds = [];
 			const shopItems = await Item.find({ shopItem: true });
+
+			// sort the shopItems by item.type and item.price
+			const order = ['rod', 'bait', 'other'];
+			shopItems.sort((a, b) => {
+				if (a.type === b.type) {
+					return a.price - b.price;
+				}
+				return order.indexOf(a.type) - order.indexOf(b.type);
+			});
 
 			let fields = [];
 			fields = shopItems.map((item) => ({

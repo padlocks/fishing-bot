@@ -26,6 +26,7 @@ function generateBaits() {
 			price: 10,
 			shopItem: true,
 			capabilities: ['weak', '2 count'],
+			biomes: ['river', 'lake', 'pond'],
 			weights: {
 				common: 7000,
 				uncommon: 2500,

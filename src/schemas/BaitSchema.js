@@ -5,6 +5,9 @@ const baitSchema = new Schema({
 	capabilities: {
 		type: [String],
 	},
+	biomes: {
+		type: [String],
+	},
 	requirements: {
 		level: {
 			type: Number,

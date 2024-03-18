@@ -156,7 +156,7 @@ const handleBuyBait = async (choice, user, userData, collectorFilter) => {
 	// check if user meets item requirements
 	const userLevel = await xpToLevel(userData.xp);
 	if (userLevel < originalItem.toJSON().requirements.level) {
-		return await choice.update({
+		return await selection.update({
 			embeds: [
 				new EmbedBuilder()
 					.setTitle('Shop')
@@ -184,7 +184,7 @@ const handleBuyBait = async (choice, user, userData, collectorFilter) => {
 	const amountRow = new ActionRowBuilder()
 		.addComponents(amount1, amount5, amount10);
 
-	const amountResponse = await choice.editReply({
+	const amountResponse = await selection.update({
 		embeds: [
 			new EmbedBuilder()
 				.setTitle('Shop')
@@ -208,7 +208,7 @@ const handleBuyBait = async (choice, user, userData, collectorFilter) => {
 	}
 
 	if (userData.inventory.money < (originalItem.price * amount)) {
-		return await amountSelection.editReply({
+		return await amountSelection.update({
 			embeds: [
 				new EmbedBuilder()
 					.setTitle('Shop')
@@ -229,7 +229,7 @@ const handleBuyBait = async (choice, user, userData, collectorFilter) => {
 			embeds: [
 				new EmbedBuilder()
 					.setTitle('Shop')
-					.setDescription(`Bought bait: **${item.name}** x${amount}`),
+					.setDescription(`Bought bait: **${item.name}** x${amount} for $${item.price * amount}!`),
 			],
 		});
 	}
