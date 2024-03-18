@@ -6,6 +6,7 @@ const { RodData } = require('../schemas/RodSchema');
 const { Item, ItemData } = require('../schemas/ItemSchema');
 const { BaitData } = require('../schemas/BaitSchema');
 const { User } = require('../schemas/UserSchema');
+const { StringSelectMenuOptionBuilder } = require('discord.js');
 
 /**
  * Logs a message with optional styling.
@@ -221,6 +222,37 @@ const clone = async (object, userId) => {
 	}
 };
 
+const selectionOptions = async (type) => {
+	const shopItems = await Item.find({ shopItem: true, type: type });
+	const uniqueValues = new Set();
+
+	return shopItems.map(async (objectId) => {
+		try {
+			const item = await Item.findById(objectId.valueOf());
+			const name = item.name;
+			const value = item._id.toString();
+
+			if (item.state && item.state === 'destroyed') {
+				return;
+			}
+
+			// Check if the value is unique
+			if (!uniqueValues.has(name)) {
+				uniqueValues.add(name);
+
+				return new StringSelectMenuOptionBuilder()
+					.setLabel(item.name)
+					.setDescription(`$${item.price} | ${item.description}`)
+					.setEmoji(item.toJSON().icon.data.split(':')[1])
+					.setValue(value);
+			}
+		}
+		catch (error) {
+			console.error(error);
+		}
+	});
+};
+
 module.exports = {
 	log,
 	time,
@@ -231,4 +263,5 @@ module.exports = {
 	getWeightedChoice,
 	sumArrays,
 	sumCountsInArrays,
+	selectionOptions,
 };

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ButtonStyle, ActionRowBuilder, ButtonBuilder } = require('discord.js');
 const { Item } = require('../../../schemas/ItemSchema');
 const buttonPagination = require('../../../buttonPagination');
 
@@ -47,7 +47,25 @@ module.exports = {
 				);
 			}
 
-			await buttonPagination(interaction, embeds);
+			const buyRod = new ButtonBuilder()
+				.setCustomId('buy-rod')
+				.setLabel('Fishing Rod')
+				.setStyle(ButtonStyle.Primary);
+
+			const buyBait = new ButtonBuilder()
+				.setCustomId('buy-bait')
+				.setLabel('Bait')
+				.setStyle(ButtonStyle.Primary);
+
+			const buyOther = new ButtonBuilder()
+				.setCustomId('buy-other')
+				.setLabel('Other')
+				.setStyle(ButtonStyle.Primary);
+
+			const buttonRow = new ActionRowBuilder()
+				.addComponents(buyRod, buyBait, buyOther);
+
+			await buttonPagination(interaction, embeds, [buttonRow]);
 		}
 		catch (err) {
 			console.error(err);

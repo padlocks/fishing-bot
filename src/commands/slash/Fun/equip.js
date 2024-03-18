@@ -35,7 +35,7 @@ const selectionOptions = async (inventoryPath, userData) => {
 		}
 	}
 
-	let options = [];
+	const options = [];
 	let first = true;
 	for (const name of uniqueValues) {
 		const count = counts[name];
@@ -47,7 +47,7 @@ const selectionOptions = async (inventoryPath, userData) => {
 			options.push(
 				new StringSelectMenuOptionBuilder()
 					.setLabel('None')
-					.setDescription('Unequips your current bait.')
+					.setDescription('Unequips your current item.')
 					.setValue('none'),
 			);
 		}
@@ -228,7 +228,6 @@ module.exports = {
 			}
 		}
 		catch (e) {
-			console.error(e);
 			await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()
