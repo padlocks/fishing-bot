@@ -1,16 +1,20 @@
 const { Fish, FishData } = require('../schemas/FishSchema');
 const { User } = require('../schemas/UserSchema');
 const { Item, ItemData } = require('../schemas/ItemSchema');
-const { log, clone, getWeightedChoice } = require('./Utils');
+const { log, clone, getWeightedChoice, sumArrays, sumCountsInArrays } = require('./Utils');
 
-const fish = async (rod, user) => {
+const fish = async (rod, bait, biome, user) => {
 	const rodObject = await ItemData.findOne({ name: rod, user: user });
-	const capabilities = rodObject.capabilities;
 	const rarities = Object.keys(rodObject.weights);
-	const weights = Object.values(rodObject.weights);
-	const generation = [capabilities, rarities, weights];
+	let capabilities = rodObject.capabilities;
+	let weights = Object.values(rodObject.weights);
 
-	return await sendFishToUser(...generation, user);
+	if (biome in bait.biomes || []) {
+		capabilities = await sumCountsInArrays(rodObject.capabilities, bait.capabilities);
+		weights = await sumArrays(Object.values(rodObject.weights), Object.values(bait.weights));
+	}
+
+	return await sendFishToUser(capabilities, rarities, weights, user);
 };
 
 const generateFish = async (capabilities, choices, weights, user) => {

@@ -7,7 +7,7 @@ module.exports = {
 		.setName('leaderboard')
 		.setDescription('Check the leaderboard!'),
 	options: {
-		cooldown: 15000,
+		cooldown: 10_000,
 	},
 	/**
      * @param {ExtendedClient} client

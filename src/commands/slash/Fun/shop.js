@@ -7,7 +7,7 @@ module.exports = {
 		.setName('shop')
 		.setDescription('Check the shop!'),
 	options: {
-		cooldown: 15000,
+		cooldown: 10_000,
 	},
 	/**
      * @param {ExtendedClient} client

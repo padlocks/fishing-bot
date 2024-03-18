@@ -9,7 +9,7 @@ module.exports = {
 		.setName('start-quest')
 		.setDescription('Start a quest!'),
 	options: {
-		cooldown: 15000,
+		cooldown: 10_000,
 	},
 	/**
      * @param {ExtendedClient} client

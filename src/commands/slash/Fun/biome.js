@@ -8,7 +8,7 @@ module.exports = {
 		.setName('biome')
 		.setDescription('Switch to a new biome.'),
 	options: {
-		cooldown: 15000,
+		cooldown: 10_000,
 	},
 	/**
      * @param {ExtendedClient} client

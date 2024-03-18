@@ -67,7 +67,7 @@ const handleBuyRod = async (choice, user, userData, collectorFilter) => {
 		components: [row],
 	});
 
-	const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
+	const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 30_000 });
 	const rodChoice = selection.values[0];
 	const originalItem = await Item.findById(rodChoice);
 
@@ -149,7 +149,7 @@ const handleBuyBait = async (choice, user, userData, collectorFilter) => {
 		components: [row],
 	});
 
-	const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
+	const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 30_000 });
 	const baitChoice = selection.values[0];
 	const originalItem = await Item.findById(baitChoice);
 
@@ -193,7 +193,7 @@ const handleBuyBait = async (choice, user, userData, collectorFilter) => {
 		components: [amountRow],
 	});
 
-	const amountSelection = await amountResponse.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
+	const amountSelection = await amountResponse.awaitMessageComponent({ filter: collectorFilter, time: 30_000 });
 	const amountChoice = amountSelection.customId;
 
 	let amount;
@@ -268,7 +268,7 @@ const handleBuyItem = async (choice, user, userData, collectorFilter) => {
 		components: [row],
 	});
 
-	const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
+	const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 30_000 });
 	const itemChoice = selection.values[0];
 	const originalItem = await Item.findById(itemChoice);
 
@@ -322,7 +322,7 @@ module.exports = {
 		.setName('buy')
 		.setDescription('Buy from the shop!'),
 	options: {
-		cooldown: 15000,
+		cooldown: 10_000,
 	},
 	/**
 	 * @param {ExtendedClient} client
@@ -370,7 +370,7 @@ module.exports = {
 		};
 
 		try {
-			const choice = await buttonResponse.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
+			const choice = await buttonResponse.awaitMessageComponent({ filter: collectorFilter, time: 30_000 });
 			const userData = await getUser(user.id);
 
 			if (choice.customId === 'buy-rod') {

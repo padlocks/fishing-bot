@@ -42,7 +42,7 @@ module.exports = {
 		.setName('equip')
 		.setDescription('Equip an item from your inventory!'),
 	options: {
-		cooldown: 15000,
+		cooldown: 10_000,
 	},
 	/**
      * @param {ExtendedClient} client
@@ -85,7 +85,7 @@ module.exports = {
 		};
 
 		try {
-			const choice = await buttonResponse.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
+			const choice = await buttonResponse.awaitMessageComponent({ filter: collectorFilter, time: 30_000 });
 			const userData = await getUser(user.id);
 
 			if (choice.customId === 'equip-rod') {
@@ -121,7 +121,7 @@ module.exports = {
 					components: [row],
 				});
 
-				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
+				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 30_000 });
 				const rodChoice = selection.values[0];
 				const newRod = await setEquippedRod(user.id, rodChoice);
 
@@ -136,7 +136,7 @@ module.exports = {
 			}
 			else if (choice.customId === 'equip-bait') {
 				let options = [];
-				options = await selectionOptions('baits', userData);
+				options = await Promise.all(await selectionOptions('baits', userData));
 				options = options.filter((option) => option !== undefined);
 
 				if (options.length === 0) {
@@ -167,11 +167,11 @@ module.exports = {
 					components: [row],
 				});
 
-				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
+				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 30_000 });
 				const baitChoice = selection.values[0];
 				const newBait = await setEquippedBait(user.id, baitChoice);
 
-				await choice.update({
+				await selection.update({
 					embeds: [
 						new EmbedBuilder()
 							.setTitle('Equipment')
@@ -192,7 +192,6 @@ module.exports = {
 			}
 		}
 		catch (e) {
-			console.error(e);
 			await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()

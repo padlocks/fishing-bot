@@ -1,13 +1,15 @@
 const { SlashCommandBuilder, EmbedBuilder, ButtonStyle, ActionRowBuilder, ButtonBuilder, ComponentType } = require('discord.js');
 const { Item } = require('../../../schemas/ItemSchema');
-const { getEquippedRod, getUser, decreaseRodDurability } = require('../../../util/User');
+const { getEquippedRod, getUser, decreaseRodDurability, getEquippedBait } = require('../../../util/User');
 const { fish } = require('../../../util/Fish');
 const { generateXP, clone } = require('../../../util/Utils');
 const { findQuests } = require('../../../util/Quest');
 
 const updateUserWithFish = async (userId) => {
 	let rod = await getEquippedRod(userId);
-	const fishArray = await fish(rod.name, userId);
+	const bait = await getEquippedBait(userId);
+	const biome = (await getUser(userId)).currentBiome;
+	const fishArray = await fish(rod.name, bait, biome, userId);
 	let xp = 0;
 
 	for (let i = 0; i < fishArray.length; i++) {

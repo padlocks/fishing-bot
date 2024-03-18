@@ -8,7 +8,7 @@ module.exports = {
 		.setName('quests')
 		.setDescription('Check your quests!'),
 	options: {
-		cooldown: 15000,
+		cooldown: 10_000,
 	},
 	/**
      * @param {ExtendedClient} client

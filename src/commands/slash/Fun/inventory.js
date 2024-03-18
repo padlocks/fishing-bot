@@ -10,7 +10,7 @@ module.exports = {
 		.setName('inventory')
 		.setDescription('Check your inventory!'),
 	options: {
-		cooldown: 15000,
+		cooldown: 10_000,
 	},
 	/**
      * @param {ExtendedClient} client
