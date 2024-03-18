@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, ButtonStyle, ActionRowBuilder, ButtonBuilder, ComponentType } = require('discord.js');
 const { Item } = require('../../../schemas/ItemSchema');
-const { getEquippedRod, getUser, decreaseRodDurability, getEquippedBait } = require('../../../util/User');
+const { getEquippedRod, getUser, decreaseRodDurability, getEquippedBait, setEquippedBait } = require('../../../util/User');
 const { fish } = require('../../../util/Fish');
 const { generateXP, clone } = require('../../../util/Utils');
 const { findQuests } = require('../../../util/Quest');
@@ -54,8 +54,15 @@ const updateUserWithFish = async (userId) => {
 				rod = await decreaseRodDurability(userId, f.count || 1);
 			}
 
-			rod.fishCaught += f.count || 1;
+			if (bait) {
+				bait.count--;
+				if (bait.count <= 0) {
+					bait.count = 0;
+					await setEquippedBait(userId, null);
+				}
+			}
 
+			rod.fishCaught += f.count || 1;
 			user.stats.fishCaught += f.count || 1;
 			user.stats.latestFish.push(f);
 			user.stats.soldLatestFish = false;
@@ -100,6 +107,7 @@ const updateUserWithFish = async (userId) => {
 		}
 
 		await rod.save();
+		if (bait) await bait.save();
 		await user.save();
 		return { fish: fishArray, questsCompleted: completedQuests.filter((quest, index, self) => self.findIndex(q => q.title === quest.title) === index), xp: xp, rodState: rod.state, success: true, message: '' };
 	}

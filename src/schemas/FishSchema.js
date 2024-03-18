@@ -47,7 +47,7 @@ const FishSchema = new Schema({
 	},
 	biome: {
 		type: String,
-		default: 'river',
+		default: 'ocean',
 	},
 });
 

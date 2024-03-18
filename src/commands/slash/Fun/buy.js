@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
-const { Item } = require('../../../schemas/ItemSchema');
+const { Item, ItemData } = require('../../../schemas/ItemSchema');
 const { getUser, xpToLevel } = require('../../../util/User');
 const { clone } = require('../../../util/Utils');
 
@@ -219,11 +219,22 @@ const handleBuyBait = async (choice, user, userData, collectorFilter) => {
 	}
 	else {
 		userData.inventory.money -= originalItem.price * amount;
-		const item = await clone(originalItem, user.id);
-		item.count = amount;
-		userData.inventory.baits.push(item);
+		// check if user has the bait in their inventory
+		let item;
+		const itemId = userData.inventory.baits.find((i) => i.name === originalItem.name);
+		if (itemId) {
+			item = await ItemData.findById(itemId) || {};
+			item.count += amount;
+			await item.save();
+		}
+		else {
+			item = await clone(originalItem, user.id);
+			item.count = amount;
+			userData.inventory.baits.push(item);
+			await item.save();
+			await userData.save();
+		}
 
-		userData.save();
 		await amountSelection.update({
 			components: [],
 			embeds: [

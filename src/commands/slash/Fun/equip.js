@@ -4,37 +4,63 @@ const { ItemData } = require('../../../schemas/ItemSchema');
 
 const selectionOptions = async (inventoryPath, userData) => {
 	const uniqueValues = new Set();
+	const counts = {};
+	const ids = {};
+	const desc = {};
 
-	return userData.inventory[inventoryPath].map(async (objectId) => {
-		let count = 1;
+	// Loop through inventory items
+	for (const objectId of userData.inventory[inventoryPath]) {
 		try {
 			const item = await ItemData.findById(objectId.valueOf());
 			const name = item.name;
-			const value = item._id.toString();
 
 			if (item.state && item.state === 'destroyed') {
-				return;
+				continue;
 			}
 
-			// Check if the value is unique
-			if (!uniqueValues.has(name)) {
-				uniqueValues.add(name);
-
-				return new StringSelectMenuOptionBuilder()
-					.setLabel(item.name)
-					.setDescription(`x${count} | ${item.description}`)
-					.setEmoji(item.icon.data.split(':')[1])
-					.setValue(value);
+			if (uniqueValues.has(name)) {
+				counts[name] = (counts[name] || 1) + (item.count || 1);
+				continue;
 			}
 			else {
-				count += item.count || 1;
+				ids[name] = item._id.toString();
+				desc[name] = item.description;
 			}
 
+			uniqueValues.add(name);
+			counts[name] = item.count || 1;
 		}
 		catch (error) {
 			console.error(error);
 		}
-	});
+	}
+
+	let options = [];
+	let first = true;
+	for (const name of uniqueValues) {
+		const count = counts[name];
+		const value = ids[name];
+		const description = desc[name];
+
+		if (first) {
+			first = false;
+			options.push(
+				new StringSelectMenuOptionBuilder()
+					.setLabel('None')
+					.setDescription('Unequips your current bait.')
+					.setValue('none'),
+			);
+		}
+
+		if (count <= 0) continue;
+		options.push(
+			new StringSelectMenuOptionBuilder()
+				.setLabel(name)
+				.setDescription(`x${count} | ${description}`)
+				.setValue(value),
+		);
+	}
+	return options;
 };
 
 module.exports = {
@@ -139,7 +165,7 @@ module.exports = {
 				options = await Promise.all(await selectionOptions('baits', userData));
 				options = options.filter((option) => option !== undefined);
 
-				if (options.length === 0) {
+				if (options.length === 1) {
 					return await choice.update({
 						embeds: [
 							new EmbedBuilder()
@@ -168,14 +194,24 @@ module.exports = {
 				});
 
 				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 30_000 });
-				const baitChoice = selection.values[0];
-				const newBait = await setEquippedBait(user.id, baitChoice);
+				const chosenBait = selection.values[0];
+
+				let newBait = {};
+				let description = '';
+				if (chosenBait === 'none') {
+					newBait = await setEquippedBait(user.id, null);
+					description = 'Unequipped bait.';
+				}
+				else {
+					newBait = await setEquippedBait(user.id, chosenBait);
+					description = `Equipped bait: **${newBait.name}**`;
+				}
 
 				await selection.update({
 					embeds: [
 						new EmbedBuilder()
 							.setTitle('Equipment')
-							.setDescription(`Equipped bait: **${newBait.name}**`),
+							.setDescription(description),
 					],
 					components: [],
 				});
@@ -192,6 +228,7 @@ module.exports = {
 			}
 		}
 		catch (e) {
+			console.error(e);
 			await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()

@@ -19,7 +19,7 @@ const UserSchema = new Schema ({
 	},
 	currentBiome: {
 		type: String,
-		default: 'river',
+		default: 'ocean',
 	},
 	stats: {
 		fishCaught: {

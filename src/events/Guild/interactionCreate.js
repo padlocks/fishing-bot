@@ -3,6 +3,7 @@ const config = require('../../config');
 const { log, clone } = require('../../util/Utils');
 const { Rod } = require('../../schemas/RodSchema');
 const { getEquippedRod, getUser } = require('../../util/User');
+const { Item } = require('../../schemas/ItemSchema');
 
 
 const cooldown = new Map();
@@ -138,13 +139,14 @@ module.exports = {
 			command.run(client, interaction);
 
 			const data = (await getUser(interaction.user.id));
-			if (!await getEquippedRod(interaction.user.id)) {
-				const rod = await Rod.findOne({ name: 'Old Rod' });
+			const equippedRod = await getEquippedRod(interaction.user.id);
+			if (!equippedRod || (equippedRod.name === 'Old Rod' && equippedRod.state === 'destroyed')) {
+				const rod = await Item.findOne({ name: 'Old Rod' });
 				const clonedRod = await clone(rod, interaction.user.id);
 				clonedRod.obtained = Date.now();
 				data.inventory.rods = [];
 				data.inventory.rods.push(clonedRod);
-				data.inventory.equippedRod = data.inventory.rods[0];
+				data.inventory.equippedRod = clonedRod;
 			}
 
 			data.commands += 1;

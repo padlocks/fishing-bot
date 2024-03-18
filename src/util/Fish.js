@@ -9,7 +9,7 @@ const fish = async (rod, bait, biome, user) => {
 	let capabilities = rodObject.capabilities;
 	let weights = Object.values(rodObject.weights);
 
-	if (biome in bait.biomes || []) {
+	if (biome in (bait?.biomes ?? [])) {
 		capabilities = await sumCountsInArrays(rodObject.capabilities, bait.capabilities);
 		weights = await sumArrays(Object.values(rodObject.weights), Object.values(bait.weights));
 	}

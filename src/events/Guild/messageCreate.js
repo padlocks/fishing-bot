@@ -18,11 +18,11 @@ module.exports = {
 	run: async (client, message) => {
 		if (message.author.bot || message.channel.type === ChannelType.DM) return;
 
-		const userData = (await getUser(message.author.id));
+		// const userData = (await getUser(message.author.id));
 
-		userData.xp += generateXP();
-		userData.inventory.money += generateCash();
-		userData.save();
+		// userData.xp += generateXP();
+		// userData.inventory.money += generateCash();
+		// userData.save();
 
 		if (!config.handler.commands.prefix) return;
 

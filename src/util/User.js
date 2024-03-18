@@ -7,8 +7,17 @@ const getEquippedRod = async (userId) => {
 	let user = await User.findOne({ userId: userId });
 	if (!user) user = await createUser(userId);
 	const rodId = user.inventory.equippedRod.valueOf();
-	const rod = await ItemData.findById(rodId);
-	return rod;
+	if (!rodId) {
+		const clonedRod = await clone(await ItemData.findOne({ name: 'Old Rod' }), userId);
+		user.inventory.rods.push(clonedRod);
+		user.inventory.equippedRod = clonedRod;
+		await user.save();
+		return clonedRod;
+	}
+	else {
+		const rod = await ItemData.findById(rodId);
+		return rod;
+	}
 };
 
 const setEquippedRod = async (userId, rodId) => {
@@ -118,7 +127,8 @@ const repairRod = async (userId) => {
 
 const getEquippedBait = async (userId) => {
 	const user = await User.findOne({ userId: userId });
-	const baitId = user.inventory.equippedBait.valueOf();
+	const baitId = user.inventory.equippedBait?.valueOf() || null;
+	if (!baitId) return null;
 	const bait = await ItemData.findById(baitId);
 	return bait;
 };
@@ -127,15 +137,11 @@ const setEquippedBait = async (userId, baitId) => {
 	const user = await User.findOne({ userId: userId });
 	const bait = user.inventory.baits.find((r) => r.valueOf() === baitId);
 
-	if (!bait) {
-		throw new Error('Bait not found in inventory');
-	}
-
 	user.inventory.equippedBait = bait;
-	const rodObject = await ItemData.findById(bait.valueOf());
+	const baitObject = await ItemData.findById(bait?.valueOf()) || null;
 
 	await user.save();
-	return rodObject;
+	return baitObject;
 };
 
 
