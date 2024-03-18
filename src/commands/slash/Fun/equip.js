@@ -40,7 +40,7 @@ const selectionOptions = async (inventoryPath, userData) => {
 module.exports = {
 	structure: new SlashCommandBuilder()
 		.setName('equip')
-		.setDescription('Equip a new rod!'),
+		.setDescription('Equip an item from your inventory!'),
 	options: {
 		cooldown: 15000,
 	},

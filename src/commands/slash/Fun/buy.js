@@ -1,7 +1,39 @@
-const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
+const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 const { Item } = require('../../../schemas/ItemSchema');
 const { getUser, xpToLevel } = require('../../../util/User');
 const { clone } = require('../../../util/Utils');
+
+const selectionOptions = async (type) => {
+	const shopItems = await Item.find({ shopItem: true, type: type });
+	const uniqueValues = new Set();
+
+	return shopItems.map(async (objectId) => {
+		try {
+			const item = await Item.findById(objectId.valueOf());
+			const name = item.name;
+			const value = item._id.toString();
+
+			if (item.state && item.state === 'destroyed') {
+				return;
+			}
+
+			// Check if the value is unique
+			if (!uniqueValues.has(name)) {
+				uniqueValues.add(name);
+
+				return new StringSelectMenuOptionBuilder()
+					.setLabel(item.name)
+					.setDescription(`$${item.price} | ${item.description}`)
+					.setEmoji(item.toJSON().icon.data.split(':')[1])
+					.setValue(value);
+			}
+
+		}
+		catch (error) {
+			console.error(error);
+		}
+	});
+};
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -17,90 +49,312 @@ module.exports = {
 	async run(client, interaction, user = null) {
 		if (user === null) user = interaction.user;
 
-		const shopItems = await Item.find({ shopItem: true });
-		const uniqueValues = new Set();
+		// Buttons
+		const cancel = new ButtonBuilder()
+			.setCustomId('cancel')
+			.setLabel('Cancel')
+			.setStyle(ButtonStyle.Secondary);
 
-		let options = [];
-		const itemPromises = shopItems.map(async (item) => {
-			try {
-				const value = item._id.toString();
+		const buyRod = new ButtonBuilder()
+			.setCustomId('buy-rod')
+			.setLabel('Fishing Rod')
+			.setStyle(ButtonStyle.Primary);
 
-				if (!uniqueValues.has(value)) {
-					uniqueValues.add(value);
+		const buyBait = new ButtonBuilder()
+			.setCustomId('buy-bait')
+			.setLabel('Bait')
+			.setStyle(ButtonStyle.Primary);
 
-					return new StringSelectMenuOptionBuilder()
-						.setLabel(item.name)
-						.setDescription(`$${item.price} | ${item.description}`)
-						.setEmoji(item.toJSON().icon.data.split(':')[1])
-						.setValue(value);
+		const buyOther = new ButtonBuilder()
+			.setCustomId('buy-other')
+			.setLabel('Other')
+			.setStyle(ButtonStyle.Primary);
+
+		const buttonRow = new ActionRowBuilder()
+			.addComponents(cancel, buyRod, buyBait, buyOther);
+
+		const buttonResponse = await interaction.reply({
+			embeds: [
+				new EmbedBuilder()
+					.setTitle('Shop')
+					.setDescription('Choose an item type to buy!'),
+			],
+			fetchReply: true,
+			components: [buttonRow],
+		});
+
+		const collectorFilter = i => {
+			return i.user.id === user.id;
+		};
+
+		try {
+			const choice = await buttonResponse.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
+			const userData = await getUser(user.id);
+
+			if (choice.customId === 'buy-rod') {
+				let options = [];
+				options = await Promise.all(await selectionOptions('rod'));
+				options = options.filter((option) => option !== undefined);
+
+				if (options.length === 0) {
+					return await choice.update({
+						embeds: [
+							new EmbedBuilder()
+								.setTitle('Shop')
+								.setDescription('There are no fishing rods for you to buy!'),
+						],
+						components: [],
+					});
 				}
 
-			}
-			catch (error) {
-				console.error(error);
-			}
-		});
+				const select = new StringSelectMenuBuilder()
+					.setCustomId('select-rod')
+					.setPlaceholder('Make a selection!')
+					.addOptions(options);
 
-		options = await Promise.all(itemPromises);
-		options = options.filter((option) => option !== undefined);
+				const row = new ActionRowBuilder()
+					.addComponents(select);
 
-		const select = new StringSelectMenuBuilder()
-			.setCustomId('buy-item')
-			.setPlaceholder('Make a selection!')
-			.addOptions(options);
-
-		const row = new ActionRowBuilder()
-			.addComponents(select);
-
-		const response = await interaction.reply({
-			content: 'What would you like to buy?',
-			components: [row],
-		});
-
-		const collector = response.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 15000 });
-
-		collector.on('collect', async i => {
-			const selection = i.values[0];
-			const userData = await getUser(user.id);
-			const originalItem = await Item.findById(selection);
-
-			// check if user meets item requirements
-			let canBuy = true;
-
-			const userLevel = await xpToLevel(userData.xp);
-			if (userLevel < originalItem.requirements.level) {
-				canBuy = false;
-			}
-
-			if (userData.inventory.money < originalItem.price && canBuy) {
-				await i.reply({
-					content: `${i.user}, you don't have enough money for that!`,
-					ephemeral: true,
+				const response = await choice.update({
+					embeds: [
+						new EmbedBuilder()
+							.setTitle('Shop')
+							.setDescription('Choose which fishing rod you want to buy!'),
+					],
+					components: [row],
 				});
-			}
-			else if (canBuy) {
-				userData.inventory.money -= originalItem.price;
 
-				let item;
-				if (originalItem.name.toLowerCase().includes('rod')) {
+				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
+				const rodChoice = selection.values[0];
+				const originalItem = await Item.findById(rodChoice);
 
-					item = await clone(originalItem, user.id);
+				// check if user meets item requirements
+				let canBuy = true;
+
+				const userLevel = await xpToLevel(userData.xp);
+				if (userLevel < originalItem.toJSON().requirements.level) {
+					canBuy = false;
+				}
+
+				if (userData.inventory.money < originalItem.price && canBuy) {
+					return await choice.update({
+						embeds: [
+							new EmbedBuilder()
+								.setTitle('Shop')
+								.setDescription('You do not have enough money to buy this item!'),
+						],
+						components: [],
+					});
+				}
+				else if (canBuy) {
+					userData.inventory.money -= originalItem.price;
+					const item = await clone(originalItem, user.id);
 					userData.inventory.rods.push(item);
+
+					userData.save();
+					await selection.update({
+						components: [],
+						embeds: [
+							new EmbedBuilder()
+								.setTitle('Shop')
+								.setDescription(`Bought fishing rod: **${item.name}**`),
+						],
+					});
 				}
 				else {
-					item = await clone(originalItem, user.id);
-					userData.inventory.items.push(item);
+					await choice.update({
+						embeds: [
+							new EmbedBuilder()
+								.setTitle('Shop')
+								.setDescription(`You need to be level ${originalItem.requirements.level} to buy this item!`),
+						],
+						components: [],
+					});
+				}
+			}
+			else if (choice.customId === 'buy-bait') {
+				let options = [];
+				options = await Promise.all(await selectionOptions('bait'));
+				options = options.filter((option) => option !== undefined);
+
+				if (options.length === 0) {
+					return await choice.update({
+						embeds: [
+							new EmbedBuilder()
+								.setTitle('Shop')
+								.setDescription('There is no bait for you to buy!'),
+						],
+						components: [],
+					});
 				}
 
-				userData.save();
-				await i.reply(`${i.user} has bought **${item.name}**!`);
+				const select = new StringSelectMenuBuilder()
+					.setCustomId('select-bait')
+					.setPlaceholder('Make a selection!')
+					.addOptions(options);
+
+				const row = new ActionRowBuilder()
+					.addComponents(select);
+
+				const response = await choice.update({
+					embeds: [
+						new EmbedBuilder()
+							.setTitle('Shop')
+							.setDescription('Choose which kind of bait you want to buy!'),
+					],
+					components: [row],
+				});
+
+				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
+				const baitChoice = selection.values[0];
+				const originalItem = await Item.findById(baitChoice);
+
+				// check if user meets item requirements
+				let canBuy = true;
+
+				const userLevel = await xpToLevel(userData.xp);
+				if (userLevel < originalItem.toJSON().requirements.level) {
+					canBuy = false;
+				}
+
+				if (userData.inventory.money < originalItem.price && canBuy) {
+					return await choice.update({
+						embeds: [
+							new EmbedBuilder()
+								.setTitle('Shop')
+								.setDescription('You do not have enough money to buy this item!'),
+						],
+						components: [],
+					});
+				}
+				else if (canBuy) {
+					userData.inventory.money -= originalItem.price;
+					const item = await clone(originalItem, user.id);
+					userData.inventory.baits.push(item);
+
+					userData.save();
+					await selection.update({
+						components: [],
+						embeds: [
+							new EmbedBuilder()
+								.setTitle('Shop')
+								.setDescription(`Bought bait: **${item.name}**`),
+						],
+					});
+				}
+				else {
+					await choice.update({
+						embeds: [
+							new EmbedBuilder()
+								.setTitle('Shop')
+								.setDescription(`You need to be level ${originalItem.requirements.level} to buy this item!`),
+						],
+						components: [],
+					});
+				}
 			}
-			else {
-				await i.reply({
-					content: `You need to be level ${originalItem.requirements.level} to buy this item!`,
-					ephemeral: true,
+			else if (choice.customId === 'buy-item') {
+				let options = [];
+				options = await Promise.all(await selectionOptions('item'));
+				options = options.filter((option) => option !== undefined);
+
+				if (options.length === 0) {
+					return await choice.update({
+						embeds: [
+							new EmbedBuilder()
+								.setTitle('Shop')
+								.setDescription('There is nothing for you to buy!'),
+						],
+						components: [],
+					});
+				}
+
+				const select = new StringSelectMenuBuilder()
+					.setCustomId('select-item')
+					.setPlaceholder('Make a selection!')
+					.addOptions(options);
+
+				const row = new ActionRowBuilder()
+					.addComponents(select);
+
+				const response = await choice.update({
+					embeds: [
+						new EmbedBuilder()
+							.setTitle('Shop')
+							.setDescription('Choose something to buy!'),
+					],
+					components: [row],
+				});
+
+				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
+				const itemChoice = selection.values[0];
+				const originalItem = await Item.findById(itemChoice);
+
+				// check if user meets item requirements
+				let canBuy = true;
+
+				const userLevel = await xpToLevel(userData.xp);
+				if (userLevel < originalItem.toJSON().requirements.level || 0) {
+					canBuy = false;
+				}
+
+				if (userData.inventory.money < originalItem.price && canBuy) {
+					return await choice.update({
+						embeds: [
+							new EmbedBuilder()
+								.setTitle('Shop')
+								.setDescription('You do not have enough money to buy this item!'),
+						],
+						components: [],
+					});
+				}
+				else if (canBuy) {
+					userData.inventory.money -= originalItem.price;
+					const item = await clone(originalItem, user.id);
+					userData.inventory.items.push(item);
+
+					userData.save();
+					await selection.update({
+						components: [],
+						embeds: [
+							new EmbedBuilder()
+								.setTitle('Shop')
+								.setDescription(`Bought item: **${item.name}**`),
+						],
+					});
+				}
+				else {
+					await choice.update({
+						embeds: [
+							new EmbedBuilder()
+								.setTitle('Shop')
+								.setDescription(`You need to be level ${originalItem.requirements.level} to buy this item!`),
+						],
+						components: [],
+					});
+				}
+			}
+			else if (choice.customId === 'cancel') {
+				await choice.update({
+					embeds: [
+						new EmbedBuilder()
+							.setTitle('Shop')
+							.setDescription('Shopping has been cancelled.'),
+					],
+					components: [],
 				});
 			}
-		});
+		}
+		catch (e) {
+			console.error(e);
+			await interaction.editReply({
+				embeds: [
+					new EmbedBuilder()
+						.setTitle('Timed Out')
+						.setDescription('Response not received within 1 minute, cancelling.'),
+				],
+				components: [],
+			});
+		}
 	},
 };
