@@ -69,5 +69,5 @@ const baitSchema = new Schema({
 });
 
 const Bait = Item.discriminator('Bait', baitSchema);
-const BaitData = ItemData.discriminator('RodData', baitSchema);
+const BaitData = ItemData.discriminator('BaitData', baitSchema);
 module.exports = { Bait, BaitData };

@@ -4,6 +4,7 @@ const { Fish, FishData } = require('../schemas/FishSchema');
 const { Quest, QuestData } = require('../schemas/QuestSchema');
 const { RodData } = require('../schemas/RodSchema');
 const { Item, ItemData } = require('../schemas/ItemSchema');
+const { BaitData } = require('../schemas/BaitSchema');
 const { User } = require('../schemas/UserSchema');
 
 /**
@@ -93,6 +94,10 @@ const clone = async (object, userId) => {
 			originalObject = await Quest.findById(object.id);
 			break;
 		}
+		default: {
+			originalObject = await Item.findById(object.id);
+			break;
+		}
 		}
 
 		if (!originalObject) {
@@ -149,6 +154,17 @@ const clone = async (object, userId) => {
 				user: userId,
 				startDate: Date.now(),
 				__t: 'QuestData',
+			});
+			break;
+		}
+		case 'bait': {
+			clonedObject = new BaitData({
+				...originalObject.toObject(),
+				_id: new mongoose.Types.ObjectId(),
+				user: userId,
+				obtained: Date.now(),
+				count: 1,
+				__t: 'BaitData',
 			});
 			break;
 		}
