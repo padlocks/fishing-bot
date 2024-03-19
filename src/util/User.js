@@ -58,6 +58,9 @@ const createUser = async (userId) => {
 		xp: 0,
 		inventory: {
 			equippedRod: null,
+			equippedBait: null,
+			items: [],
+			baits: [],
 			rods: [],
 			fish: [],
 			quests: [],
