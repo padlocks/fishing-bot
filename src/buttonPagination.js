@@ -1,6 +1,6 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 
-module.exports = async (interaction, pages, time = 30 * 1000) => {
+module.exports = async (interaction, pages, components = [], time = 30 * 1000) => {
 	try {
 		if (!interaction || !pages || !pages.length > 0) throw new Error('Invalid arguments');
 
@@ -9,7 +9,7 @@ module.exports = async (interaction, pages, time = 30 * 1000) => {
 		if (pages.length === 1) {
 			return await interaction.editReply({
 				embeds: pages,
-				components: [],
+				components: [...components],
 				fetchReply: true,
 			});
 		}
@@ -25,13 +25,14 @@ module.exports = async (interaction, pages, time = 30 * 1000) => {
 
 		const msg = await interaction.editReply({
 			embeds: [pages[index]],
-			components: [buttons],
+			components: [buttons, ...components],
 			fetchReply: true,
 		});
 
 		const mc = await msg.createMessageComponentCollector({
 			componentType: ComponentType.Button,
 			time,
+			filter: (i) => ['prev', 'home', 'next'].includes(i.customId),
 		});
 
 		mc.on('collect', async (i) => {
@@ -67,7 +68,7 @@ module.exports = async (interaction, pages, time = 30 * 1000) => {
 
 			await msg.edit({
 				embeds: [pages[index]],
-				components: [buttons],
+				components: [buttons, ...components],
 			});
 
 			mc.resetTimer();

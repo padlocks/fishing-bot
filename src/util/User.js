@@ -7,8 +7,17 @@ const getEquippedRod = async (userId) => {
 	let user = await User.findOne({ userId: userId });
 	if (!user) user = await createUser(userId);
 	const rodId = user.inventory.equippedRod.valueOf();
-	const rod = await ItemData.findById(rodId);
-	return rod;
+	if (!rodId) {
+		const clonedRod = await clone(await ItemData.findOne({ name: 'Old Rod' }), userId);
+		user.inventory.rods.push(clonedRod);
+		user.inventory.equippedRod = clonedRod;
+		await user.save();
+		return clonedRod;
+	}
+	else {
+		const rod = await ItemData.findById(rodId);
+		return rod;
+	}
 };
 
 const setEquippedRod = async (userId, rodId) => {
@@ -49,6 +58,9 @@ const createUser = async (userId) => {
 		xp: 0,
 		inventory: {
 			equippedRod: null,
+			equippedBait: null,
+			items: [],
+			baits: [],
 			rods: [],
 			fish: [],
 			quests: [],
@@ -116,10 +128,38 @@ const repairRod = async (userId) => {
 	return rod;
 };
 
+const getEquippedBait = async (userId) => {
+	const user = await User.findOne({ userId: userId });
+	const baitId = user.inventory.equippedBait?.valueOf() || null;
+	if (!baitId) return null;
+	const bait = await ItemData.findById(baitId);
+	return bait;
+};
+
+const setEquippedBait = async (userId, baitId) => {
+	const user = await User.findOne({ userId: userId });
+	const bait = user.inventory.baits.find((r) => r.valueOf() === baitId);
+
+	user.inventory.equippedBait = bait;
+	const baitObject = await ItemData.findById(bait?.valueOf()) || null;
+
+	await user.save();
+	return baitObject;
+};
+
+const getAllBaits = async (userId) => {
+	const user = await User.findOne({ userId: userId });
+	const baitIds = user.inventory.baits;
+	const baits = await ItemData.find({ _id: { $in: baitIds } });
+	return baits;
+};
+
 
 module.exports = {
 	getEquippedRod,
 	setEquippedRod,
+	getEquippedBait,
+	setEquippedBait,
 	decreaseRodDurability,
 	repairRod,
 	getUser,
@@ -127,4 +167,5 @@ module.exports = {
 	xpToLevel,
 	xpToNextLevel,
 	getInventoryValue,
+	getAllBaits,
 };

@@ -19,7 +19,7 @@ const UserSchema = new Schema ({
 	},
 	currentBiome: {
 		type: String,
-		default: 'river',
+		default: 'ocean',
 	},
 	stats: {
 		fishCaught: {
@@ -52,6 +52,14 @@ const UserSchema = new Schema ({
 			type: Schema.Types.ObjectId,
 			ref: 'Rod',
 		},
+		equippedBait: {
+			type: Schema.Types.ObjectId,
+			ref: 'Bait',
+		},
+		baits: [{
+			type: Schema.Types.ObjectId,
+			ref: 'Bait',
+		}],
 		fish: [{
 			type: Schema.Types.ObjectId,
 			ref: 'Fish',

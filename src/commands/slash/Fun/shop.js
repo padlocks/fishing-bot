@@ -1,14 +1,13 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ButtonStyle, ActionRowBuilder, ButtonBuilder } = require('discord.js');
 const { Item } = require('../../../schemas/ItemSchema');
 const buttonPagination = require('../../../buttonPagination');
-const { log } = require('../../../util/Utils');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
 		.setName('shop')
 		.setDescription('Check the shop!'),
 	options: {
-		cooldown: 15000,
+		cooldown: 10_000,
 	},
 	/**
      * @param {ExtendedClient} client
@@ -18,6 +17,15 @@ module.exports = {
 		try {
 			const embeds = [];
 			const shopItems = await Item.find({ shopItem: true });
+
+			// sort the shopItems by item.type and item.price
+			const order = ['rod', 'bait', 'other'];
+			shopItems.sort((a, b) => {
+				if (a.type === b.type) {
+					return a.price - b.price;
+				}
+				return order.indexOf(a.type) - order.indexOf(b.type);
+			});
 
 			let fields = [];
 			fields = shopItems.map((item) => ({
@@ -39,7 +47,25 @@ module.exports = {
 				);
 			}
 
-			await buttonPagination(interaction, embeds);
+			const buyRod = new ButtonBuilder()
+				.setCustomId('buy-rod')
+				.setLabel('Fishing Rod')
+				.setStyle(ButtonStyle.Primary);
+
+			const buyBait = new ButtonBuilder()
+				.setCustomId('buy-bait')
+				.setLabel('Bait')
+				.setStyle(ButtonStyle.Primary);
+
+			const buyOther = new ButtonBuilder()
+				.setCustomId('buy-other')
+				.setLabel('Other')
+				.setStyle(ButtonStyle.Primary);
+
+			const buttonRow = new ActionRowBuilder()
+				.addComponents(buyRod, buyBait, buyOther);
+
+			await buttonPagination(interaction, embeds, [buttonRow]);
 		}
 		catch (err) {
 			console.error(err);

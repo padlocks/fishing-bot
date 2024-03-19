@@ -6,7 +6,7 @@ module.exports = {
 		.setName('balance')
 		.setDescription('Check how much money you have!'),
 	options: {
-		cooldown: 15000,
+		cooldown: 10_000,
 	},
 	/**
      * @param {ExtendedClient} client

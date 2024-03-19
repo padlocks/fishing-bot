@@ -4,7 +4,9 @@ const { Fish, FishData } = require('../schemas/FishSchema');
 const { Quest, QuestData } = require('../schemas/QuestSchema');
 const { RodData } = require('../schemas/RodSchema');
 const { Item, ItemData } = require('../schemas/ItemSchema');
+const { BaitData } = require('../schemas/BaitSchema');
 const { User } = require('../schemas/UserSchema');
+const { StringSelectMenuOptionBuilder } = require('discord.js');
 
 /**
  * Logs a message with optional styling.
@@ -57,6 +59,47 @@ const getRandomInteger = (max) => {
 	return Math.floor(Math.random() * max);
 };
 
+const sumArrays = async (arr1, arr2) => {
+	if (arr1.length == arr2.length) {
+		const sum = [];
+		for (let i = 0; i < arr1.length; i++) {
+			sum.push(arr1[i] + arr2[i]);
+		}
+		return sum;
+	}
+	else if (arr1.length > arr2.length) {
+		return arr1;
+	}
+	else {
+		return arr2;
+	}
+};
+
+const sumCountsInArrays = async (arr1, arr2) => {
+	const arrays = arr1.concat(arr2);
+	const result = [];
+
+	for (let i = 0; i < arrays.length; i++) {
+		const countMatch = arrays[i].match(/\d+ count/);
+		const numberMatch = arrays[i].match(/^\d+$/);
+
+		if (countMatch) {
+			const matches = countMatch.map(match => parseInt(match));
+			const sum = matches.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+			result.push(`${sum} count`);
+		}
+		else if (numberMatch) {
+			const sum = numberMatch.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+			result.push(`${sum}`);
+		}
+		else {
+			result.push(arrays[i]);
+		}
+	}
+
+	return result;
+};
+
 const getWeightedChoice = async (choices, weights) => {
 	const sumOfWeights = weights.reduce((acc, x) => acc + x, 0);
 	let randomInt = getRandomInteger(sumOfWeights) + 1;
@@ -91,6 +134,10 @@ const clone = async (object, userId) => {
 		}
 		case 'quest': {
 			originalObject = await Quest.findById(object.id);
+			break;
+		}
+		default: {
+			originalObject = await Item.findById(object.id);
 			break;
 		}
 		}
@@ -152,6 +199,17 @@ const clone = async (object, userId) => {
 			});
 			break;
 		}
+		case 'bait': {
+			clonedObject = new BaitData({
+				...originalObject.toObject(),
+				_id: new mongoose.Types.ObjectId(),
+				user: userId,
+				obtained: Date.now(),
+				count: 1,
+				__t: 'BaitData',
+			});
+			break;
+		}
 		}
 
 		await clonedObject.save();
@@ -164,6 +222,37 @@ const clone = async (object, userId) => {
 	}
 };
 
+const selectionOptions = async (type) => {
+	const shopItems = await Item.find({ shopItem: true, type: type });
+	const uniqueValues = new Set();
+
+	return shopItems.map(async (objectId) => {
+		try {
+			const item = await Item.findById(objectId.valueOf());
+			const name = item.name;
+			const value = item._id.toString();
+
+			if (item.state && item.state === 'destroyed') {
+				return;
+			}
+
+			// Check if the value is unique
+			if (!uniqueValues.has(name)) {
+				uniqueValues.add(name);
+
+				return new StringSelectMenuOptionBuilder()
+					.setLabel(item.name)
+					.setDescription(`$${item.price} | ${item.description}`)
+					.setEmoji(item.toJSON().icon.data.split(':')[1])
+					.setValue(value);
+			}
+		}
+		catch (error) {
+			console.error(error);
+		}
+	});
+};
+
 module.exports = {
 	log,
 	time,
@@ -172,4 +261,7 @@ module.exports = {
 	generateCash,
 	clone,
 	getWeightedChoice,
+	sumArrays,
+	sumCountsInArrays,
+	selectionOptions,
 };

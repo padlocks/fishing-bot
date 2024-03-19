@@ -7,7 +7,7 @@ module.exports = {
 		.setName('help')
 		.setDescription('View all the possible commands!'),
 	options: {
-		cooldown: 15000,
+		cooldown: 10_000,
 	},
 	/**
      * @param {ExtendedClient} client
