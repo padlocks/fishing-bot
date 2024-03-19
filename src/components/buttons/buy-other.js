@@ -65,7 +65,7 @@ module.exports = {
 			}
 
 			if (userData.inventory.money < originalItem.price && canBuy) {
-				return await selection.reply({
+				return await selection.update({
 					content: 'You do not have enough money to buy this item!',
 					ephemeral: true,
 					components: [],
