@@ -32,6 +32,7 @@ module.exports = async (interaction, pages, components = [], time = 30 * 1000) =
 		const mc = await msg.createMessageComponentCollector({
 			componentType: ComponentType.Button,
 			time,
+			filter: (i) => ['prev', 'home', 'next'].includes(i.customId),
 		});
 
 		mc.on('collect', async (i) => {
@@ -67,7 +68,7 @@ module.exports = async (interaction, pages, components = [], time = 30 * 1000) =
 
 			await msg.edit({
 				embeds: [pages[index]],
-				components: [buttons],
+				components: [buttons, ...components],
 			});
 
 			mc.resetTimer();
