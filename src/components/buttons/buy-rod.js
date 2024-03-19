@@ -42,8 +42,10 @@ module.exports = {
 			// check for additional action rows and remove them
 			const components = interaction.message.components;
 			const firstActionRow = components.find(r => r.type === ComponentType.ActionRow);
+			const secondActionRow = components.find((r, index) => r.type === ComponentType.ActionRow && index !== components.indexOf(firstActionRow));
 			components.length = 0;
 			components.push(firstActionRow);
+			components.push(secondActionRow);
 
 			const response = await interaction.update({
 				embeds: interaction.message.embeds,
