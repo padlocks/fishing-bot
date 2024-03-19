@@ -8,6 +8,10 @@ const baitSchema = new Schema({
 	biomes: {
 		type: [String],
 	},
+	multiplier: {
+		type: Number,
+		default: 1,
+	},
 	requirements: {
 		level: {
 			type: Number,

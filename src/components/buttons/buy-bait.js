@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, ButtonStyle, ButtonBuilder, ComponentType } = require('discord.js');
 const { clone, selectionOptions } = require('../../util/Utils');
-const { xpToLevel, getUser } = require('../../util/User');
+const { xpToLevel, getUser, getAllBaits } = require('../../util/User');
 const { Item, ItemData } = require('../../schemas/ItemSchema');
 
 module.exports = {
@@ -112,7 +112,8 @@ module.exports = {
 				userData.inventory.money -= originalItem.price * amount;
 				// check if user has the bait in their inventory
 				let item;
-				const itemId = userData.inventory.baits.find((i) => i.name === originalItem.name);
+				const baits = await getAllBaits(userData.userId);
+				const itemId = baits.find((bait) => bait.name === originalItem.name);
 				if (itemId) {
 					item = await ItemData.findById(itemId) || {};
 					item.count += amount;

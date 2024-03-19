@@ -57,8 +57,13 @@ const updateUserWithFish = async (userId) => {
 			if (bait) {
 				bait.count--;
 				if (bait.count <= 0) {
-					bait.count = 0;
 					await setEquippedBait(userId, null);
+					// delete bait from user inventory
+					user.inventory.baits.find((b, index) => {
+						if (b.valueOf() === bait._id.valueOf()) {
+							user.inventory.baits.splice(index, 1);
+						}
+					}, 0);
 				}
 			}
 

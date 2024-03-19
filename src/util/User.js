@@ -144,6 +144,13 @@ const setEquippedBait = async (userId, baitId) => {
 	return baitObject;
 };
 
+const getAllBaits = async (userId) => {
+	const user = await User.findOne({ userId: userId });
+	const baitIds = user.inventory.baits;
+	const baits = await ItemData.find({ _id: { $in: baitIds } });
+	return baits;
+};
+
 
 module.exports = {
 	getEquippedRod,
@@ -157,4 +164,5 @@ module.exports = {
 	xpToLevel,
 	xpToNextLevel,
 	getInventoryValue,
+	getAllBaits,
 };

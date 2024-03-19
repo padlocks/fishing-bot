@@ -36,29 +36,27 @@ const selectionOptions = async (inventoryPath, userData) => {
 	}
 
 	const options = [];
-	let first = true;
-	for (const name of uniqueValues) {
-		const count = counts[name];
-		const value = ids[name];
-		const description = desc[name];
+	options.push(
+		new StringSelectMenuOptionBuilder()
+			.setLabel('None')
+			.setDescription('Unequips your current item.')
+			.setValue('none'),
+	);
+	// check if uniqueValues is empty
+	if (uniqueValues.size !== 0) {
+		for (const name of uniqueValues) {
+			const count = counts[name];
+			const value = ids[name];
+			const description = desc[name];
 
-		if (first) {
-			first = false;
+			if (count <= 0) continue;
 			options.push(
 				new StringSelectMenuOptionBuilder()
-					.setLabel('None')
-					.setDescription('Unequips your current item.')
-					.setValue('none'),
+					.setLabel(name)
+					.setDescription(`x${count} | ${description}`)
+					.setValue(value),
 			);
 		}
-
-		if (count <= 0) continue;
-		options.push(
-			new StringSelectMenuOptionBuilder()
-				.setLabel(name)
-				.setDescription(`x${count} | ${description}`)
-				.setValue(value),
-		);
 	}
 	return options;
 };
