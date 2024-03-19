@@ -16,6 +16,10 @@ const updateUserWithFish = async (userId) => {
 		xp += generateXP();
 	}
 
+	if (bait) {
+		xp = Math.floor(xp * bait.multiplier);
+	}
+
 	const completedQuests = [];
 	const user = await getUser(userId);
 	if (user) {
