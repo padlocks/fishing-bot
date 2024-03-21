@@ -77,13 +77,13 @@ const getBaitSelection = async (response, user) => {
 	const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['select-bait'], user), time: 30000 });
 
 	collector.on('collect', async i => {
-		const selection = i.values[0];
 		const userData = await getUser(user);
-		return await processBaitSelection(i, selection, userData, user);
+		return await processBaitSelection(i, userData, user);
 	});
 };
 
-const processBaitSelection = async (selection, baitChoice, userData, user) => {
+const processBaitSelection = async (selection, userData, user) => {
+	const baitChoice = selection.values[0];
 	const originalItem = await getItemById(baitChoice);
 
 	if (!meetsItemRequirements(userData, originalItem)) {
