@@ -24,6 +24,18 @@ const updateUserWithFish = async (userId) => {
 	const user = await getUser(userId);
 	if (user) {
 		user.stats.latestFish = [];
+		if (bait) {
+			bait.count--;
+			if (bait.count <= 0) {
+				await setEquippedBait(userId, null);
+				// delete bait from user inventory
+				user.inventory.baits.find((b, index) => {
+					if (b.valueOf() === bait._id.valueOf()) {
+						user.inventory.baits.splice(index, 1);
+					}
+				}, 0);
+			}
+		}
 		for (let i = 0; i < fishArray.length; i++) {
 			const f = fishArray[i];
 			if (!f.count) f.count = 1;
@@ -56,19 +68,6 @@ const updateUserWithFish = async (userId) => {
 			}
 			else {
 				rod = await decreaseRodDurability(userId, f.count || 1);
-			}
-
-			if (bait) {
-				bait.count--;
-				if (bait.count <= 0) {
-					await setEquippedBait(userId, null);
-					// delete bait from user inventory
-					user.inventory.baits.find((b, index) => {
-						if (b.valueOf() === bait._id.valueOf()) {
-							user.inventory.baits.splice(index, 1);
-						}
-					}, 0);
-				}
 			}
 
 			rod.fishCaught += f.count || 1;
@@ -118,11 +117,11 @@ const updateUserWithFish = async (userId) => {
 		await rod.save();
 		if (bait) await bait.save();
 		await user.save();
-		return { fish: fishArray, questsCompleted: completedQuests.filter((quest, index, self) => self.findIndex(q => q.title === quest.title) === index), xp: xp, rodState: rod.state, success: true, message: '' };
+		return { fish: fishArray, questsCompleted: completedQuests.filter((quest, index, self) => self.findIndex(q => q.title === quest.title) === index), xp: xp, rodState: rod.state, bait: bait, success: true, message: '' };
 	}
 };
 
-const followUpMessage = async (interaction, user, fishArray, completedQuests, xp, rodState, success, message) => {
+const followUpMessage = async (interaction, user, fishArray, completedQuests, xp, rodState, bait, success, message) => {
 	const fields = [];
 	let fishString = '';
 	let questString = '';
@@ -160,6 +159,10 @@ const followUpMessage = async (interaction, user, fishArray, completedQuests, xp
 		else if (rodState === 'destroyed') {
 			fishAgainDisabled = true;
 			fields.push({ name: 'Uh oh!', value: 'Your fishing rod has been destroyed! Looks like you need to buy a new one..' });
+		}
+
+		if (bait?.count <= 0) {
+			fields.push({ name: 'Uh oh!', value: 'You ran out of bait!' });
 		}
 	}
 	else {
@@ -229,10 +232,11 @@ module.exports = {
 		const completedQuests = object.questsCompleted;
 		const xp = object.xp;
 		const rodState = object.rodState;
+		const bait = object.bait;
 		const success = object.success;
 		const message = object.message;
 
-		const followUp = await followUpMessage(interaction, user, newFish, completedQuests, xp, rodState, success, message);
+		const followUp = await followUpMessage(interaction, user, newFish, completedQuests, xp, rodState, bait, success, message);
 
 		// const filter = () => interaction.user.id === interaction.message.author.id;
 
