@@ -253,6 +253,12 @@ const selectionOptions = async (type) => {
 	});
 };
 
+const getCollectionFilter = (customIds, user) => {
+	return i => {
+		return customIds.includes(i.customId) && i.user.id === user;
+	};
+};
+
 module.exports = {
 	log,
 	time,
@@ -264,4 +270,5 @@ module.exports = {
 	sumArrays,
 	sumCountsInArrays,
 	selectionOptions,
+	getCollectionFilter,
 };
