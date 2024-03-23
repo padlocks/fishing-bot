@@ -4,8 +4,13 @@ const { getEquippedRod, getUser, decreaseRodDurability, getEquippedBait, setEqui
 const { fish } = require('../../../util/Fish');
 const { generateXP, clone } = require('../../../util/Utils');
 const { findQuests } = require('../../../util/Quest');
+const { Pond } = require('../../../schemas/PondSchema');
 
-const updateUserWithFish = async (userId) => {
+const updateUserWithFish = async (interaction, userId) => {
+	const pond = await Pond.findOne({ id: interaction.channel.id });
+	if (pond && pond.count <= 0) {
+		return { fish: [], questsCompleted: [], xp: 0, rodState: '', success: false, message: 'The pond is empty!' };
+	}
 	let rod = await getEquippedRod(userId);
 	const bait = await getEquippedBait(userId);
 	const biome = (await getUser(userId)).currentBiome;
@@ -76,6 +81,24 @@ const updateUserWithFish = async (userId) => {
 			user.stats.soldLatestFish = false;
 			user.stats.fishStats.set(f.name.toLowerCase(), (user.stats.fishStats.get(f.name.toLowerCase()) || 0) + (f.count || 1));
 			user.xp += xp;
+
+			if (pond) {
+				pond.count -= f.count || 1;
+				if (pond.count <= 0) {
+					pond.count = 0;
+				}
+				else if (pond.count <= 250) {
+					await interaction.followUp({
+						embeds: [
+							new EmbedBuilder()
+								.setTitle('Pond')
+								.addFields({ name: 'Pond Status', value: `The pond is running low! There are only ${pond.count} fish left!` }),
+						],
+					});
+				}
+				pond.lastFished = Date.now();
+				await pond.save();
+			}
 
 			// quest stuff
 			const quests = await findQuests(f.name.toLowerCase(), rod.name.toLowerCase(), f.qualities.map(q => q.toLowerCase()));
@@ -227,7 +250,7 @@ module.exports = {
 
 		await interaction.deferReply();
 
-		const object = await updateUserWithFish(user.id);
+		const object = await updateUserWithFish(interaction, user.id);
 		const newFish = object.fish;
 		const completedQuests = object.questsCompleted;
 		const xp = object.xp;

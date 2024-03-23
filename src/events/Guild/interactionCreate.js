@@ -1,9 +1,10 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const config = require('../../config');
 const { log, clone } = require('../../util/Utils');
-const { Rod } = require('../../schemas/RodSchema');
 const { getEquippedRod, getUser } = require('../../util/User');
 const { Item } = require('../../schemas/ItemSchema');
+const { Guild } = require('../../schemas/GuildSchema');
+const { Pond } = require('../../schemas/PondSchema');
 
 
 const cooldown = new Map();
@@ -136,7 +137,23 @@ module.exports = {
 				}
 			}
 
-			command.run(client, interaction);
+			const guildData = await Guild.findOne({ id: interaction.guild.id });
+			if (!guildData) {
+				const newGuild = new Guild({ id: interaction.guild.id });
+				await newGuild.save();
+			}
+
+			// check if it is a new day and reset the pond
+			const pond = await Pond.findOne({ id: interaction.channel.id });
+			if (pond && pond.lastFished) {
+				const lastFished = new Date(pond.lastFished);
+				const now = new Date();
+				if (now.getDate() > lastFished.getDate()) {
+					pond.count = 1000;
+					pond.lastFished = now;
+					await pond.save();
+				}
+			}
 
 			const data = (await getUser(interaction.user.id));
 			const equippedRod = await getEquippedRod(interaction.user.id);
@@ -152,6 +169,7 @@ module.exports = {
 			data.commands += 1;
 			data.save();
 
+			command.run(client, interaction);
 		}
 		catch (error) {
 			console.error(error);
