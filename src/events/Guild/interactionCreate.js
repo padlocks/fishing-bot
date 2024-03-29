@@ -1,10 +1,11 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const config = require('../../config');
-const { log, clone } = require('../../util/Utils');
+const { clone } = require('../../util/Utils');
 const { getEquippedRod, getUser } = require('../../util/User');
 const { Item } = require('../../schemas/ItemSchema');
 const { Guild } = require('../../schemas/GuildSchema');
 const { Pond } = require('../../schemas/PondSchema');
+const { Command } = require('../../schemas/CommandSchema');
 
 
 const cooldown = new Map();
@@ -168,6 +169,16 @@ module.exports = {
 
 			data.commands += 1;
 			data.save();
+
+			const commandObject = new Command({
+				user: interaction.user.id,
+				command: interaction.commandName,
+				time: Date.now(),
+				channel: interaction.channel.id,
+				guild: interaction.guild.id,
+				type: 'command',
+			});
+			await commandObject.save();
 
 			command.run(client, interaction);
 		}
