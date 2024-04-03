@@ -15,33 +15,36 @@ module.exports = {
      * @param {ChatInputCommandInteraction} interaction
      */
 	run: async (client, interaction) => {
-
-		await interaction.deferReply();
 		try {
 			const embeds = [];
 			const target = interaction.options.getUser('user') || interaction.user;
 			const user = await getUser(target.id);
 
 			const fields = [];
-			user.stats.fishStats.forEach(async (value, key) => {
+			for (const [key] of user.stats.fishStats) {
 				const fish = await getFishByName(key);
+				const value = `
+				${fish.description}
+				**Caught:** ${user.stats.fishStats.get(key)}
+				`;
 				fields.push({
-					name: key[0].toUpperCase() + key.slice(1),
-					value: fish.description || 'No description available',
-					inline: true,
+					name: fish.name,
+					value: value,
+					inline: false,
 				});
-			});
+			}
 
-			const chunkSize = 6;
+			const chunkSize = 5;
 
 			for (let i = 0; i < fields.length; i += chunkSize) {
 				const chunk = fields.slice(i, i + chunkSize);
 
-				embeds.push(new EmbedBuilder()
-					.setFooter({ text: `Page ${Math.floor(i / chunkSize) + 1} / ${Math.ceil(fields.length / chunkSize)} ` })
-					.setTitle(`${interaction.user.globalName}'s Collection`)
-					.setColor('Green')
-					.addFields(chunk),
+				embeds.push(
+					new EmbedBuilder()
+						.setFooter({ text: `Page ${Math.floor(i / chunkSize) + 1} / ${Math.ceil(fields.length / chunkSize)} ` })
+						.setTitle(`${interaction.user.globalName}'s Collection`)
+						.setColor('Green')
+						.addFields(chunk),
 				);
 			}
 

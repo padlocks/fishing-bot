@@ -163,7 +163,8 @@ const getFishCount = async (userId, fishName) => {
 };
 
 const getFishByName = async (fishName) => {
-	return await Fish.findOne({ name: fishName });
+	const capitalized = fishName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+	return await Fish.findOne({ name: capitalized });
 };
 
 module.exports = {
