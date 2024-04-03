@@ -73,54 +73,67 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 					switch (fish.name) {
 					case 'Common Ocean strong Fish': {
 						fish.name = 'Seabass';
+						fish.description = 'Seabass is a type of fish commonly found in the ocean. It is known for its strong and flavorful taste. Seabass is often sought after by anglers and is considered a prized catch in many fishing communities.';
 						break;
 					}
 					case 'Common Ocean weak Fish': {
 						fish.name = 'Sardine';
+						fish.description = 'Sardine is a type of fish commonly found in the ocean. It is known for its small size and silvery appearance. Sardines are often used in cooking and can be found in a variety of dishes.';
 						break;
 					}
 					case 'Uncommon Ocean strong Fish': {
 						fish.name = 'Tuna';
+						fish.description = 'Tuna is a type of fish found in the ocean. It is known for its large size and powerful swimming ability. Tuna are popular game fish and are often sought after by anglers for their fighting spirit.';
 						break;
 					}
 					case 'Uncommon Ocean weak Fish': {
 						fish.name = 'Mackerel';
+						fish.description = 'Mackerel is a type of fish found in the ocean. It is known for its oily flesh and strong flavor. While mackerel is a popular food fish, it can also be used as bait for other species of fish.';
 						break;
 					}
 					case 'Rare Ocean strong Fish': {
 						fish.name = 'Swordfish';
+						fish.description = 'Swordfish is a type of fish found in the ocean. It is known for its large size and distinctive appearance. Like its name suggests, swordfish have a long, sword-like bill that they use to catch prey.';
 						break;
 					}
 					case 'Rare Ocean weak Fish': {
 						fish.name = 'Pufferfish';
+						fish.description = 'Pufferfish is a type of fish found in the ocean. It is known for its unique appearance and ability to inflate its body. Although pufferfish are considered a delicacy in some cultures, they can be toxic if not prepared properly.';
 						break;
 					}
 					case 'Ultra Ocean strong Fish': {
 						fish.name = 'Azure Marlin';
+						fish.description = 'Azure Marlin is a type of fish found in the ocean. Marlin are known for their large size and impressive fighting ability. They are popular game fish and are often sought after by anglers for their challenging nature.';
 						break;
 					}
 					case 'Ultra Ocean weak Fish': {
 						fish.name = 'Giant Shrimp';
+						fish.description = 'Giant Shrimp is a type of crustacean found in the ocean. It is known for its large size and sweet flavor. Giant Shrimp are popular seafood items and are often used in a variety of dishes.';
 						break;
 					}
 					case 'Giant Ocean strong Fish': {
 						fish.name = 'Whale';
+						fish.description = 'Whale is a type of marine mammal found in the ocean. It is known for its large size and impressive swimming ability. Whales are iconic creatures of the sea and are often associated with the beauty and majesty of the ocean.';
 						break;
 					}
 					case 'Giant Ocean weak Fish': {
 						fish.name = 'Shark';
+						fish.description = 'Shark is a type of fish found in the ocean. It is known for its sharp teeth and powerful swimming ability. Sharks are apex predators of the sea and play a crucial role in maintaining the balance of marine ecosystems.';
 						break;
 					}
 					case 'Legendary Ocean strong Fish': {
 						fish.name = 'Kraken';
+						fish.description = 'Kraken is a legendary sea monster said to dwell off the coast of Norway and Greenland. It is known for its massive size and fearsome appearance. The Kraken is said to be capable of dragging entire ships beneath the waves.';
 						break;
 					}
 					case 'Legendary Ocean weak Fish': {
 						fish.name = 'Narwhal';
+						fish.description = 'Narwhal is a type of whale found in the Arctic Ocean. It is known for its long, spiral tusk that can grow up to 10 feet in length. Narwhals are elusive creatures of the sea and are often associated with the beauty and mystery of the Arctic.';
 						break;
 					}
 					case 'Lucky Ocean strong Fish': {
 						fish.name = 'King Mackarel';
+						fish.description = 'King Mackarel is a type of fish found in the ocean. It is known for its large size and powerful swimming ability. King Mackarel are popular game fish and are often sought after by anglers for their fighting spirit.';
 						break;
 					}
 					case 'Lucky Ocean weak Fish': {
