@@ -162,10 +162,15 @@ const getFishCount = async (userId, fishName) => {
 	return total;
 };
 
+const getFishByName = async (fishName) => {
+	return await Fish.findOne({ name: fishName });
+};
+
 module.exports = {
 	fish,
 	generateFish,
 	sendFishToUser,
 	sellFishByRarity,
 	getFishCount,
+	getFishByName,
 };
