@@ -127,8 +127,11 @@ const sellFishByRarity = async (userId, targetRarity) => {
 
 	const updatedFish = await Promise.all(user.inventory.fish.map(async (f) => {
 		const fishToSell = await FishData.findById(f.valueOf());
+		if (!fishToSell) {
+			return null;
+		}
 		if (!fishToSell.locked && (targetRarity.toLowerCase() === 'all' || fishToSell.rarity.toLowerCase() === targetRarity.toLowerCase())) {
-			totalValue += fishToSell.value * cashMultiplier * f.count;
+			totalValue += fishToSell.value * cashMultiplier * fishToSell.count;
 			return null;
 		}
 		return f;

@@ -1,5 +1,5 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, ComponentType } = require('discord.js');
-const { clone, selectionOptions, getCollectionFilter } = require('../../util/Utils');
+const { selectionOptions, getCollectionFilter } = require('../../util/Utils');
 const { xpToLevel, getUser, sendToInventory } = require('../../util/User');
 const { Item } = require('../../schemas/ItemSchema');
 
