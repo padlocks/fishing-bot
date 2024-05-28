@@ -30,7 +30,7 @@ module.exports = {
 			return await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()
-						.setTitle(`Opened ${name}`)
+						.setTitle(`Opened ${name.split(' ').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}`)
 						.setDescription(`You got a <${opened.icon?.animated ? 'a' : ''}:${opened.icon?.data}> ${opened.name}! Congrats!`)
 						.setColor('Green'),
 				],

@@ -32,9 +32,12 @@ const buffSchema = new Schema({
 	length: {
 		type: Number,
 	},
+	endTime: {
+		type: Number,
+	},
 	count: {
 		type: Number,
-		default: 0,
+		default: 1,
 	},
 	icon: {
 		animated: {

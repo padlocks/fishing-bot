@@ -1,8 +1,8 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
-const { getUser, setEquippedRod, setEquippedBait } = require('../../../util/User');
+const { getUser, setEquippedRod, setEquippedBait, startBooster } = require('../../../util/User');
 const { ItemData } = require('../../../schemas/ItemSchema');
 
-const selectionOptions = async (inventoryPath, userData) => {
+const selectionOptions = async (inventoryPath, userData, allowNone = true) => {
 	const uniqueValues = new Set();
 	const counts = {};
 	const ids = {};
@@ -36,12 +36,14 @@ const selectionOptions = async (inventoryPath, userData) => {
 	}
 
 	const options = [];
-	options.push(
-		new StringSelectMenuOptionBuilder()
-			.setLabel('None')
-			.setDescription('Unequips your current item.')
-			.setValue('none'),
-	);
+	if (allowNone) {
+		options.push(
+			new StringSelectMenuOptionBuilder()
+				.setLabel('None')
+				.setDescription('Unequips your current item.')
+				.setValue('none'),
+		);
+	}
 	// check if uniqueValues is empty
 	if (uniqueValues.size !== 0) {
 		for (const name of uniqueValues) {
@@ -91,8 +93,13 @@ module.exports = {
 			.setLabel('Bait')
 			.setStyle(ButtonStyle.Primary);
 
+		const equipBooster = new ButtonBuilder()
+			.setCustomId('equip-booster')
+			.setLabel('Booster')
+			.setStyle(ButtonStyle.Primary);
+
 		const buttonRow = new ActionRowBuilder()
-			.addComponents(cancel, equipRod, equipBait);
+			.addComponents(cancel, equipRod, equipBait, equipBooster);
 
 		const buttonResponse = await interaction.reply({
 			embeds: [
@@ -204,6 +211,56 @@ module.exports = {
 					newBait = await setEquippedBait(user.id, chosenBait);
 					description = `Equipped bait: **${newBait.name}**`;
 				}
+
+				await selection.update({
+					embeds: [
+						new EmbedBuilder()
+							.setTitle('Equipment')
+							.setDescription(description),
+					],
+					components: [],
+				});
+			}
+			else if (choice.customId === 'equip-booster') {
+				let options = [];
+				options = await Promise.all(await selectionOptions('buffs', userData, false));
+				options = options.filter((option) => option !== undefined);
+
+				if (options.length === 0) {
+					return await choice.update({
+						embeds: [
+							new EmbedBuilder()
+								.setTitle('Equipment')
+								.setDescription('You do not have any boosters to equip!'),
+						],
+						components: [],
+					});
+				}
+
+				const select = new StringSelectMenuBuilder()
+					.setCustomId('select-booster')
+					.setPlaceholder('Make a selection!')
+					.addOptions(options);
+
+				const row = new ActionRowBuilder()
+					.addComponents(select);
+
+				const response = await choice.update({
+					embeds: [
+						new EmbedBuilder()
+							.setTitle('Equipment')
+							.setDescription('Choose your booster!'),
+					],
+					components: [row],
+				});
+
+				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 30_000 });
+				const chosenBooster = selection.values[0];
+
+				let newBooster = {};
+				let description = '';
+				newBooster = await startBooster(user.id, chosenBooster);
+				description = `Equipped booster: **${newBooster.name}**`;
 
 				await selection.update({
 					embeds: [

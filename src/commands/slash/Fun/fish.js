@@ -18,7 +18,7 @@ const updateUserWithFish = async (interaction, userId) => {
 	let xp = 0;
 
 	for (let i = 0; i < fishArray.length; i++) {
-		xp += await generateBoostedXP();
+		xp += await generateBoostedXP(userId);
 	}
 
 	if (bait) {

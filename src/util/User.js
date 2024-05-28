@@ -2,7 +2,6 @@ const { clone, generateXP, generateCash, getWeightedChoice } = require('./Utils'
 const { Fish, FishData } = require('../schemas/FishSchema');
 const { Item, ItemData } = require('../schemas/ItemSchema');
 const { User } = require('../schemas/UserSchema');
-const { Gacha } = require('../schemas/GachaSchema');
 const { BuffData } = require('../schemas/BuffSchema');
 
 const generateBoostedXP = async (userId) => {
@@ -10,6 +9,10 @@ const generateBoostedXP = async (userId) => {
 	const activeBuffs = await BuffData.find({ user: userId, active: true });
 	const xpBuff = activeBuffs.find((buff) => buff.capabilities.includes('xp'));
 	const xpMultiplier = xpBuff ? parseFloat(xpBuff.capabilities[1]) : 1;
+
+	console.log(activeBuffs);
+	console.log(xpBuff);
+	console.log(xpMultiplier);
 
 	return generateXP(10 * xpMultiplier, 25 * xpMultiplier);
 };
@@ -192,8 +195,21 @@ const openBox = async (userId, name) => {
 		const weights = box.weights;
 		const items = [...await Item.find({ type: { $in: capabilities } }), ...await Fish.find({ type: { $in: capabilities } })];
 
+		// check for active buffs
+		const activeBuffs = await BuffData.find({ user: userId, active: true });
+		const gachaBuff = activeBuffs.find((buff) => buff.capabilities.includes('gacha'));
+		const gachaMultiplier = gachaBuff ? parseFloat(gachaBuff.capabilities[1]) : 1;
+
+		// multiply rare+ item weights by gachaMultiplier
+		const weightValues = Object.values(weights);
+		for (let i = 0; i < weightValues.length; i++) {
+			if (i > 1) {
+				weightValues[i] *= gachaMultiplier;
+			}
+		}
+
 		// generate random item from box
-		let draw = await getWeightedChoice(Object.keys(box.weights), Object.values(weights));
+		let draw = await getWeightedChoice(Object.keys(box.weights), weightValues);
 		draw = draw.charAt(0).toUpperCase() + draw.slice(1);
 
 		const filteredItems = items.filter((item) => item.rarity === draw);
@@ -204,74 +220,103 @@ const openBox = async (userId, name) => {
 		user.inventory.gacha = user.inventory.gacha.filter((i) => i._id !== box._id);
 
 		// add item to user inventory
-		const clonedItem = await clone(item, userId);
-		switch (clonedItem.type) {
-		case 'rod':
-			user.inventory.rods.push(clonedItem);
-			break;
-		case 'bait':
-			user.inventory.baits.push(clonedItem);
-			break;
-		case 'fish':
-			user.inventory.fish.push(clonedItem);
-			break;
-		case 'buff':
-			user.inventory.buffs.push(clonedItem);
-			break;
-		default:
-			user.inventory.items.push(clonedItem);
-			break;
-		}
-		await user.save();
-
-		return clonedItem;
+		return await sendToInventory(userId, item);
 	}
 	else {
 		return null;
 	}
 };
 
-const generateBox = async (userId, name) => {
-	const box = await Gacha.findOne({ name: name });
-	const clonedBox = await clone(box, userId);
-	clonedBox.obtained = Date.now();
-	clonedBox.user = userId;
-	await clonedBox.save();
-
-	const user = await User.findOne({ userId: userId });
-	user.inventory.gacha.push(clonedBox);
-	await user.save();
-
-	return clonedBox;
-};
-
 const sendToInventory = async (userId, item) => {
 	const user = await User.findOne({ userId: userId });
 	const itemObject = await Item.findById(item);
-	const clonedItem = await clone(itemObject, userId);
+
+	let existingItem;
+	let clonedItem;
+	let finalItem;
 	switch (clonedItem.type) {
 	case 'rod':
+		clonedItem = await clone(itemObject, userId);
 		user.inventory.rods.push(clonedItem);
+		finalItem = clonedItem;
 		break;
 	case 'bait':
-		user.inventory.baits.push(clonedItem);
+		existingItem = user.inventory.baits.find((b) => b.name === clonedItem.name);
+		if (existingItem) {
+			existingItem.count += clonedItem.count;
+			await existingItem.save();
+			finalItem = existingItem;
+		}
+		else {
+			clonedItem = await clone(itemObject, userId);
+			user.inventory.baits.push(clonedItem);
+			finalItem = clonedItem;
+		}
 		break;
 	case 'fish':
+		clonedItem = await clone(itemObject, userId);
 		user.inventory.fish.push(clonedItem);
+		finalItem = clonedItem;
 		break;
 	case 'buff':
-		user.inventory.buffs.push(clonedItem);
+		existingItem = user.inventory.buffs.find((b) => b.name === clonedItem.name);
+		if (existingItem && existingItem.length === clonedItem.length) {
+			existingItem.count += clonedItem.count;
+			await existingItem.save();
+			finalItem = existingItem;
+		}
+		else {
+			clonedItem = await clone(itemObject, userId);
+			user.inventory.buffs.push(clonedItem);
+			finalItem = clonedItem;
+		}
 		break;
 	case 'gacha':
-		user.inventory.gacha.push(clonedItem);
+		existingItem = user.inventory.gacha.find((b) => b.name === clonedItem.name);
+		if (existingItem) {
+			existingItem.count += clonedItem.count;
+			await existingItem.save();
+			finalItem = existingItem;
+		}
+		else {
+			clonedItem = await clone(itemObject, userId);
+			user.inventory.gacha.push(clonedItem);
+			finalItem = clonedItem;
+		}
 		break;
 	case 'quest':
+		clonedItem = await clone(itemObject, userId);
 		user.inventory.quests.push(clonedItem);
+		finalItem = clonedItem;
 		break;
 	default:
+		clonedItem = await clone(itemObject, userId);
 		user.inventory.items.push(clonedItem);
+		finalItem = clonedItem;
 		break;
 	}
+	await user.save();
+
+	return finalItem;
+};
+
+const startBooster = async (userId, id) => {
+	const buff = await BuffData.findById(id);
+	if (!buff) return null;
+	buff.active = true;
+	buff.endTime = Date.now() + buff.length;
+	await buff.save();
+	return buff;
+};
+
+const endBooster = async (userId, name) => {
+	const user = await User.findOne({ userId: userId });
+	const buff = user.inventory.buffs.find((b) => b.name === name);
+	if (!buff) return null;
+	buff.active = false;
+	await buff.save();
+
+	user.inventory.buffs = user.inventory.buffs.filter((b) => b.name !== name);
 	await user.save();
 };
 
@@ -291,6 +336,7 @@ module.exports = {
 	generateBoostedXP,
 	generateBoostedCash,
 	openBox,
-	generateBox,
 	sendToInventory,
+	startBooster,
+	endBooster,
 };

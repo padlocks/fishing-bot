@@ -1,11 +1,12 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const config = require('../../config');
 const { clone } = require('../../util/Utils');
-const { getEquippedRod, getUser } = require('../../util/User');
+const { getEquippedRod, getUser, endBooster } = require('../../util/User');
 const { Item } = require('../../schemas/ItemSchema');
 const { Guild } = require('../../schemas/GuildSchema');
 const { Pond } = require('../../schemas/PondSchema');
 const { Command } = require('../../schemas/CommandSchema');
+const { BuffData } = require('../../schemas/BuffSchema');
 
 
 const cooldown = new Map();
@@ -170,6 +171,15 @@ module.exports = {
 
 			data.commands += 1;
 			data.save();
+
+			// check for active buffs
+			const activeBuffs = await BuffData.find({ user: interaction.user.id, active: true });
+			// check if it has ended
+			for (const buff of activeBuffs) {
+				if (buff.endTime && buff.endTime <= Date.now()) {
+					await endBooster(interaction.user.id, buff.name);
+				}
+			}
 
 			const commandObject = new Command({
 				user: interaction.user.id,
