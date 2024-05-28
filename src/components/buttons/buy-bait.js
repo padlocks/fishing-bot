@@ -102,25 +102,30 @@ const processBaitSelection = async (selection, userData, user) => {
 		components: [...components, amountRow],
 	});
 
-	const amountSelection = await amountResponse.awaitMessageComponent({ filter: getCollectionFilter(['buy-one', 'buy-five', 'buy-ten'], user), time: 30000 });
-	const amountChoice = amountSelection.customId;
-	const amount = await getAmountFromChoice(amountChoice);
+	const amountCollector = await amountResponse.createMessageComponentCollector({ filter: getCollectionFilter(['buy-one', 'buy-five', 'buy-ten', 'buy-hundred'], user), time: 30000 });
 
-	if (!hasEnoughMoney(userData, originalItem, amount)) {
-		return await amountSelection.reply({
-			content: 'You do not have enough money to buy this item!',
-			ephemeral: true,
-			components: [],
-		});
-	}
-	else {
-		await buyItem(userData, originalItem, amount);
-		await amountSelection.reply({
-			components: [],
-			content: `You have successfully bought ${amount} ${originalItem.name}!`,
-			ephemeral: true,
-		});
-	}
+	// const amountSelection = await amountResponse.awaitMessageComponent({ filter: getCollectionFilter(['buy-one', 'buy-five', 'buy-ten'], user), time: 30000 });
+
+	amountCollector.on('collect', async i => {
+		const amountChoice = i.customId;
+		const amount = await getAmountFromChoice(amountChoice);
+
+		if (!hasEnoughMoney(userData, originalItem, amount)) {
+			return await i.reply({
+				content: 'You do not have enough money to buy this item!',
+				ephemeral: true,
+				components: [],
+			});
+		}
+		else {
+			await buyItem(userData, originalItem, amount);
+			await i.reply({
+				components: [],
+				content: `You have successfully bought ${amount} ${originalItem.name}!`,
+				ephemeral: true,
+			});
+		}
+	});
 };
 
 const getItemById = async (itemId) => {
@@ -136,7 +141,8 @@ const createAmountActionRow = () => {
 	const amount1 = new ButtonBuilder().setCustomId('buy-one').setLabel('Buy 1').setStyle(ButtonStyle.Primary);
 	const amount5 = new ButtonBuilder().setCustomId('buy-five').setLabel('Buy 5').setStyle(ButtonStyle.Primary);
 	const amount10 = new ButtonBuilder().setCustomId('buy-ten').setLabel('Buy 10').setStyle(ButtonStyle.Primary);
-	return new ActionRowBuilder().addComponents(amount1, amount5, amount10);
+	const amount100 = new ButtonBuilder().setCustomId('buy-hundred').setLabel('Buy 100').setStyle(ButtonStyle.Primary);
+	return new ActionRowBuilder().addComponents(amount1, amount5, amount10, amount100);
 };
 
 
@@ -149,6 +155,9 @@ const getAmountFromChoice = async (amountChoice) => {
 	}
 	else if (amountChoice === 'buy-ten') {
 		return 10;
+	}
+	else if (amountChoice === 'buy-hundred') {
+		return 100;
 	}
 };
 
