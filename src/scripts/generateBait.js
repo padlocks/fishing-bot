@@ -27,24 +27,10 @@ function generateBaits() {
 			shopItem: true,
 			capabilities: ['weak', '1'],
 			biomes: ['river', 'lake', 'pond', 'swamp'],
-			weights: {
-				common: 7000,
-				uncommon: 2500,
-				rare: 500,
-				ultra: 100,
-				giant: 50,
-				legendary: 20,
-				lucky: 1,
+			icon: {
+				animated: false,
+				data: '',
 			},
-		},
-		{
-			name: 'Shrimp',
-			description: 'Classic bait for many saltwater fish species.',
-			rarity: 'common',
-			price: 10,
-			shopItem: true,
-			capabilities: ['weak', '1'],
-			biomes: ['ocean', 'coast'],
 			weights: {
 				common: 7000,
 				uncommon: 2500,

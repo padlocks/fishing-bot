@@ -1,7 +1,26 @@
-const { clone } = require('./Utils');
-const { FishData } = require('../schemas/FishSchema');
+const { clone, generateXP, generateCash, getWeightedChoice } = require('./Utils');
+const { Fish, FishData } = require('../schemas/FishSchema');
 const { Item, ItemData } = require('../schemas/ItemSchema');
 const { User } = require('../schemas/UserSchema');
+const { BuffData } = require('../schemas/BuffSchema');
+
+const generateBoostedXP = async (userId) => {
+	// check for active buffs
+	const activeBuffs = await BuffData.find({ user: userId, active: true });
+	const xpBuff = activeBuffs.find((buff) => buff.capabilities.includes('xp'));
+	const xpMultiplier = xpBuff ? parseFloat(xpBuff.capabilities[1]) : 1;
+
+	return generateXP(10 * xpMultiplier, 25 * xpMultiplier);
+};
+
+const generateBoostedCash = async (userId) => {
+	// check for active buffs
+	const activeBuffs = await BuffData.find({ user: userId, active: true });
+	const cashBuff = activeBuffs.find((buff) => buff.capabilities.includes('cash'));
+	const cashMultiplier = cashBuff ? parseFloat(cashBuff.capabilities[1]) : 1;
+
+	return generateCash(10 * cashMultiplier, 100 * cashMultiplier);
+};
 
 const getEquippedRod = async (userId) => {
 	let user = await User.findOne({ userId: userId });
@@ -154,6 +173,159 @@ const getAllBaits = async (userId) => {
 	return baits;
 };
 
+const openBox = async (userId, name) => {
+	const user = await User.findOne({ userId: userId });
+	// uppercase the first letter of each word in name
+	name = name.split(' ').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+
+	const boxes = user.inventory.gacha.filter((box) => !box.opened && box.name !== name);
+	if (boxes.length === 0) return null;
+
+	const box = await ItemData.findById(boxes[0]);
+	if (!box.opened) {
+		box.opened = true;
+		await box.save();
+
+		// remove box from user inventory
+		user.inventory.gacha = user.inventory.gacha.filter((i) => i.id !== box.id);
+		await user.save();
+
+		// check box capabilities to generate items
+		const capabilities = box.capabilities;
+		const weights = box.weights;
+		let items = [...await Item.find({ type: { $in: capabilities } })];
+		if (capabilities.includes('fish')) {
+			items = [...items, ...await Fish.find()];
+		}
+
+		// check for active buffs
+		const activeBuffs = await BuffData.find({ user: userId, active: true });
+		const gachaBuff = activeBuffs.find((buff) => buff.capabilities.includes('gacha'));
+		const gachaMultiplier = gachaBuff ? parseFloat(gachaBuff.capabilities[1]) : 1;
+
+		// multiply rare+ item weights by gachaMultiplier
+		const weightValues = Object.values(weights);
+		for (let i = 0; i < weightValues.length; i++) {
+			if (i > 1) {
+				weightValues[i] *= gachaMultiplier;
+			}
+		}
+
+		// generate random items from box
+		let filteredItems = [];
+		while (filteredItems.length === 0) {
+			let draw = await getWeightedChoice(Object.keys(box.weights), weightValues);
+			draw = draw.charAt(0).toUpperCase() + draw.slice(1);
+			filteredItems = items.filter((item) => item.rarity.toLowerCase() === draw.toLowerCase());
+		}
+
+		const numItems = box.items || 1;
+		const generatedItems = [];
+		for (let i = 0; i < numItems; i++) {
+			const random = Math.floor(Math.random() * filteredItems.length);
+			const item = filteredItems[random];
+			generatedItems.push(await sendToInventory(userId, item));
+		}
+
+		return generatedItems;
+	}
+	else {
+		return null;
+	}
+};
+
+const sendToInventory = async (userId, item) => {
+	const user = await User.findOne({ userId: userId });
+	const itemObject = await Item.findById(item);
+
+	let existingItem;
+	let clonedItem;
+	let finalItem;
+	switch (itemObject.type) {
+	case 'rod':
+		clonedItem = await clone(itemObject, userId);
+		user.inventory.rods.push(clonedItem);
+		finalItem = clonedItem;
+		break;
+	case 'bait':
+		existingItem = user.inventory.baits.find((b) => b.name === itemObject.name);
+		if (existingItem) {
+			existingItem.count += clonedItem.count;
+			await existingItem.save();
+			finalItem = existingItem;
+		}
+		else {
+			clonedItem = await clone(itemObject, userId);
+			user.inventory.baits.push(clonedItem);
+			finalItem = clonedItem;
+		}
+		break;
+	case 'fish':
+		clonedItem = await clone(itemObject, userId);
+		user.inventory.fish.push(clonedItem);
+		finalItem = clonedItem;
+		break;
+	case 'buff':
+		existingItem = user.inventory.buffs.find((b) => b.name === itemObject.name);
+		if (existingItem && existingItem.length === clonedItem.length) {
+			existingItem.count += clonedItem.count;
+			await existingItem.save();
+			finalItem = existingItem;
+		}
+		else {
+			clonedItem = await clone(itemObject, userId);
+			user.inventory.buffs.push(clonedItem);
+			finalItem = clonedItem;
+		}
+		break;
+	case 'gacha':
+		existingItem = user.inventory.gacha.find((b) => b.name === itemObject.name);
+		if (existingItem) {
+			existingItem.count += clonedItem.count;
+			await existingItem.save();
+			finalItem = existingItem;
+		}
+		else {
+			clonedItem = await clone(itemObject, userId);
+			user.inventory.gacha.push(clonedItem);
+			finalItem = clonedItem;
+		}
+		break;
+	case 'quest':
+		clonedItem = await clone(itemObject, userId);
+		user.inventory.quests.push(clonedItem);
+		finalItem = clonedItem;
+		break;
+	default:
+		clonedItem = await clone(itemObject, userId);
+		user.inventory.items.push(clonedItem);
+		finalItem = clonedItem;
+		break;
+	}
+	await user.save();
+
+	return finalItem;
+};
+
+const startBooster = async (userId, id) => {
+	const buff = await BuffData.findById(id);
+	if (!buff) return null;
+	buff.active = true;
+	buff.endTime = Date.now() + buff.length;
+	await buff.save();
+	return buff;
+};
+
+const endBooster = async (userId, id) => {
+	const user = await User.findOne({ userId: userId });
+	const buff = await BuffData.findById(id);
+	if (!buff) return null;
+	buff.active = false;
+	await buff.save();
+
+	user.inventory.buffs = user.inventory.buffs.filter((b) => b.id !== buff.id);
+	await user.save();
+};
 
 module.exports = {
 	getEquippedRod,
@@ -168,4 +340,10 @@ module.exports = {
 	xpToNextLevel,
 	getInventoryValue,
 	getAllBaits,
+	generateBoostedXP,
+	generateBoostedCash,
+	openBox,
+	sendToInventory,
+	startBooster,
+	endBooster,
 };

@@ -5,6 +5,10 @@ const FishSchema = new Schema({
 		type: String,
 		required: true,
 	},
+	description: {
+		type: String,
+		default: 'A fish',
+	},
 	rarity: {
 		type: String,
 		default: 'Common',

@@ -1,6 +1,7 @@
 const { Fish, FishData } = require('../schemas/FishSchema');
 const { User } = require('../schemas/UserSchema');
 const { Item, ItemData } = require('../schemas/ItemSchema');
+const { BuffData } = require('../schemas/BuffSchema');
 const { log, clone, getWeightedChoice, sumArrays, sumCountsInArrays } = require('./Utils');
 
 const fish = async (rod, bait, biome, user) => {
@@ -26,9 +27,11 @@ const generateFish = async (capabilities, choices, weights, user) => {
 
 	let f = await Fish.find({ rarity: draw, biome: biome });
 	if (draw === 'Lucky') {
-		const itemFind = await getWeightedChoice(['fish, item'], [80, 20]);
+		const itemFind = await getWeightedChoice(['fish', 'item'], [80, 20]);
 		if (itemFind === 'item') {
-			f = await Item.find({ rarity: draw });
+			const options = await Item.find({ rarity: draw });
+			const random = Math.floor(Math.random() * options.length);
+			f = [options[random]];
 		}
 	}
 	const filteredChoices = await Promise.all(f.map(async fishObj => {
@@ -117,10 +120,15 @@ const sellFishByRarity = async (userId, targetRarity) => {
 	let newFish = [];
 	const user = await User.findOne({ userId: userId });
 
+	// check for buffs
+	const activeBuffs = await BuffData.find({ user: userId, active: true });
+	const cashBuff = activeBuffs.find((buff) => buff.capabilities.includes('cash'));
+	const cashMultiplier = cashBuff ? parseFloat(cashBuff.capabilities[1]) : 1;
+
 	const updatedFish = await Promise.all(user.inventory.fish.map(async (f) => {
 		const fishToSell = await FishData.findById(f.valueOf());
 		if (!fishToSell.locked && (targetRarity.toLowerCase() === 'all' || fishToSell.rarity.toLowerCase() === targetRarity.toLowerCase())) {
-			totalValue += fishToSell.value;
+			totalValue += fishToSell.value * cashMultiplier * f.count;
 			return null;
 		}
 		return f;
@@ -162,10 +170,16 @@ const getFishCount = async (userId, fishName) => {
 	return total;
 };
 
+const getFishByName = async (fishName) => {
+	const capitalized = fishName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+	return await Fish.findOne({ name: capitalized });
+};
+
 module.exports = {
 	fish,
 	generateFish,
 	sendFishToUser,
 	sellFishByRarity,
 	getFishCount,
+	getFishByName,
 };

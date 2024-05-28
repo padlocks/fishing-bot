@@ -112,6 +112,7 @@ const getWeightedChoice = async (choices, weights) => {
 };
 
 const clone = async (object, userId) => {
+	if (!object) return;
 	try {
 		let originalObject;
 
@@ -134,6 +135,18 @@ const clone = async (object, userId) => {
 		}
 		case 'quest': {
 			originalObject = await Quest.findById(object.id);
+			break;
+		}
+		case 'bait': {
+			originalObject = await Item.findById(object.id);
+			break;
+		}
+		case 'gacha': {
+			originalObject = await Item.findById(object.id);
+			break;
+		}
+		case 'buff': {
+			originalObject = await Item.findById(object.id);
 			break;
 		}
 		default: {
@@ -207,6 +220,26 @@ const clone = async (object, userId) => {
 				obtained: Date.now(),
 				count: 1,
 				__t: 'BaitData',
+			});
+			break;
+		}
+		case 'gacha': {
+			clonedObject = new ItemData({
+				...originalObject.toObject(),
+				_id: new mongoose.Types.ObjectId(),
+				user: userId,
+				obtained: Date.now(),
+				__t: 'GachaData',
+			});
+			break;
+		}
+		case 'buff': {
+			clonedObject = new ItemData({
+				...originalObject.toObject(),
+				_id: new mongoose.Types.ObjectId(),
+				user: userId,
+				obtained: Date.now(),
+				__t: 'BuffData',
 			});
 			break;
 		}

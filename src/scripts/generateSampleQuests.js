@@ -3,6 +3,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const config = require('../config');
 const { Quest } = require('../schemas/QuestSchema');
+const { Rod } = require('../schemas/RodSchema');
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -16,7 +17,7 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 	});
 
 // Function to generate sample quests
-function generateSampleQuests() {
+async function generateSampleQuests() {
 	// Define an array of sample quest data
 	const sampleQuests = [
 		{
@@ -31,6 +32,7 @@ function generateSampleQuests() {
 			},
 			progressType: {
 				fish: ['rainbow trout', 'golden trout'],
+				rarity: ['any'],
 				rod: 'any',
 				qualities: ['any'],
 			},
@@ -50,6 +52,7 @@ function generateSampleQuests() {
 			},
 			progressType: {
 				fish: ['carp'],
+				rarity: ['any'],
 				rod: 'any',
 				qualities: ['any'],
 			},
@@ -69,6 +72,7 @@ function generateSampleQuests() {
 			},
 			progressType: {
 				fish: ['magikarp'],
+				rarity: ['any'],
 				rod: 'any',
 				qualities: ['any'],
 			},
@@ -88,6 +92,7 @@ function generateSampleQuests() {
 			},
 			progressType: {
 				fish: ['any'],
+				rarity: ['any'],
 				rod: 'any',
 				qualities: ['any'],
 			},
@@ -98,7 +103,7 @@ function generateSampleQuests() {
 		{
 			title: 'Lucky Fisher',
 			description: 'Catch 25 lucky fish.',
-			reward: ['Lucky Rod'],
+			reward: [await Rod.findOne({ name: 'Lucky Rod' })],
 			cash: 3000,
 			xp: 3000,
 			requirements: {
@@ -127,6 +132,7 @@ function generateSampleQuests() {
 			},
 			progressType: {
 				fish: ['any'],
+				rarity: ['any'],
 				rod: 'any',
 				qualities: ['any'],
 			},
@@ -146,6 +152,7 @@ function generateSampleQuests() {
 			},
 			progressType: {
 				fish: ['any'],
+				rarity: ['any'],
 				rod: 'any',
 				qualities: ['any'],
 			},
@@ -165,6 +172,7 @@ function generateSampleQuests() {
 			},
 			progressType: {
 				fish: ['any'],
+				rarity: ['any'],
 				rod: 'any',
 				qualities: ['any'],
 			},
@@ -184,6 +192,7 @@ function generateSampleQuests() {
 			},
 			progressType: {
 				fish: ['any'],
+				rarity: ['any'],
 				rod: 'any',
 				qualities: ['any'],
 			},
@@ -203,6 +212,7 @@ function generateSampleQuests() {
 			},
 			progressType: {
 				fish: ['any'],
+				rarity: ['any'],
 				rod: 'any',
 				qualities: ['any'],
 			},
