@@ -27,9 +27,11 @@ const generateFish = async (capabilities, choices, weights, user) => {
 
 	let f = await Fish.find({ rarity: draw, biome: biome });
 	if (draw === 'Lucky') {
-		const itemFind = await getWeightedChoice(['fish, item'], [80, 20]);
+		const itemFind = await getWeightedChoice(['fish', 'item'], [80, 20]);
 		if (itemFind === 'item') {
-			f = await Item.find({ rarity: draw });
+			const options = await Item.find({ rarity: draw });
+			const random = Math.floor(Math.random() * options.length);
+			f = [options[random]];
 		}
 	}
 	const filteredChoices = await Promise.all(f.map(async fishObj => {
