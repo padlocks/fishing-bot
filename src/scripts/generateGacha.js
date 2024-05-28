@@ -40,19 +40,20 @@ async function generateGacha() {
 		{
 			name: 'Booster Pack',
 			description: 'A pack containing boosters to help you in your journey.',
+			rarity: 'Lucky',
 			capabilities: ['buff'],
 			icon: {
 				animated: false,
 				data: '',
 			},
 			weights: {
-				common: 7000,
-				uncommon: 2500,
+				common: 0,
+				uncommon: 0,
 				rare: 500,
-				ultra: 100,
-				giant: 50,
-				legendary: 20,
-				lucky: 1,
+				ultra: 0,
+				giant: 0,
+				legendary: 0,
+				lucky: 0,
 			},
 		},
 		{
@@ -64,7 +65,7 @@ async function generateGacha() {
 				data: '',
 			},
 			weights: {
-				common: 7000,
+				common: 5000,
 				uncommon: 2500,
 				rare: 500,
 				ultra: 100,

@@ -209,10 +209,13 @@ const openBox = async (userId, name) => {
 		}
 
 		// generate random item from box
-		let draw = await getWeightedChoice(Object.keys(box.weights), weightValues);
-		draw = draw.charAt(0).toUpperCase() + draw.slice(1);
+		let filteredItems = [];
+		while (filteredItems.length === 0) {
+			let draw = await getWeightedChoice(Object.keys(box.weights), weightValues);
+			draw = draw.charAt(0).toUpperCase() + draw.slice(1);
+			filteredItems = items.filter((item) => item.rarity === draw);
+		}
 
-		const filteredItems = items.filter((item) => item.rarity === draw);
 		const random = Math.floor(Math.random() * filteredItems.length);
 		const item = filteredItems[random];
 
