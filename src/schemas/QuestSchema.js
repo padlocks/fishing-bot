@@ -10,7 +10,9 @@ const questSchema = new Schema({
 		required: true,
 	},
 	reward: {
-		type: [String],
+		type: [{
+			type: Schema.Types.ObjectId,
+		}],
 	},
 	cash: {
 		type: Number,

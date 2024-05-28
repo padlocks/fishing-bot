@@ -72,6 +72,14 @@ const UserSchema = new Schema ({
 			type: Schema.Types.ObjectId,
 			ref: 'Quest',
 		}],
+		buffs: [{
+			type: Schema.Types.ObjectId,
+			ref: 'Buff',
+		}],
+		gacha: [{
+			type: Schema.Types.ObjectId,
+			ref: 'Gacha',
+		}],
 	},
 });
 

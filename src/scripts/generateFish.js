@@ -3,48 +3,6 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const config = require('../config');
 const { Fish } = require('../schemas/FishSchema');
-const readline = require('readline');
-
-const rl = readline.createInterface({
-	input: process.stdin,
-	output: process.stdout,
-});
-
-const askUser = (fishes, index) => {
-	if (index < fishes.length) {
-		const fishData = fishes[index];
-		const fish = new Fish(fishData);
-
-		rl.question(`Name this fish: ${fishData.name}: `, (answer) => {
-			fish.name = answer;
-
-			rl.question('Add this fish to the database? (y/n): ', (response) => {
-				if (response === 'y') {
-					fish.save()
-						.then(() => {
-							console.log(`Fish "${fish.name}" created successfully`);
-						})
-						.catch((error) => {
-							console.error(`Error creating fish "${fish.name}":`, error);
-						})
-						.finally(() => {
-							// Call the function recursively for the next fish
-							askUser(fishes, index + 1);
-						});
-				}
-				else {
-					console.log(`Fish "${fish.name}" skipped`);
-					// Call the function recursively for the next fish
-					askUser(fishes, index + 1);
-				}
-			});
-		});
-	}
-	else {
-		// Close readline interface when all fish are processed
-		rl.close();
-	}
-};
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -74,216 +32,260 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 					case 'Common Ocean strong Fish': {
 						fish.name = 'Seabass';
 						fish.description = 'Seabass is a type of fish commonly found in the ocean. It is known for its strong and flavorful taste. Seabass is often sought after by anglers and is considered a prized catch in many fishing communities.';
+						fish.icon.data = 'Largemouth_Bass:1244065155361407111';
 						break;
 					}
 					case 'Common Ocean weak Fish': {
 						fish.name = 'Sardine';
 						fish.description = 'Sardine is a type of fish commonly found in the ocean. It is known for its small size and silvery appearance. Sardines are often used in cooking and can be found in a variety of dishes.';
+						fish.icon.data = 'Sardine:1244064605622501467';
 						break;
 					}
 					case 'Uncommon Ocean strong Fish': {
 						fish.name = 'Tuna';
 						fish.description = 'Tuna is a type of fish found in the ocean. It is known for its large size and powerful swimming ability. Tuna are popular game fish and are often sought after by anglers for their fighting spirit.';
+						fish.icon.data = 'Tuna:1244065971543609394';
 						break;
 					}
 					case 'Uncommon Ocean weak Fish': {
-						fish.name = 'Mackerel';
-						fish.description = 'Mackerel is a type of fish found in the ocean. It is known for its oily flesh and strong flavor. While mackerel is a popular food fish, it can also be used as bait for other species of fish.';
+						fish.name = 'Anchovy';
+						fish.description = 'Anchovy is a type of fish found in the ocean. It is known for its small size and strong flavor. Anchovies are often used as a topping on pizzas and in salads.';
+						fish.icon.data = 'Anchovy:1244064518590697497';
 						break;
 					}
 					case 'Rare Ocean strong Fish': {
 						fish.name = 'Swordfish';
 						fish.description = 'Swordfish is a type of fish found in the ocean. It is known for its large size and distinctive appearance. Like its name suggests, swordfish have a long, sword-like bill that they use to catch prey.';
+						fish.icon.data = 'Sturgeon:1244066061964283934';
 						break;
 					}
 					case 'Rare Ocean weak Fish': {
 						fish.name = 'Pufferfish';
 						fish.description = 'Pufferfish is a type of fish found in the ocean. It is known for its unique appearance and ability to inflate its body. Although pufferfish are considered a delicacy in some cultures, they can be toxic if not prepared properly.';
+						fish.icon.data = 'Pufferfish:1244064592229961748';
 						break;
 					}
 					case 'Ultra Ocean strong Fish': {
 						fish.name = 'Azure Marlin';
 						fish.description = 'Azure Marlin is a type of fish found in the ocean. Marlin are known for their large size and impressive fighting ability. They are popular game fish and are often sought after by anglers for their challenging nature.';
+						fish.icon.data = 'Ice_Pip:1244064559942205472';
 						break;
 					}
 					case 'Ultra Ocean weak Fish': {
 						fish.name = 'Giant Shrimp';
 						fish.description = 'Giant Shrimp is a type of crustacean found in the ocean. It is known for its large size and sweet flavor. Giant Shrimp are popular seafood items and are often used in a variety of dishes.';
+						fish.icon.data = 'Shrimp:1244065947585871872';
 						break;
 					}
 					case 'Giant Ocean strong Fish': {
-						fish.name = 'Whale';
-						fish.description = 'Whale is a type of marine mammal found in the ocean. It is known for its large size and impressive swimming ability. Whales are iconic creatures of the sea and are often associated with the beauty and majesty of the ocean.';
+						fish.name = 'Albacore';
+						fish.description = 'Albacore is a type of fish found in the ocean. It is known for its large size and powerful swimming ability. Albacore are popular game fish and are often sought after by anglers for their fighting spirit.';
+						fish.icon.data = 'Albacore:1244064517332271187';
 						break;
 					}
 					case 'Giant Ocean weak Fish': {
-						fish.name = 'Shark';
-						fish.description = 'Shark is a type of fish found in the ocean. It is known for its sharp teeth and powerful swimming ability. Sharks are apex predators of the sea and play a crucial role in maintaining the balance of marine ecosystems.';
+						fish.name = 'Super Cucumber';
+						fish.description = 'Super Cucumber is a type of fish found in the ocean. It is known for its large size and distinctive appearance. Many anglers consider Super Cucumber to be a prized catch.';
+						fish.icon.data = 'Super_Cucumber:1244066062744420383';
 						break;
 					}
 					case 'Legendary Ocean strong Fish': {
 						fish.name = 'Kraken';
 						fish.description = 'Kraken is a legendary sea monster said to dwell off the coast of Norway and Greenland. It is known for its massive size and fearsome appearance. The Kraken is said to be capable of dragging entire ships beneath the waves.';
+						fish.icon.data = 'Octopus:1244065311859282030';
 						break;
 					}
 					case 'Legendary Ocean weak Fish': {
-						fish.name = 'Narwhal';
-						fish.description = 'Narwhal is a type of whale found in the Arctic Ocean. It is known for its long, spiral tusk that can grow up to 10 feet in length. Narwhals are elusive creatures of the sea and are often associated with the beauty and mystery of the Arctic.';
+						fish.name = 'Anglerfish';
+						fish.description = 'Anglerfish is a type of fish found in the ocean. It is known for its unique appearance and bioluminescent lure. Anglerfish are skilled hunters and use their glowing lure to attract prey.';
+						fish.icon.data = 'Angler:1244064520213762188';
 						break;
 					}
 					case 'Lucky Ocean strong Fish': {
-						fish.name = 'King Mackarel';
-						fish.description = 'King Mackarel is a type of fish found in the ocean. It is known for its large size and powerful swimming ability. King Mackarel are popular game fish and are often sought after by anglers for their fighting spirit.';
+						fish.name = 'Pearl';
+						fish.description = 'Pearl is a rare and valuable gemstone found in the ocean. It is known for its lustrous appearance and iridescent colors. Pearls are often used in jewelry and are considered a symbol of beauty and elegance.';
+						fish.icon.data = 'Pearl:1244065167004667964';
 						break;
 					}
 					case 'Lucky Ocean weak Fish': {
 						fish.name = 'Magikarp';
 						fish.description = 'Magikarp is a type of fish found in the ocean. It is known for its small size and weak swimming ability. Magikarp are often considered a nuisance by anglers, but they can evolve into a powerful and majestic creature.';
+						fish.icon.animated = true;
+						fish.icon.data = 'magikarp:1209358098976874538';
 						break;
 					}
 					case 'Common River strong Fish': {
 						fish.name = 'Salmon';
 						fish.description = 'Salmon is a type of fish found in rivers and streams. It is known for its distinctive pink flesh and rich flavor. Salmon are popular food fish and are often sought after by anglers for their fighting spirit.';
+						fish.icon.data = 'Salmon:1244064602682036234';
 						break;
 					}
 					case 'Common River weak Fish': {
 						fish.name = 'Carp';
 						fish.description = 'Carp is a type of fish found in rivers and lakes. It is known for its large size and hardy nature. Although carp are often considered a nuisance by anglers, they can be a challenging and rewarding catch.';
+						fish.icon.data = 'Carp:1244064525859422228';
 						break;
 					}
 					case 'Uncommon River strong Fish': {
 						fish.name = 'Catfish';
 						fish.description = 'Catfish is a type of fish found in rivers and lakes. It is known for its whisker-like barbels and bottom-feeding behavior. Catfish are popular food fish and are often sought after by anglers for their unique taste.';
+						fish.icon.data = 'Catfish:1244065147769851904';
 						break;
 					}
 					case 'Uncommon River weak Fish': {
 						fish.name = 'Rainbow Trout';
 						fish.description = 'Rainbow Trout is a type of fish found in rivers and streams. It is known for its colorful appearance and delicate flavor. Rainbow Trout can be found in a variety of habitats and are popular game fish.';
+						fish.icon.data = 'Rainbow_Trout:1244064595681869834';
 						break;
 					}
 					case 'Rare River strong Fish': {
 						fish.name = 'Sturgeon';
 						fish.description = 'Sturgeon is a type of fish found in rivers and lakes. It is known for its large size and prehistoric appearance. Sturgeon will often migrate between freshwater and saltwater habitats.';
+						fish.icon.data = 'Sturgeon:1244066061964283934';
 						break;
 					}
 					case 'Rare River weak Fish': {
 						fish.name = 'Shad';
 						fish.description = 'Shad is a type of fish found in rivers and lakes. It is known for its silvery appearance and strong flavor. Shad play an important role in the ecosystem as a food source for other species of fish.';
+						fish.icon.data = 'Shad:1244065946457473044';
 						break;
 					}
 					case 'Ultra River strong Fish': {
-						fish.name = 'Golden Trout';
-						fish.description = 'Golden Trout is a type of fish found in rivers and streams. It is known for its vibrant golden color and delicate flavor. Golden Trout are popular game fish and are often sought after by anglers for their beauty.';
+						fish.name = 'Dorado';
+						fish.description = 'Dorado is a type of fish found in rivers and streams. It is known for its vibrant golden color and delicate flavor. Dorado are popular game fish and are often sought after by anglers for their beauty.';
+						fish.icon.data = 'Dorado:1244064546608386239';
 						break;
 					}
 					case 'Ultra River weak Fish': {
-						fish.name = 'Golden Carp';
-						fish.description = 'Golden Carp is a type of fish found in rivers and lakes. It is known for its golden scales and peaceful nature. Golden Carp are often kept as ornamental fish in ponds and aquariums.';
+						fish.name = 'Scorpion Carp';
+						fish.description = 'Scorpion Carp is a rare and mystical creature found in rivers and streams. It is known for its scorpion-like tail and venomous spines. Scorpion Carp are said to bring good luck and prosperity to those who encounter them.';
+						fish.icon.data = 'Scorpion_Carp:1244065942909096038';
 						break;
 					}
 					case 'Giant River strong Fish': {
 						fish.name = 'Queen Salmon';
 						fish.description = 'Queen Salmon is a type of fish found in rivers and streams. It is known for its large size and powerful swimming ability. Queen Salmon lay their eggs in freshwater and migrate to the ocean to feed.';
+						fish.icon.data = 'Salmon:1244064602682036234';
 						break;
 					}
 					case 'Giant River weak Fish': {
 						fish.name = 'King Salmon';
 						fish.description = 'King Salmon is a type of fish found in rivers and streams. It is known for its large size and distinctive flavor. King Salmon are popular food fish and are often sought after by anglers for their rich taste.';
+						fish.icon.data = 'Salmon:1244064602682036234';
 						break;
 					}
 					case 'Legendary River strong Fish': {
-						fish.name = 'Golden Sturgeon';
-						fish.description = 'Golden Sturgeon is a legendary fish said to dwell in the depths of rivers and lakes. It is known for its massive size and golden scales. Golden Sturgeon are said to bring good luck to those who catch them.';
+						fish.name = 'Void Salmon';
+						fish.description = 'Void Salmon is a legendary fish said to dwell in the depths of rivers and streams. It is known for its dark color and mysterious nature. Void Salmon are said to possess mystical powers and are said to bring misfortune to those who catch them.';
+						fish.icon.data = 'Void_Salmon:1244066120542064731';
 						break;
 					}
 					case 'Legendary River weak Fish': {
-						fish.name = 'Golden Salmon';
-						fish.description = 'Golden Salmon is a legendary fish said to dwell in the depths of rivers and streams. It is known for its vibrant golden color and delicate flavor. Golden Salmon are said to bring prosperity and abundance to those who catch them.';
+						fish.name = 'Woodskip';
+						fish.description = 'Woodskip is a legendary fish said to dwell in the depths of rivers and streams. It is known for its wooden appearance and elusive nature. Woodskip are said to bring good luck and prosperity to those who catch them.';
+						fish.icon.data = 'Woodskip:1244066122727428146';
 						break;
 					}
 					case 'Lucky River strong Fish': {
 						fish.name = 'Noxclate Fish';
 						fish.description = 'Noxclate Fish is a rare and mysterious creature said to dwell in the dark depths of rivers and lakes. It is known for its elusive nature and otherworldly appearance. Noxclate Fish are said to bring good fortune to those who encounter them.';
+						fish.icon.data = 'Son_of_Crimsonfish:1244065950915891242';
 						break;
 					}
 					case 'Lucky River weak Fish': {
 						fish.name = 'Lunafin Fish';
 						fish.description = 'Lunafin Fish is a rare and magical creature said to dwell in the moonlit waters of rivers and streams. It is known for its shimmering scales and ethereal beauty. Lunafin Fish are said to bring luck and prosperity to those who catch them.';
+						fish.icon.data = 'Ghostfish:1244064550471598213';
 						break;
 					}
 					case 'Common Lake strong Fish': {
 						fish.name = 'Bass';
 						fish.description = 'Bass is a type of fish found in lakes and rivers. It is known for its large size and powerful swimming ability. Bass fishing is a popular sport in many parts of the world.';
+						fish.icon.data = 'Smallmouth_Bass:1244065949930487889';
 						break;
 					}
 					case 'Common Lake weak Fish': {
 						fish.name = 'Bluegill';
 						fish.description = 'Bluegill is a type of fish found in lakes and ponds. It is known for its small size and colorful appearance. Bluegill are popularly caught by anglers and are often used as bait for larger fish.';
+						fish.icon.data = 'Blue_Discus:1244064522566762596';
 						break;
 					}
 					case 'Uncommon Lake strong Fish': {
 						fish.name = 'Walleye';
 						fish.description = 'Walleye is a type of fish found in lakes and rivers. It is known for its large size and distinctive appearance. Walleye are popular game fish and are often sought after by anglers for their delicate flavor.';
+						fish.icon.data = 'Walleye:1244066121552756816';
 						break;
 					}
 					case 'Uncommon Lake weak Fish': {
 						fish.name = 'Perch';
 						fish.description = 'Perch is a type of fish found in lakes and rivers. It is known for its small size and striped appearance. Perch are popular food fish and are often caught by anglers for their mild flavor.';
+						fish.icon.data = 'Perch:1244064588530581544';
 						break;
 					}
 					case 'Rare Lake strong Fish': {
 						fish.name = 'Pike';
 						fish.description = 'Pike is a type of fish found in lakes and rivers. It is known for its large size and aggressive nature. Pike are apex predators of the water and are often sought after by anglers for their challenging nature.';
+						fish.icon.data = 'Pike:1244065312924504094';
 						break;
 					}
 					case 'Rare Lake weak Fish': {
 						fish.name = 'Loach';
 						fish.description = 'Loach is a type of fish found in lakes and rivers. It is known for its small size and bottom-feeding behavior. Loach are often used as bait for other species of fish.';
+						fish.icon.data = 'Eel:1244064547313291285';
 						break;
 					}
 					case 'Ultra Lake strong Fish': {
 						fish.name = 'Steelhead';
 						fish.description = 'Steelhead is a type of fish found in lakes and rivers. It is known for its large size and powerful swimming ability. Steelhead are zealous fighters and are popular game fish among anglers.';
+						fish.icon.data = 'Bullhead:1244064524798267433';
 						break;
 					}
 					case 'Ultra Lake weak Fish': {
 						fish.name = 'Golden Bass';
 						fish.description = 'Golden Bass is a type of fish found in lakes and rivers. It is known for its golden scales and peaceful nature. Golden Bass are often kept as ornamental fish in ponds and aquariums.';
+						fish.icon.data = 'Dorado:1244064546608386239';
 						break;
 					}
 					case 'Giant Lake strong Fish': {
 						fish.name = 'Loch Ness Monster';
 						fish.description = 'Loch Ness Monster is a legendary creature said to dwell in the depths of Loch Ness in Scotland. It is known for its long neck and humped back. The Loch Ness Monster is a popular figure in Scottish folklore and has captured the imagination of people around the world.';
+						fish.icon.data = 'Mutant_Carp:1244064581484023819';
 						break;
 					}
 					case 'Giant Lake weak Fish': {
 						fish.name = 'Ogopogo';
 						fish.description = 'Ogopogo is a legendary creature said to dwell in the depths of Okanagan Lake in British Columbia, Canada. It is known for its long neck and serpentine body. Ogopogo is a popular figure in Canadian folklore and has become a symbol of the region.';
+						fish.icon.data = 'Mutant_Carp:1244064581484023819';
 						break;
 					}
 					case 'Legendary Lake strong Fish': {
 						fish.name = 'Golden Pike';
 						fish.description = 'Golden Pike is a legendary fish said to dwell in the depths of lakes and rivers. It is known for its massive size and golden scales. Golden Pike possess mystical powers and are said to bring good fortune to those who catch them.';
+						fish.icon.data = 'Dorado:1244064546608386239';
 						break;
 					}
 					case 'Legendary Lake weak Fish': {
 						fish.name = 'Golden Loach';
 						fish.description = 'Golden Loach is a legendary fish said to dwell in the depths of lakes and rivers. It is known for its shimmering scales and elusive nature. Golden Loach are said to bring prosperity and abundance to those who catch them.';
+						fish.icon.data = 'Dorado:1244064546608386239';
 						break;
 					}
 					case 'Lucky Lake strong Fish': {
 						fish.name = 'Lost Ring';
 						fish.description = 'Lost Ring is a rare and valuable item said to be hidden in the depths of lakes and rivers. It is known for its intricate design and sparkling gemstones.';
+						fish.icon.data = 'Treasure_Chest:1244066065751867423';
 						break;
 					}
 					case 'Lucky Lake weak Fish': {
 						fish.name = 'Lost Necklace';
 						fish.description = 'Lost Necklace is a rare and precious item said to be hidden in the depths of lakes and rivers. It is known for its elegant design and shimmering gemstones.';
+						fish.icon.data = 'Treasure_Chest:1244066065751867423';
 						break;
 					}
 					case 'Common Pond strong Fish': {
 						fish.name = 'Guppy';
 						fish.description = 'Guppy is a type of fish commonly found in ponds and aquariums. It is known for its small size and colorful appearance. Guppies are popular ornamental fish and are often kept in home aquariums.';
+						fish.icon.data = 'Red_Snapper:1244064598722875392';
 						break;
 					}
 					case 'Common Pond weak Fish': {
@@ -294,6 +296,7 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 					case 'Uncommon Pond strong Fish': {
 						fish.name = 'Betta';
 						fish.description = 'Betta is a type of fish commonly found in ponds and aquariums. It is known for its vibrant colors and aggressive nature. Betta fish are popular ornamental fish and are often kept in home aquariums.';
+						fish.icon.data = 'Blue_Discus:1244064522566762596';
 						break;
 					}
 					case 'Uncommon Pond weak Fish': {
@@ -304,6 +307,7 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 					case 'Rare Pond strong Fish': {
 						fish.name = 'Chub';
 						fish.description = 'Chub is a type of fish commonly found in ponds and lakes. It is known for its large size and powerful swimming ability. Chub are popular game fish and sport a distinctive appearance.';
+						fish.icon.data = 'Chub:1244064529009086465';
 						break;
 					}
 					case 'Rare Pond weak Fish': {
@@ -314,6 +318,7 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 					case 'Ultra Pond strong Fish': {
 						fish.name = 'Golden Guppy';
 						fish.description = 'Golden Guppy is a rare and valuable fish found in ponds and aquariums. It is known for its shimmering scales and peaceful nature. Golden Guppy are often kept as ornamental fish in home aquariums.';
+						fish.icon.data = 'Dorado:1244064546608386239';
 						break;
 					}
 					case 'Ultra Pond weak Fish': {
@@ -329,11 +334,13 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 					case 'Giant Pond weak Fish': {
 						fish.name = 'Zombie Fish';
 						fish.description = 'Zombie Fish is a rare and mysterious creature found in the depths of ponds and lakes. It is known for its undead appearance and eerie behavior. Zombie Fish are said to bring bad luck and misfortune to those who encounter them.';
+						fish.icon.data = 'Mutant_Carp:1244064581484023819';
 						break;
 					}
 					case 'Legendary Pond strong Fish': {
 						fish.name = 'Golden Chub';
 						fish.description = 'Golden Chub is a legendary fish said to dwell in the depths of ponds and lakes. It is known for its massive size and golden scales. Golden Chub are said to bring good fortune and prosperity to those who catch them.';
+						fish.icon.data = 'Dorado:1244064546608386239';
 						break;
 					}
 					case 'Legendary Pond weak Fish': {
@@ -344,26 +351,31 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 					case 'Lucky Pond strong Fish': {
 						fish.name = 'Lost Wallet';
 						fish.description = 'Lost Wallet is a rare and valuable item said to be hidden in the depths of ponds and lakes. It is known for its leather exterior and hidden treasures.';
+						fish.icon.data = 'Treasure_Chest:1244066065751867423';
 						break;
 					}
 					case 'Lucky Pond weak Fish': {
 						fish.name = 'Lost Phone';
 						fish.description = 'Lost Phone is a rare and precious item said to be hidden in the depths of ponds and lakes. It is known for its sleek design and advanced technology.';
+						fish.icon.data = 'Treasure_Chest:1244066065751867423';
 						break;
 					}
 					case 'Common Swamp strong Fish': {
 						fish.name = 'Swamp Eel';
 						fish.description = 'Swamp Eel is a type of fish found in swamps and wetlands. It is known for its long, snake-like body and slippery skin. Swamp Eel are often used in cooking and can be found in a variety of dishes.';
+						fish.icon.data = 'Eel:1244064547313291285';
 						break;
 					}
 					case 'Common Swamp weak Fish': {
 						fish.name = 'Mud Fish';
 						fish.description = 'Mud Fish is a type of fish found in swamps and wetlands. It is known for its small size and muddy appearance. Mud Fish are often found in shallow waters and feed on insects and small crustaceans.';
+						fish.icon.data = 'Stonefish:1244065957706465282';
 						break;
 					}
 					case 'Uncommon Swamp strong Fish': {
 						fish.name = 'Water Snake';
 						fish.description = 'Water Snake is a type of fish found in swamps and wetlands. It is known for its long, slender body and sharp teeth. Water Snake are often feared by anglers and are considered a nuisance in many fishing communities.';
+						fish.icon.data = 'Eel:1244064547313291285';
 						break;
 					}
 					case 'Uncommon Swamp weak Fish': {
@@ -374,21 +386,25 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 					case 'Rare Swamp strong Fish': {
 						fish.name = 'Viperfish';
 						fish.description = 'Viperfish is a type of fish found in swamps and wetlands. It is known for its sharp teeth and bioluminescent appearance. Viperfish are often found in deep waters and are rarely seen by humans.';
+						fish.icon.data = 'Tiger_Trout:1244065964501368872';
 						break;
 					}
 					case 'Rare Swamp weak Fish': {
 						fish.name = 'Bogfish';
 						fish.description = 'Bogfish is a type of fish found in swamps and wetlands. It is known for its slimy skin and foul odor. Bogfish are often considered a nuisance by anglers and are rarely eaten.';
+						fish.icon.data = 'Lingcod:1244065304716513392';
 						break;
 					}
 					case 'Ultra Swamp strong Fish': {
 						fish.name = 'Golden Eel';
 						fish.description = 'Golden Eel is a rare and valuable fish found in swamps and wetlands. It is known for its shimmering scales and peaceful nature. Golden Eel are often kept as ornamental fish in home aquariums.';
+						fish.icon.data = 'Eel:1244064547313291285';
 						break;
 					}
 					case 'Ultra Swamp weak Fish': {
 						fish.name = 'Golden Mudfish';
 						fish.description = 'Golden Mudfish is a rare and mystical creature found in swamps and wetlands. It is known for its golden color and magical properties. Golden Mudfish are said to bring good luck and prosperity to those who encounter them.';
+						fish.icon.data = 'Stonefish:1244065957706465282';
 						break;
 					}
 					case 'Giant Swamp strong Fish': {
@@ -404,48 +420,57 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 					case 'Legendary Swamp strong Fish': {
 						fish.name = 'Golden Viperfish';
 						fish.description = 'Golden Viperfish is a legendary fish said to dwell in the depths of swamps and wetlands. It is known for its massive size and golden scales. Golden Viperfish are said to bring good fortune and prosperity to those who catch them.';
+						fish.icon.data = 'Tiger_Trout:1244065964501368872';
 						break;
 					}
 					case 'Legendary Swamp weak Fish': {
 						fish.name = 'Golden Bogfish';
 						fish.description = 'Golden Bogfish is a legendary fish said to dwell in the depths of swamps and wetlands. It is known for its shimmering scales and elusive nature. Golden Bogfish are said to bring youth and vitality to those who encounter them.';
+						fish.icon.data = 'Lingcod:1244065304716513392';
 						break;
 					}
 					case 'Lucky Swamp strong Fish': {
 						fish.name = 'Lost Boot';
 						fish.description = 'Lost Boot is a rare item hidden in the depths of swamps and wetlands.';
 						fish.value = 0;
+						fish.icon.data = 'Treasure_Chest:1244066065751867423';
 						break;
 					}
 					case 'Lucky Swamp weak Fish': {
 						fish.name = 'Lost Hat';
 						fish.description = 'Lost Hat is a rare item hidden in the depths of swamps and wetlands.';
 						fish.value = 0;
+						fish.icon.data = 'Treasure_Chest:1244066065751867423';
 						break;
 					}
 					case 'Common Coast strong Fish': {
 						fish.name = 'Crab';
 						fish.description = 'Crab is a type of crustacean found in coastal waters. It is known for its hard shell and delicious meat. Crabs are popular seafood items and are often used in a variety of dishes.';
+						fish.icon.data = 'Crab:1244064534826717287';
 						break;
 					}
 					case 'Common Coast weak Fish': {
 						fish.name = 'Clam';
 						fish.description = 'Clam is a type of mollusk found in coastal waters. It is known for its hard shell and tender meat. Clams are popular seafood items and are often used in soups and stews.';
+						fish.icon.data = 'Clam:1244064531387514890';
 						break;
 					}
 					case 'Uncommon Coast strong Fish': {
 						fish.name = 'Lobster';
 						fish.description = 'Lobster is a type of crustacean found in coastal waters. It is known for its large size and sweet flavor. Lobsters are popular seafood items and are often served as a delicacy.';
+						fish.icon.data = 'Lobster:1244065160096907264';
 						break;
 					}
 					case 'Uncommon Coast weak Fish': {
 						fish.name = 'Oyster';
 						fish.description = 'Oyster is a type of mollusk found in coastal waters. It is known for its hard shell and briny flavor. Oysters are popular seafood items and are often served raw or cooked.';
+						fish.icon.data = 'Oyster:1244064585309491215';
 						break;
 					}
 					case 'Rare Coast strong Fish': {
 						fish.name = 'Octopus';
 						fish.description = 'Octopus is a type of cephalopod found in coastal waters. It is known for its eight arms and intelligent behavior. Octopus are skilled hunters and can change color to blend in with their surroundings.';
+						fish.icon.data = 'Octopus:1244065311859282030';
 						break;
 					}
 					case 'Rare Coast weak Fish': {
@@ -456,11 +481,13 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 					case 'Ultra Coast strong Fish': {
 						fish.name = 'Golden Crab';
 						fish.description = 'Golden Crab is a rare and valuable crustacean found in coastal waters. It is known for its golden shell and delicate meat. Golden Crab are often considered a delicacy and are highly prized by seafood enthusiasts.';
+						fish.icon.data = 'Crab:1244064534826717287';
 						break;
 					}
 					case 'Ultra Coast weak Fish': {
 						fish.name = 'Golden Clam';
 						fish.description = 'Golden Clam is a rare and precious mollusk found in coastal waters. It is known for its golden shell and lustrous pearls. Golden Clam are often sought after by collectors and are said to bring good luck and prosperity.';
+						fish.icon.data = 'Clam:1244064531387514890';
 						break;
 					}
 					case 'Giant Coast strong Fish': {
@@ -471,11 +498,13 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 					case 'Giant Coast weak Fish': {
 						fish.name = 'Sea Serpent';
 						fish.description = 'Sea Serpent is a legendary creature said to dwell in the depths of coastal waters. It is known for its long, serpentine body and fearsome appearance. Sea Serpent are often associated with myths and legends.';
+						fish.icon.data = 'Glacierfish:1244064552341999726';
 						break;
 					}
 					case 'Legendary Coast strong Fish': {
 						fish.name = 'Golden Octopus';
 						fish.description = 'Golden Octopus is a legendary creature said to dwell in the depths of coastal waters. It is known for its massive size and golden color. Golden Octopus are said to possess mystical powers and are said to bring good fortune to those who encounter them.';
+						fish.icon.data = 'Octopus:1244065311859282030';
 						break;
 					}
 					case 'Legendary Coast weak Fish': {
@@ -487,12 +516,14 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 						fish.name = 'Lost Boot';
 						fish.description = 'Lost Boot is a rare item hidden in the depths of coastal waters.';
 						fish.value = 0;
+						fish.icon.data = 'Treasure_Chest:1244066065751867423';
 						break;
 					}
 					case 'Lucky Coast weak Fish': {
 						fish.name = 'Lost Hat';
 						fish.description = 'Lost Hat is a rare item hidden in the depths of coastal waters.';
 						fish.value = 0;
+						fish.icon.data = 'Treasure_Chest:1244066065751867423';
 						break;
 					}
 					default: {
@@ -518,7 +549,7 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 					console.error(`Error creating fish "${fish.name}":`, error);
 				});
 		});
-		generateSampleFish();
+		// generateSampleFish();
 
 	})
 	.catch((error) => {
@@ -579,896 +610,4 @@ function generateFishIcon() {
 		'animated': false,
 		'data': 'rawfish:1209352519726276648',
 	};
-}
-
-function generateSampleFish() {
-	const sampleFish = [
-		{
-			'name': 'Oarfish',
-			'rarity': 'Ultra',
-			'value': 500,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'strong',
-			],
-			'type': 'fish',
-		},
-		{
-			'name': 'Tuna',
-			'rarity': 'Uncommon',
-			'value': 50,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'ocean',
-		},
-		{
-			'name': 'Cod',
-			'rarity': 'Common',
-			'value': 5,
-			'icon': {
-				'animated': false,
-				'data': 'cod:1209352557630062633',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'lake',
-		},
-		{
-			'name': 'Sunfish',
-			'rarity': 'Rare',
-			'value': 200,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'ocean',
-		},
-		{
-			'name': 'Rainbow Trout',
-			'rarity': 'Uncommon',
-			'value': 55,
-			'icon': {
-				'animated': false,
-				'data': 'salmon:1209358095873085480',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'river',
-		},
-		{
-			'name': 'Bluegill',
-			'rarity': 'Common',
-			'value': 3,
-			'icon': {
-				'animated': false,
-				'data': 'salmon:1209358095873085480',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'lake',
-		},
-		{
-			'name': 'Catfish',
-			'rarity': 'Uncommon',
-			'value': 25,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'river',
-		},
-		{
-			'name': 'Clownfish',
-			'rarity': 'Uncommon',
-			'value': 35,
-			'icon': {
-				'animated': false,
-				'data': 'clownfish:1209352536037785611',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'ocean',
-		},
-		{
-			'name': 'Carp',
-			'rarity': 'Common',
-			'value': 4,
-			'__v': 0,
-			'icon': {
-				'animated': false,
-				'data': 'cod:1209352557630062633',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'lake',
-		},
-		{
-			'name': 'Golden Trout',
-			'rarity': 'Ultra',
-			'value': 375,
-			'icon': {
-				'animated': false,
-				'data': 'goldfish:1209358094598021140',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'river',
-		},
-		{
-			'name': 'Tiger Shark',
-			'rarity': 'Giant',
-			'value': 1700,
-			'icon': {
-				'animated': false,
-				'data': 'sharkyshark:1209358097009610842',
-			},
-			'qualities': [
-				'strong',
-			],
-			'type': 'fish',
-			'biome': 'ocean',
-		},
-		{
-			'name': 'Magikarp',
-			'rarity': 'Legendary',
-			'value': 3000,
-			'icon': {
-				'animated': true,
-				'data': 'magikarp:1209358098976874538',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'lake',
-		},
-		{
-			'name': 'Swordfish',
-			'rarity': 'Rare',
-			'value': 200,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'strong',
-			],
-			'type': 'fish',
-			'biome': 'ocean',
-		},
-		{
-			'name': 'Pufferfish',
-			'rarity': 'Rare',
-			'value': 250,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'ocean',
-		},
-		{
-			'name': 'Salmon',
-			'rarity': 'Uncommon',
-			'value': 40,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'river',
-		},
-		{
-			'name': 'Bass',
-			'rarity': 'Uncommon',
-			'value': 45,
-			'icon': {
-				'animated': false,
-				'data':'salmon:120',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'lake',
-		},
-		{
-			'name': 'Snapping Turtle',
-			'rarity': 'Rare',
-			'value': 300,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'strong',
-			],
-			'type': 'fish',
-			'biome': 'pond',
-		},
-		{
-			'name': 'Guppy',
-			'rarity': 'Common',
-			'value': 2,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'pond',
-		},
-		{
-			'name': 'Betta',
-			'rarity': 'Uncommon',
-			'value': 30,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'pond',
-		},
-		{
-			'name': 'Frog',
-			'rarity': 'Common',
-			'value': 10,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'pond',
-		},
-		{
-			'name': 'Koi',
-			'rarity': 'Rare',
-			'value': 275,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'pond',
-		},
-		{
-			'name': 'Loach',
-			'rarity': 'Common',
-			'value': 6,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'pond',
-		},
-		{
-			'name': 'Piranha',
-			'rarity': 'Rare',
-			'value': 250,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'strong',
-			],
-			'type': 'fish',
-			'biome': 'river',
-		},
-		{
-			'name': 'Electric Eel',
-			'rarity': 'Rare',
-			'value': 275,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'strong',
-			],
-			'type': 'fish',
-			'biome': 'ocean',
-		},
-		{
-			'name': 'Giant Squid',
-			'rarity': 'Giant',
-			'value': 2000,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'strong',
-			],
-			'type': 'fish',
-			'biome': 'ocean',
-		},
-		{
-			'name': 'Whale',
-			'rarity': 'Giant',
-			'value': 2500,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'strong',
-			],
-			'type': 'fish',
-			'biome': 'ocean',
-		},
-		{
-			'name': 'Dolphin',
-			'rarity': 'Giant',
-			'value': 3000,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'strong',
-			],
-			'type': 'fish',
-			'biome': 'ocean',
-		},
-		{
-			'name': 'Narwhal',
-			'rarity': 'Legendary',
-			'value': 3000,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'strong',
-			],
-			'type': 'fish',
-			'biome': 'ocean',
-		},
-		{
-			'name': 'Seahorse',
-			'rarity': 'Common',
-			'value': 8,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'ocean',
-		},
-		{
-			'name': 'Pike',
-			'rarity': 'Uncommon',
-			'value': 60,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'lake',
-		},
-		{
-			'name': 'Sturgeon',
-			'rarity': 'Rare',
-			'value': 200,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'strong',
-			],
-			'type': 'fish',
-			'biome': 'lake',
-		},
-		{
-			'name': 'Walleye',
-			'rarity': 'Uncommon',
-			'value': 55,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'lake',
-		},
-		{
-			'name': 'Perch',
-			'rarity': 'Common',
-			'value': 5,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'lake',
-		},
-		{
-			'name': 'Steelhead',
-			'rarity': 'Uncommon',
-			'value': 50,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'river',
-		},
-		{
-			'name': 'Shad',
-			'rarity': 'Rare',
-			'value': 225,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'river',
-		},
-		{
-			'name': 'Chub',
-			'rarity': 'Common',
-			'value': 7,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'river',
-		},
-		{
-			'name': 'Mahi Mahi',
-			'rarity': 'Rare',
-			'value': 250,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'strong',
-			],
-			'type': 'fish',
-			'biome': 'ocean',
-		},
-		{
-			'name': 'Azure Marlin',
-			'rarity': 'Ultra',
-			'value': 400,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'strong',
-			],
-			'type': 'fish',
-			'biome': 'ocean',
-		},
-		{
-			'name': 'Jellyfish',
-			'rarity': 'Rare',
-			'value': 275,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'ocean',
-		},
-		{
-			'name': 'Baracuda',
-			'rarity': 'Uncommon',
-			'value': 60,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'ocean',
-		},
-		{
-			'name': 'Sailfish',
-			'rarity': 'Rare',
-			'value': 275,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'strong',
-			],
-			'type': 'fish',
-			'biome': 'ocean',
-		},
-		{
-			'name': 'Clam',
-			'rarity': 'Common',
-			'value': 5,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'coast',
-		},
-		{
-			'name': 'Lobster',
-			'rarity': 'Uncommon',
-			'value': 40,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'coast',
-		},
-		{
-			'name': 'Crab',
-			'rarity': 'Common',
-			'value': 8,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'coast',
-		},
-		{
-			'name': 'Giant Shrimp',
-			'rarity': 'Ultra',
-			'value': 400,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'coast',
-		},
-		{
-			'name': 'Octopus',
-			'rarity': 'Rare',
-			'value': 250,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'strong',
-			],
-			'type': 'fish',
-			'biome': 'coast',
-		},
-		{
-			'name': 'Squid',
-			'rarity': 'Uncommon',
-			'value': 50,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'coast',
-		},
-		{
-			'name': 'Sea Urchin',
-			'rarity': 'Rare',
-			'value': 275,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'coast',
-		},
-		{
-			'name': 'Unusual Starfish',
-			'rarity': 'Legendary',
-			'value': 3000,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'coast',
-		},
-		{
-			'name': 'Sand Dab',
-			'rarity': 'Uncommon',
-			'value': 30,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'coast',
-		},
-		{
-			'name': 'Kelp',
-			'rarity': 'Common',
-			'value': 1,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'coast',
-		},
-		{
-			'name': 'Mudfish',
-			'rarity': 'Common',
-			'value': 5,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'swamp',
-		},
-		{
-			'name': 'Bullfrog',
-			'rarity': 'Common',
-			'value': 10,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'swamp',
-		},
-		{
-			'name': 'Water Snake',
-			'rarity': 'Uncommon',
-			'value': 35,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'swamp',
-		},
-		{
-			'name': 'Leech',
-			'rarity': 'Common',
-			'value': 5,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'swamp',
-		},
-		{
-			'name': 'Gar',
-			'rarity': 'Rare',
-			'value': 250,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'strong',
-			],
-			'type': 'fish',
-			'biome': 'swamp',
-		},
-		{
-			'name': 'Marsh Snail',
-			'rarity': 'Uncommon',
-			'value': 30,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'swamp',
-		},
-		{
-			'name': 'Swamp Eel',
-			'rarity': 'Rare',
-			'value': 225,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'strong',
-			],
-			'type': 'fish',
-			'biome': 'swamp',
-		},
-		{
-			'name': 'Mudskipper',
-			'rarity': 'Common',
-			'value': 15,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'strong',
-			],
-			'type': 'fish',
-			'biome': 'swamp',
-		},
-		{
-			'name': 'Crocodile',
-			'rarity': 'Ultra',
-			'value': 500,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'strong',
-			],
-			'type': 'fish',
-			'biome': 'swamp',
-		},
-		{
-			'name': 'Giant Salamander',
-			'rarity': 'Giant',
-			'value': 1000,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'weak',
-			],
-			'type': 'fish',
-			'biome': 'swamp',
-		},
-		{
-			'name': 'Loch Ness Monster',
-			'rarity': 'Legendary',
-			'value': 3000,
-			'icon': {
-				'animated': false,
-				'data': 'rawfish:1209352519726276648',
-			},
-			'qualities': [
-				'strong',
-			],
-			'type': 'fish',
-			'biome': 'swamp',
-		},
-	];
-
-	sampleFish.forEach((fishData) => {
-		const fish = new Fish(fishData);
-		// check if fish name already exists
-		const fishExists = Fish.findOne({ name: fish.name });
-		if (fishExists) {
-			console.log(`Fish "${fishData.name}" already exists`);
-			return;
-		}
-		else {
-			fish.save()
-				.then(() => {
-					console.log(`Fish "${fishData.name}" created successfully`);
-				})
-				.catch((error) => {
-					console.error(`Error creating fish "${fishData.name}":`, error);
-				});
-		}
-	});
 }

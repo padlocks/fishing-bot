@@ -2,6 +2,7 @@ const { clone } = require('./Utils');
 const { xpToLevel } = require('./User');
 const { Quest, QuestData } = require('../schemas/QuestSchema');
 const { User } = require('../schemas/UserSchema');
+const { Gacha } = require('../schemas/GachaSchema');
 
 const generateDailyQuest = async (userId) => {
 	const user = await User.findOne({ userId: userId });
@@ -44,6 +45,8 @@ const generateDailyQuest = async (userId) => {
 		quest.status = 'in_progress';
 		quest.user = userId;
 		quest.startDate = Date.now();
+		quest.reward = [];
+		quest.reward.push(await Gacha.findOne({ name: 'Daily Box' }));
 		await quest.save();
 		user.inventory.quests.push(quest._id);
 		user.stats.lastDailyQuest = Date.now();

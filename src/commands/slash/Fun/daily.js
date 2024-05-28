@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { generateDailyQuest, getQuests } = require('../../../util/Quest');
+const { Item } = require('../../../schemas/ItemSchema');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -33,13 +34,30 @@ module.exports = {
 			});
 		}
 		else {
+			let value = '';
+			const rewards = [];
+			if (quest.reward.length > 0) {
+				for await (const reward of quest.reward) {
+					const rewardObject = await Item.findById(reward);
+					rewards.push(rewardObject.name);
+				}
+			}
+
+			const rewardsString = rewards.join(', ');
+			if (rewards.length > 0) {
+				value = `$${quest.cash}, ${quest.xp} XP, ${rewardsString}`;
+			}
+			else {
+				value = `$${quest.cash}, ${quest.xp} XP`;
+			}
+
 			await interaction.reply({
 				embeds: [
 					new EmbedBuilder()
 						.setTitle(`Daily Quest: ${quest.title}`)
 						.setDescription(quest.description)
 						.addFields(
-							{ name: 'Rewards', value: `$${quest.cash}, ${quest.xp} XP` },
+							{ name: 'Rewards', value: value },
 						),
 				],
 			});

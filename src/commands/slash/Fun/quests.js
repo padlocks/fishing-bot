@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const buttonPagination = require('../../../buttonPagination');
 const { QuestData } = require('../../../schemas/QuestSchema');
-const { log } = require('../../../util/Utils');
+const { Item } = require('../../../schemas/ItemSchema');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -26,15 +26,26 @@ module.exports = {
 				});
 			}
 
-			let fields = [];
-			fields = quests.map((q) => ({
-				name: q.title,
-				value: `${q.description}\n
-					**Rewards:** $${q.cash}, ${q.xp} XP ${q.reward.length > 0 ? q.reward.join(', ') : ''}
-					**Progress:** ${q.progress}/${q.progressMax}
-					---------`,
-				inline: true,
-			}));
+			const fields = [];
+			for (const q of quests) {
+				const rewards = [];
+
+				if (q.reward.length > 0) {
+					for (const reward of q.reward) {
+						const rewardObject = await Item.findById(reward);
+						rewards.push(rewardObject.name);
+					}
+				}
+
+				fields.push({
+					name: q.title,
+					value: `${q.description}\n
+						**Rewards:** $${q.cash}, ${q.xp} XP ${', ' + rewards.join(', ')}
+						**Progress:** ${q.progress}/${q.progressMax}
+						---------`,
+					inline: true,
+				});
+			}
 
 			const chunkSize = 6;
 

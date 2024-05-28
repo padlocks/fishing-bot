@@ -1,5 +1,6 @@
 const { User } = require('../../schemas/UserSchema');
 const { FishData } = require('../../schemas/FishSchema');
+const { BuffData } = require('../../schemas/BuffSchema');
 const { getUser } = require('../../util/User');
 const { log } = require('../../util/Utils');
 
@@ -17,13 +18,19 @@ module.exports = {
 		const fishArray = userData.stats.latestFish;
 		let newFish = userData.inventory.fish;
 
+		// check for buffs
+		const activeBuffs = await BuffData.find({ user: userData.userId, active: true });
+		const cashBuff = activeBuffs.find((buff) => buff.capabilities.includes('cash'));
+		const cashMultiplier = cashBuff ? parseFloat(cashBuff.capabilities[1]) : 1;
+
 		for (const fish of fishArray) {
 			const fishData = await FishData.findById(fish.valueOf());
-			const value = fishData.value;
+			const value = fishData.value * cashMultiplier * fish.count;
 			// newFish.push(...userData.inventory.fish.filter(x => x._id.valueOf() !== fishData._id.valueOf()));
 			newFish = newFish.filter(x => {
 				return x._id.valueOf() != fishData._id.valueOf();
 			});
+
 			userData.inventory.money += value;
 		}
 

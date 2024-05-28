@@ -152,6 +152,7 @@ module.exports = {
 				if (now.getDate() > lastFished.getDate()) {
 					pond.count = 1000;
 					pond.lastFished = now;
+					pond.warning = false;
 					await pond.save();
 				}
 			}

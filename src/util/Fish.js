@@ -1,6 +1,7 @@
 const { Fish, FishData } = require('../schemas/FishSchema');
 const { User } = require('../schemas/UserSchema');
 const { Item, ItemData } = require('../schemas/ItemSchema');
+const { BuffData } = require('../schemas/BuffSchema');
 const { log, clone, getWeightedChoice, sumArrays, sumCountsInArrays } = require('./Utils');
 
 const fish = async (rod, bait, biome, user) => {
@@ -117,10 +118,15 @@ const sellFishByRarity = async (userId, targetRarity) => {
 	let newFish = [];
 	const user = await User.findOne({ userId: userId });
 
+	// check for buffs
+	const activeBuffs = await BuffData.find({ user: userId, active: true });
+	const cashBuff = activeBuffs.find((buff) => buff.capabilities.includes('cash'));
+	const cashMultiplier = cashBuff ? parseFloat(cashBuff.capabilities[1]) : 1;
+
 	const updatedFish = await Promise.all(user.inventory.fish.map(async (f) => {
 		const fishToSell = await FishData.findById(f.valueOf());
 		if (!fishToSell.locked && (targetRarity.toLowerCase() === 'all' || fishToSell.rarity.toLowerCase() === targetRarity.toLowerCase())) {
-			totalValue += fishToSell.value;
+			totalValue += fishToSell.value * cashMultiplier * f.count;
 			return null;
 		}
 		return f;

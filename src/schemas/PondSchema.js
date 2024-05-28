@@ -14,6 +14,10 @@ const PondSchema = new Schema({
 		type: Number,
 		default: 0,
 	},
+	warning: {
+		type: Boolean,
+		default: false,
+	},
 });
 
 const Pond = model('Pond', PondSchema);

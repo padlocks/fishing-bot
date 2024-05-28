@@ -1,7 +1,27 @@
-const { clone } = require('./Utils');
-const { FishData } = require('../schemas/FishSchema');
+const { clone, generateXP, generateCash, getWeightedChoice } = require('./Utils');
+const { Fish, FishData } = require('../schemas/FishSchema');
 const { Item, ItemData } = require('../schemas/ItemSchema');
 const { User } = require('../schemas/UserSchema');
+const { Gacha } = require('../schemas/GachaSchema');
+const { BuffData } = require('../schemas/BuffSchema');
+
+const generateBoostedXP = async (userId) => {
+	// check for active buffs
+	const activeBuffs = await BuffData.find({ user: userId, active: true });
+	const xpBuff = activeBuffs.find((buff) => buff.capabilities.includes('xp'));
+	const xpMultiplier = xpBuff ? parseFloat(xpBuff.capabilities[1]) : 1;
+
+	return generateXP(10 * xpMultiplier, 25 * xpMultiplier);
+};
+
+const generateBoostedCash = async (userId) => {
+	// check for active buffs
+	const activeBuffs = await BuffData.find({ user: userId, active: true });
+	const cashBuff = activeBuffs.find((buff) => buff.capabilities.includes('cash'));
+	const cashMultiplier = cashBuff ? parseFloat(cashBuff.capabilities[1]) : 1;
+
+	return generateCash(10 * cashMultiplier, 100 * cashMultiplier);
+};
 
 const getEquippedRod = async (userId) => {
 	let user = await User.findOne({ userId: userId });
@@ -154,6 +174,99 @@ const getAllBaits = async (userId) => {
 	return baits;
 };
 
+const openBox = async (userId, name) => {
+	const user = await User.findOne({ userId: userId });
+	// uppercase the first letter of each word in name
+	name = name.split(' ').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+	const box = await ItemData.findOne({ name: name, opened: false, user: userId });
+	if (!box) return null;
+
+	box.opened = true;
+	await box.save();
+
+	// check box capabilities to generate items
+	const capabilities = box.capabilities;
+	const weights = box.weights;
+	const items = [...await Item.find({ type: { $in: capabilities } }), ...await Fish.find({ type: { $in: capabilities } })];
+
+	// generate random item from box
+	let draw = await getWeightedChoice(Object.keys(box.weights), Object.values(weights));
+	draw = draw.charAt(0).toUpperCase() + draw.slice(1);
+
+	const filteredItems = items.filter((item) => item.rarity === draw);
+	const random = Math.floor(Math.random() * filteredItems.length);
+	const item = filteredItems[random];
+
+	// remove box from user inventory
+	user.inventory.gacha = user.inventory.gacha.filter((i) => i._id !== box._id);
+
+	// add item to user inventory
+	const clonedItem = await clone(item, userId);
+	switch (clonedItem.type) {
+	case 'rod':
+		user.inventory.rods.push(clonedItem);
+		break;
+	case 'bait':
+		user.inventory.baits.push(clonedItem);
+		break;
+	case 'fish':
+		user.inventory.fish.push(clonedItem);
+		break;
+	case 'buff':
+		user.inventory.buffs.push(clonedItem);
+		break;
+	default:
+		user.inventory.items.push(clonedItem);
+		break;
+	}
+	await user.save();
+
+	return clonedItem;
+};
+
+const generateBox = async (userId, name) => {
+	const box = await Gacha.findOne({ name: name });
+	const clonedBox = await clone(box, userId);
+	clonedBox.obtained = Date.now();
+	clonedBox.user = userId;
+	await clonedBox.save();
+
+	const user = await User.findOne({ userId: userId });
+	user.inventory.gacha.push(clonedBox);
+	await user.save();
+
+	return clonedBox;
+};
+
+const sendToInventory = async (userId, item) => {
+	const user = await User.findOne({ userId: userId });
+	const itemObject = await Item.findById(item);
+	const clonedItem = await clone(itemObject, userId);
+	switch (clonedItem.type) {
+	case 'rod':
+		user.inventory.rods.push(item);
+		break;
+	case 'bait':
+		user.inventory.baits.push(item);
+		break;
+	case 'fish':
+		user.inventory.fish.push(item);
+		break;
+	case 'buff':
+		user.inventory.buffs.push(item);
+		break;
+	case 'gacha':
+		user.inventory.gacha.push(item);
+		break;
+	case 'quest':
+		user.inventory.quests.push(item);
+		break;
+	default:
+		user.inventory.items.push(item);
+		break;
+	}
+	await user.save();
+};
 
 module.exports = {
 	getEquippedRod,
@@ -168,4 +281,9 @@ module.exports = {
 	xpToNextLevel,
 	getInventoryValue,
 	getAllBaits,
+	generateBoostedXP,
+	generateBoostedCash,
+	openBox,
+	generateBox,
+	sendToInventory,
 };
