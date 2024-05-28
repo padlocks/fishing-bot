@@ -10,10 +10,6 @@ const generateBoostedXP = async (userId) => {
 	const xpBuff = activeBuffs.find((buff) => buff.capabilities.includes('xp'));
 	const xpMultiplier = xpBuff ? parseFloat(xpBuff.capabilities[1]) : 1;
 
-	console.log(activeBuffs);
-	console.log(xpBuff);
-	console.log(xpMultiplier);
-
 	return generateXP(10 * xpMultiplier, 25 * xpMultiplier);
 };
 
