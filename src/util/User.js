@@ -308,14 +308,14 @@ const startBooster = async (userId, id) => {
 	return buff;
 };
 
-const endBooster = async (userId, name) => {
+const endBooster = async (userId, id) => {
 	const user = await User.findOne({ userId: userId });
-	const buff = user.inventory.buffs.find((b) => b.name === name);
+	const buff = await BuffData.findById(id);
 	if (!buff) return null;
 	buff.active = false;
 	await buff.save();
 
-	user.inventory.buffs = user.inventory.buffs.filter((b) => b.name !== name);
+	user.inventory.buffs = user.inventory.buffs.filter((b) => b.id !== buff.id);
 	await user.save();
 };
 

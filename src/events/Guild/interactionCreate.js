@@ -177,7 +177,7 @@ module.exports = {
 			// check if it has ended
 			for (const buff of activeBuffs) {
 				if (buff.endTime && buff.endTime <= Date.now()) {
-					await endBooster(interaction.user.id, buff.name);
+					await endBooster(interaction.user.id, buff.id);
 				}
 			}
 
