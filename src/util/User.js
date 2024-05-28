@@ -178,50 +178,57 @@ const openBox = async (userId, name) => {
 	const user = await User.findOne({ userId: userId });
 	// uppercase the first letter of each word in name
 	name = name.split(' ').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-	const box = await ItemData.findOne({ name: name, opened: false, user: userId });
-	if (!box) return null;
 
-	box.opened = true;
-	await box.save();
+	const boxes = user.inventory.gacha.filter((box) => !box.opened && box.name !== name);
+	if (boxes.length === 0) return null;
+	user.inventory.gacha.shift();
+	const box = await ItemData.findById(boxes[0]);
+	if (!box.opened) {
+		box.opened = true;
+		await box.save();
 
-	// check box capabilities to generate items
-	const capabilities = box.capabilities;
-	const weights = box.weights;
-	const items = [...await Item.find({ type: { $in: capabilities } }), ...await Fish.find({ type: { $in: capabilities } })];
+		// check box capabilities to generate items
+		const capabilities = box.capabilities;
+		const weights = box.weights;
+		const items = [...await Item.find({ type: { $in: capabilities } }), ...await Fish.find({ type: { $in: capabilities } })];
 
-	// generate random item from box
-	let draw = await getWeightedChoice(Object.keys(box.weights), Object.values(weights));
-	draw = draw.charAt(0).toUpperCase() + draw.slice(1);
+		// generate random item from box
+		let draw = await getWeightedChoice(Object.keys(box.weights), Object.values(weights));
+		draw = draw.charAt(0).toUpperCase() + draw.slice(1);
 
-	const filteredItems = items.filter((item) => item.rarity === draw);
-	const random = Math.floor(Math.random() * filteredItems.length);
-	const item = filteredItems[random];
+		const filteredItems = items.filter((item) => item.rarity === draw);
+		const random = Math.floor(Math.random() * filteredItems.length);
+		const item = filteredItems[random];
 
-	// remove box from user inventory
-	user.inventory.gacha = user.inventory.gacha.filter((i) => i._id !== box._id);
+		// remove box from user inventory
+		user.inventory.gacha = user.inventory.gacha.filter((i) => i._id !== box._id);
 
-	// add item to user inventory
-	const clonedItem = await clone(item, userId);
-	switch (clonedItem.type) {
-	case 'rod':
-		user.inventory.rods.push(clonedItem);
-		break;
-	case 'bait':
-		user.inventory.baits.push(clonedItem);
-		break;
-	case 'fish':
-		user.inventory.fish.push(clonedItem);
-		break;
-	case 'buff':
-		user.inventory.buffs.push(clonedItem);
-		break;
-	default:
-		user.inventory.items.push(clonedItem);
-		break;
+		// add item to user inventory
+		const clonedItem = await clone(item, userId);
+		switch (clonedItem.type) {
+		case 'rod':
+			user.inventory.rods.push(clonedItem);
+			break;
+		case 'bait':
+			user.inventory.baits.push(clonedItem);
+			break;
+		case 'fish':
+			user.inventory.fish.push(clonedItem);
+			break;
+		case 'buff':
+			user.inventory.buffs.push(clonedItem);
+			break;
+		default:
+			user.inventory.items.push(clonedItem);
+			break;
+		}
+		await user.save();
+
+		return clonedItem;
 	}
-	await user.save();
-
-	return clonedItem;
+	else {
+		return null;
+	}
 };
 
 const generateBox = async (userId, name) => {
@@ -244,25 +251,25 @@ const sendToInventory = async (userId, item) => {
 	const clonedItem = await clone(itemObject, userId);
 	switch (clonedItem.type) {
 	case 'rod':
-		user.inventory.rods.push(item);
+		user.inventory.rods.push(clonedItem);
 		break;
 	case 'bait':
-		user.inventory.baits.push(item);
+		user.inventory.baits.push(clonedItem);
 		break;
 	case 'fish':
-		user.inventory.fish.push(item);
+		user.inventory.fish.push(clonedItem);
 		break;
 	case 'buff':
-		user.inventory.buffs.push(item);
+		user.inventory.buffs.push(clonedItem);
 		break;
 	case 'gacha':
-		user.inventory.gacha.push(item);
+		user.inventory.gacha.push(clonedItem);
 		break;
 	case 'quest':
-		user.inventory.quests.push(item);
+		user.inventory.quests.push(clonedItem);
 		break;
 	default:
-		user.inventory.items.push(item);
+		user.inventory.items.push(clonedItem);
 		break;
 	}
 	await user.save();
