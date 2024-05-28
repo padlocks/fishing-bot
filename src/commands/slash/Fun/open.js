@@ -25,13 +25,18 @@ module.exports = {
 
 		// Open the box
 		const opened = await openBox(interaction.user.id, name.toLowerCase());
+		let description = 'Rewards: \n';
+
+		for (const item in opened) {
+			description += `<${item.icon?.animated ? 'a' : ''}:${item.icon?.data}> ${item.count}x ${item.name}\n`;
+		}
 
 		if (opened) {
 			return await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()
 						.setTitle(`Opened ${name.split(' ').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}`)
-						.setDescription(`You got a <${opened.icon?.animated ? 'a' : ''}:${opened.icon?.data}> ${opened.name}! Congrats!`)
+						.setDescription(description)
 						.setColor('Green'),
 				],
 			});

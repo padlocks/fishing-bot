@@ -22,10 +22,14 @@ async function generateGacha() {
 		{
 			name: 'Fishing Crate',
 			description: 'A crate containing a random assortment of fishing supplies.',
+			rarity: 'Common',
 			capabilities: ['bait'],
+			shopItem: true,
+			price: 750,
+			items: 10,
 			icon: {
 				animated: false,
-				data: '',
+				data: 'Treasure_Chest:1244066065751867423',
 			},
 			weights: {
 				common: 7000,
@@ -44,7 +48,7 @@ async function generateGacha() {
 			capabilities: ['buff'],
 			icon: {
 				animated: false,
-				data: '',
+				data: 'Treasure_Chest:1244066065751867423',
 			},
 			weights: {
 				common: 0,
@@ -59,13 +63,15 @@ async function generateGacha() {
 		{
 			name: 'Voter\'s Crate',
 			description: 'A crate containing a random assortment of items for voters.',
+			rarity: 'Rare',
 			capabilities: ['bait', 'buff', 'rod', 'fish'],
+			items: 3,
 			icon: {
 				animated: false,
-				data: '',
+				data: 'Treasure_Chest:1244066065751867423',
 			},
 			weights: {
-				common: 5000,
+				common: 3000,
 				uncommon: 2500,
 				rare: 500,
 				ultra: 100,
@@ -77,10 +83,12 @@ async function generateGacha() {
 		{
 			name: 'Daily Box',
 			description: 'A box containing a random assortment of items for daily quests.',
+			rarity: 'Uncommon',
 			capabilities: ['bait', 'buff', 'fish'],
+			items: 3,
 			icon: {
 				animated: false,
-				data: '',
+				data: 'Treasure_Chest:1244066065751867423',
 			},
 			weights: {
 				common: 7000,

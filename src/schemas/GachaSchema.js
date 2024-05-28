@@ -21,7 +21,8 @@ const gachaSchema = new Schema({
 		type: [String],
 	},
 	items: {
-		type: Schema.Types.ObjectId,
+		type: Number,
+		default: 1,
 	},
 	requirements: {
 		level: {

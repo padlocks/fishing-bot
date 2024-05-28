@@ -180,16 +180,23 @@ const openBox = async (userId, name) => {
 
 	const boxes = user.inventory.gacha.filter((box) => !box.opened && box.name !== name);
 	if (boxes.length === 0) return null;
-	user.inventory.gacha.shift();
+
 	const box = await ItemData.findById(boxes[0]);
 	if (!box.opened) {
 		box.opened = true;
 		await box.save();
 
+		// remove box from user inventory
+		user.inventory.gacha = user.inventory.gacha.filter((i) => i.id !== box.id);
+		await user.save();
+
 		// check box capabilities to generate items
 		const capabilities = box.capabilities;
 		const weights = box.weights;
-		const items = [...await Item.find({ type: { $in: capabilities } }), ...await Fish.find({ type: { $in: capabilities } })];
+		let items = [...await Item.find({ type: { $in: capabilities } })];
+		if (capabilities.includes('fish')) {
+			items = [...items, ...await Fish.find()];
+		}
 
 		// check for active buffs
 		const activeBuffs = await BuffData.find({ user: userId, active: true });
@@ -204,22 +211,23 @@ const openBox = async (userId, name) => {
 			}
 		}
 
-		// generate random item from box
+		// generate random items from box
 		let filteredItems = [];
 		while (filteredItems.length === 0) {
 			let draw = await getWeightedChoice(Object.keys(box.weights), weightValues);
 			draw = draw.charAt(0).toUpperCase() + draw.slice(1);
-			filteredItems = items.filter((item) => item.rarity === draw);
+			filteredItems = items.filter((item) => item.rarity.toLowerCase() === draw.toLowerCase());
 		}
 
-		const random = Math.floor(Math.random() * filteredItems.length);
-		const item = filteredItems[random];
+		const numItems = box.items || 1;
+		const generatedItems = [];
+		for (let i = 0; i < numItems; i++) {
+			const random = Math.floor(Math.random() * filteredItems.length);
+			const item = filteredItems[random];
+			generatedItems.push(await sendToInventory(userId, item));
+		}
 
-		// remove box from user inventory
-		user.inventory.gacha = user.inventory.gacha.filter((i) => i._id !== box._id);
-
-		// add item to user inventory
-		return await sendToInventory(userId, item);
+		return generatedItems;
 	}
 	else {
 		return null;
@@ -233,14 +241,14 @@ const sendToInventory = async (userId, item) => {
 	let existingItem;
 	let clonedItem;
 	let finalItem;
-	switch (clonedItem.type) {
+	switch (itemObject.type) {
 	case 'rod':
 		clonedItem = await clone(itemObject, userId);
 		user.inventory.rods.push(clonedItem);
 		finalItem = clonedItem;
 		break;
 	case 'bait':
-		existingItem = user.inventory.baits.find((b) => b.name === clonedItem.name);
+		existingItem = user.inventory.baits.find((b) => b.name === itemObject.name);
 		if (existingItem) {
 			existingItem.count += clonedItem.count;
 			await existingItem.save();
@@ -258,7 +266,7 @@ const sendToInventory = async (userId, item) => {
 		finalItem = clonedItem;
 		break;
 	case 'buff':
-		existingItem = user.inventory.buffs.find((b) => b.name === clonedItem.name);
+		existingItem = user.inventory.buffs.find((b) => b.name === itemObject.name);
 		if (existingItem && existingItem.length === clonedItem.length) {
 			existingItem.count += clonedItem.count;
 			await existingItem.save();
@@ -271,7 +279,7 @@ const sendToInventory = async (userId, item) => {
 		}
 		break;
 	case 'gacha':
-		existingItem = user.inventory.gacha.find((b) => b.name === clonedItem.name);
+		existingItem = user.inventory.gacha.find((b) => b.name === itemObject.name);
 		if (existingItem) {
 			existingItem.count += clonedItem.count;
 			await existingItem.save();

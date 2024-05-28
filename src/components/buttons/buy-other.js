@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, ComponentType } = require('discord.js');
 const { clone, selectionOptions, getCollectionFilter } = require('../../util/Utils');
-const { xpToLevel, getUser } = require('../../util/User');
+const { xpToLevel, getUser, sendToInventory } = require('../../util/User');
 const { Item } = require('../../schemas/ItemSchema');
 
 module.exports = {
@@ -35,7 +35,11 @@ module.exports = {
 };
 
 const getSelectionOptions = async () => {
-	let options = await Promise.all(await selectionOptions('item'));
+	let options = await Promise.all([
+		...(await selectionOptions('item')),
+		...(await selectionOptions('gacha')),
+		...(await selectionOptions('buff')),
+	]);
 	options = options.filter((option) => option !== undefined);
 	return options;
 };
@@ -100,8 +104,7 @@ const processItemSelection = async (selection, userData) => {
 	}
 	else if (canBuy) {
 		userData.inventory.money -= originalItem.price;
-		const item = await clone(originalItem, userData.userId);
-		userData.inventory.items.push(item);
+		await sendToInventory(userData.userId, originalItem);
 
 		userData.save();
 		await selection.reply({
