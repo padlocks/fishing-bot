@@ -27,8 +27,7 @@ module.exports = {
 		const opened = await openBox(interaction.user.id, name.toLowerCase());
 		let description = 'Rewards: \n';
 
-		for (const index in opened) {
-			const item = opened[index];
+		for (const item of opened) {
 			description += `<${item.icon?.animated ? 'a' : ''}:${item.icon?.data}> ${item.count}x ${item.name}\n`;
 		}
 
