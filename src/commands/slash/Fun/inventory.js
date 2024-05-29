@@ -114,16 +114,14 @@ module.exports = {
 			for (let i = 0; i < user.inventory.gacha?.length; i++) {
 				const itemId = user.inventory.gacha[i].valueOf();
 				const itemObject = await ItemData.findById(itemId);
-				const itemsOfType = await ItemData.find({ name: itemObject.name, user: user.userId });
-				const count = itemsOfType.length;
+				const count = itemObject.count;
 				items[itemObject.name] = `x${count} <${itemObject.icon.animated ? 'a' : ''}:${itemObject.icon.data || ''}> ${itemObject.name || ''}\n`;
 			}
 
 			for (let i = 0; i < user.inventory.buffs?.length; i++) {
 				const itemId = user.inventory.buffs[i].valueOf();
 				const itemObject = await ItemData.findById(itemId);
-				const itemsOfType = await ItemData.find({ name: itemObject.name, user: user.userId });
-				const count = itemsOfType.length;
+				const count = itemObject.count;
 				items[itemObject.name] = `x${count} <${itemObject.icon.animated ? 'a' : ''}:${itemObject.icon.data || ''}> ${itemObject.name || ''}\n`;
 			}
 

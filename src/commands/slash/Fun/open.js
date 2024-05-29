@@ -27,11 +27,12 @@ module.exports = {
 		const opened = await openBox(interaction.user.id, name.toLowerCase());
 		let description = 'Rewards: \n';
 
-		for (const item of opened) {
-			description += `<${item.icon?.animated ? 'a' : ''}:${item.icon?.data}> ${item.count}x ${item.name}\n`;
-		}
-
 		if (opened) {
+			for (const object of opened) {
+				const item = object.item;
+				description += `<${item.icon?.animated ? 'a' : ''}:${item.icon?.data}> ${object.count}x ${item.name}\n`;
+			}
+
 			return await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()
