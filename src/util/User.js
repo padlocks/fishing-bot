@@ -187,7 +187,7 @@ const openBox = async (userId, name) => {
 		await box.save();
 
 		// remove box from user inventory
-		user.inventory.gacha = user.inventory.gacha.filter((i) => i.id !== box.id);
+		user.inventory.gacha = user.inventory.gacha.filter((i) => i.valueOf() !== box.id);
 		await user.save();
 
 		// check box capabilities to generate items
