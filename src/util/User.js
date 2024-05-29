@@ -183,12 +183,17 @@ const openBox = async (userId, name) => {
 
 	const box = await ItemData.findById(boxes[0]);
 	if (!box.opened) {
-		box.opened = true;
+		box.count--;
 		await box.save();
 
 		// remove box from user inventory
-		user.inventory.gacha = user.inventory.gacha.filter((i) => i.valueOf() !== box.id);
-		await user.save();
+		if (box.count <= 0) {
+			box.opened = true;
+			await box.save();
+
+			user.inventory.gacha = user.inventory.gacha.filter((i) => i.valueOf() !== box.id);
+			await user.save();
+		}
 
 		// check box capabilities to generate items
 		const capabilities = box.capabilities;
@@ -238,73 +243,88 @@ const sendToInventory = async (userId, item) => {
 	const user = await User.findOne({ userId: userId });
 	const itemObject = await Item.findById(item);
 
+	let items;
 	let existingItem;
 	let clonedItem;
 	let finalItem;
+	let newItemCount;
 	switch (itemObject.type) {
 	case 'rod':
 		clonedItem = await clone(itemObject, userId);
 		user.inventory.rods.push(clonedItem);
 		finalItem = clonedItem;
+		newItemCount = clonedItem.count || 1;
 		break;
 	case 'bait':
-		existingItem = user.inventory.baits.find((b) => b.name === itemObject.name);
+		items = await Promise.all(user.inventory.baits.map(async (b) => await ItemData.findById(b)));
+		existingItem = items.find((b) => b.name === itemObject.name);
 		if (existingItem) {
-			existingItem.count += clonedItem.count;
+			existingItem.count += itemObject.count;
 			await existingItem.save();
 			finalItem = existingItem;
+			newItemCount = itemObject.count || 1;
 		}
 		else {
 			clonedItem = await clone(itemObject, userId);
 			user.inventory.baits.push(clonedItem);
 			finalItem = clonedItem;
+			newItemCount = clonedItem.count || 1;
 		}
 		break;
 	case 'fish':
 		clonedItem = await clone(itemObject, userId);
 		user.inventory.fish.push(clonedItem);
 		finalItem = clonedItem;
+		newItemCount = clonedItem.count || 1;
 		break;
 	case 'buff':
-		existingItem = user.inventory.buffs.find((b) => b.name === itemObject.name);
-		if (existingItem && existingItem.length === clonedItem.length) {
-			existingItem.count += clonedItem.count;
+		items = await Promise.all(user.inventory.buffs.map(async (b) => await ItemData.findById(b)));
+		existingItem = items.find((b) => b.name === itemObject.name);
+		if (existingItem) {
+			existingItem.count += itemObject.count;
 			await existingItem.save();
 			finalItem = existingItem;
+			newItemCount = itemObject.count || 1;
 		}
 		else {
 			clonedItem = await clone(itemObject, userId);
 			user.inventory.buffs.push(clonedItem);
 			finalItem = clonedItem;
+			newItemCount = clonedItem.count || 1;
 		}
 		break;
 	case 'gacha':
-		existingItem = user.inventory.gacha.find((b) => b.name === itemObject.name);
+		items = await Promise.all(user.inventory.gacha.map(async (b) => await ItemData.findById(b)));
+		existingItem = items.find((b) => b.name === itemObject.name);
 		if (existingItem) {
-			existingItem.count += clonedItem.count;
+			existingItem.count += itemObject.count;
 			await existingItem.save();
 			finalItem = existingItem;
+			newItemCount = itemObject.count || 1;
 		}
 		else {
 			clonedItem = await clone(itemObject, userId);
 			user.inventory.gacha.push(clonedItem);
 			finalItem = clonedItem;
+			newItemCount = clonedItem.count || 1;
 		}
 		break;
 	case 'quest':
 		clonedItem = await clone(itemObject, userId);
 		user.inventory.quests.push(clonedItem);
 		finalItem = clonedItem;
+		newItemCount = clonedItem.count || 1;
 		break;
 	default:
 		clonedItem = await clone(itemObject, userId);
 		user.inventory.items.push(clonedItem);
 		finalItem = clonedItem;
+		newItemCount = clonedItem.count || 1;
 		break;
 	}
 	await user.save();
 
-	return finalItem;
+	return { item: finalItem, count: newItemCount };
 };
 
 const startBooster = async (userId, id) => {
