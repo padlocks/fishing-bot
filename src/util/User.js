@@ -188,9 +188,6 @@ const openBox = async (userId, name) => {
 
 		// remove box from user inventory
 		if (box.count <= 0) {
-			box.opened = true;
-			await box.save();
-
 			user.inventory.gacha = user.inventory.gacha.filter((i) => i.valueOf() !== box.id);
 			await user.save();
 		}
