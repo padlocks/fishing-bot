@@ -97,6 +97,23 @@ class Aquarium {
 		this.aquarium.temperature = newTemperature;
 		return this.save();
 	}
+
+	async compareBiome(biome) {
+		const biomeWaterType = {
+			'Ocean': 'Saltwater',
+			'Coast': 'Saltwater',
+			'River': 'Freshwater',
+			'Lake': 'Freshwater',
+			'Pond': 'Freshwater',
+			'Swamp': 'Freshwater',
+		};
+
+		const biomeType = biomeWaterType[biome];
+		if (!biomeType) return false;
+		const waterType = await this.getWaterType();
+
+		return biomeType !== waterType;
+	}
 }
 
 module.exports = { Aquarium };

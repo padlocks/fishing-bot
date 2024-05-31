@@ -1,3 +1,4 @@
+const { FishData } = require('../schemas/FishSchema');
 const { Habitat } = require('../schemas/HabitatSchema');
 const { PetFish } = require('../schemas/PetSchema');
 const { User } = require('../schemas/UserSchema');
@@ -13,6 +14,15 @@ class Pet {
 
 	async getId() {
 		return this.pet._id;
+	}
+
+	async getFishData() {
+		return await FishData.findById(this.pet.fish);
+	}
+
+	async getBiome() {
+		const fish = await this.getFishData();
+		return fish.biome;
 	}
 
 	async getName() {
