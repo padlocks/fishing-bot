@@ -52,7 +52,10 @@ class Aquarium {
 	}
 
 	async removeFish(fishId) {
-		this.aquarium.fish = this.aquarium.fish.filter(fish => fish._id.valueOf() !== fishId.valueOf());
+		this.aquarium.fish = this.aquarium.fish.filter((fish) => {
+			// console.log(fish._id.valueOf(), fishId.valueOf(), fish._id.valueOf() !== fishId.valueOf());
+			return fish._id.valueOf() !== fishId.valueOf();
+		});
 		return this.save();
 	}
 

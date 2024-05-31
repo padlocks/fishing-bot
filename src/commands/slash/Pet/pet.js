@@ -41,7 +41,8 @@ module.exports = {
 			for (const p of pets) {
 				const pet = new Pet(p);
 				await pet.updateStatus();
-				fields.push({ name: `${await pet.getName()}`, value: `**Species**: ${await pet.getSpecies()}\n**Age**: ${await pet.getAge()}\n**Hunger**: ${await pet.getHunger()}%\n**Mood**: ${await pet.getMood()}%\n**Stress**: ${await pet.getStress()}%\n**XP**: ${await pet.getXP()}` });
+				const petData = await pet.getFishData();
+				fields.push({ name: `${await pet.getName()}`, value: `**Species**: <${petData.icon?.animated ? 'a' : ''}:${petData.icon?.data}> ${await pet.getSpecies()}\n**Age**: ${await pet.getAge()}\n**Hunger**: ${await pet.getHunger()}%\n**Mood**: ${await pet.getMood()}%\n**Stress**: ${await pet.getStress()}%\n**XP**: ${await pet.getXP()}` });
 			}
 
 			const chunkSize = 1;

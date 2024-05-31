@@ -50,7 +50,9 @@ module.exports = {
 				const information = { name: `Aquarium: ${aquarium.name}`, value: `**Fish**: ${aquarium.fish.length}/${aquarium.size}\n**Cleanliness**: ${aquarium.cleanliness}%\n**Temperature**: ${aquarium.temperature}°C\n**Inhabitants**: ` };
 				if (!fish.length) information.value += 'None';
 				for (const f of fish) {
-					information.value += `${f.name}\n`;
+					const pet = new Pet(f);
+					const fishData = await pet.getFishData();
+					information.value += `<${fishData.icon?.animated ? 'a' : ''}:${fishData.icon?.data}> ${f.name} `;
 				}
 				fields.push(information);
 			}

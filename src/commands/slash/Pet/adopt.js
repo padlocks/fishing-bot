@@ -107,7 +107,7 @@ module.exports = {
 					new EmbedBuilder()
 						.setTitle('Adoption Agency')
 						.addFields(
-							{ name: 'Congratulations!', value: `You have successfully adopted the ${species} **${name}**! They have been added to aquarium **${aquariumName}**.` },
+							{ name: 'Congratulations!', value: `You have successfully adopted the <${fishInInventory.icon?.animated ? 'a' : ''}:${fishInInventory.icon?.data}> ${species} **${name}**! They have been added to aquarium **${aquariumName}**.` },
 						),
 				],
 			});
