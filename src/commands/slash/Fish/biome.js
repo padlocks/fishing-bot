@@ -1,6 +1,5 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
 const { getUser, xpToLevel } = require('../../../util/User');
-const { log } = require('../../../util/Utils');
 const { Biome } = require('../../../schemas/BiomeSchema');
 
 module.exports = {

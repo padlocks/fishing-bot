@@ -1,18 +1,11 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const buttonPagination = require('../../../buttonPagination');
 const { RodData } = require('../../../schemas/RodSchema');
-const { getUser, xpToLevel, xpToNextLevel } = require('../../../util/User');
-const { log } = require('../../../util/Utils');
-
+const { getUser } = require('../../../util/User');
 module.exports = {
 	structure: new SlashCommandBuilder()
-		.setName('profile')
-		.setDescription('Check someone\'s profile!')
-		.addUserOption((opt) =>
-			opt.setName('user')
-				.setDescription('The user.')
-				.setRequired(false),
-		),
+		.setName('stats')
+		.setDescription('Check your stats!'),
 	options: {
 		cooldown: 10_000,
 	},
@@ -23,27 +16,28 @@ module.exports = {
 	run: async (client, interaction) => {
 		try {
 			const embeds = [];
-			const target = interaction.options.getUser('user') || interaction.user;
-			const user = await getUser(target.id);
+			const user = await getUser(interaction.user.id);
 			const rods = await RodData.find({ user: interaction.user.id });
 
 			let fields = [{
-				name: `Level ${await xpToLevel(user.xp) || 0}`,
-				value: `${await xpToNextLevel(user.xp)}`,
-				inline: false,
-			}];
-
-			fields = fields.concat([{
 				name: 'Total Fish Caught',
 				value: `${user.stats.fishCaught || 0}`,
 				inline: false,
-			}]);
+			}];
 
 			fields = fields.concat(rods.map((item) => ({
 				name: item.name,
 				value: `Fish Caught: ${item.fishCaught || 0}`,
 				inline: true,
 			})));
+
+			user.stats.fishStats.forEach((value, key) => {
+				fields.push({
+					name: key[0].toUpperCase() + key.slice(1),
+					value: value.toLocaleString(),
+					inline: true,
+				});
+			});
 
 			const chunkSize = 6;
 
@@ -52,7 +46,7 @@ module.exports = {
 
 				embeds.push(new EmbedBuilder()
 					.setFooter({ text: `Page ${Math.floor(i / chunkSize) + 1} / ${Math.ceil(fields.length / chunkSize)} ` })
-					.setTitle(`${interaction.user.globalName}'s Profile`)
+					.setTitle('Stats')
 					.setColor('Green')
 					.addFields(chunk),
 				);
