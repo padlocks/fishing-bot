@@ -9,7 +9,6 @@ const PetSchema = new Schema({
 	aquarium: {
 		type: Schema.Types.ObjectId,
 		ref: 'Aquarium',
-		required: true,
 	},
 	adoptTime: {
 		type: Date,
@@ -25,7 +24,6 @@ const PetSchema = new Schema({
 	},
 	owner: {
 		type: String,
-		required: true,
 	},
 	traits: {
 		type: [String],

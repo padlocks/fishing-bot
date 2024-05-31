@@ -11,7 +11,7 @@ class Aquarium {
 	}
 
 	async getId() {
-		return this.aquarium.id;
+		return this.aquarium._id;
 	}
 
 	async getName() {
@@ -52,7 +52,7 @@ class Aquarium {
 	}
 
 	async removeFish(fishId) {
-		this.aquarium.fish = this.aquarium.fish.filter(fish => !fish.equals(fishId));
+		this.aquarium.fish = this.aquarium.fish.filter(fish => fish._id.valueOf() !== fishId.valueOf());
 		return this.save();
 	}
 
