@@ -32,10 +32,19 @@ module.exports = {
 			return await interaction.followUp('You have already redeemed this code.');
 		}
 
+		// check if the code has reached the maximum number of redemptions
+		if (redemption.uses >= redemption.usesLeft) {
+			return await interaction.followUp('This code has reached the maximum number of redemptions.');
+		}
+
 		// check if the code has expired
 		if (redemption.expiresAt < Date.now()) {
 			return await interaction.followUp('This code has expired.');
 		}
+
+		// decrement the number of usesLeft
+		redemption.usesLeft--;
+		await redemption.save();
 
 		// add the code to the user's inventory
 		user.inventory.codes.push(redemption._id);
