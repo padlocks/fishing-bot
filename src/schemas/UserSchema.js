@@ -88,6 +88,10 @@ const UserSchema = new Schema ({
 			type: Schema.Types.ObjectId,
 			ref: 'Aquarium',
 		}],
+		codes: [{
+			type: Schema.Types.ObjectId,
+			ref: 'Code',
+		}],
 	},
 });
 
