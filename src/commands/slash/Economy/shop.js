@@ -30,7 +30,7 @@ module.exports = {
 			let fields = [];
 			fields = shopItems.map((item) => ({
 				name: item.name,
-				value: `${item.description}\n**Price:** $${item.price}`,
+				value: `${item.description}\n**Price:** $${item.price.toLocaleString()}`,
 				inline: false,
 			}));
 
@@ -65,7 +65,7 @@ module.exports = {
 			const buttonRow = new ActionRowBuilder()
 				.addComponents(buyRod, buyBait, buyOther);
 
-			await buttonPagination(interaction, embeds, [buttonRow]);
+			await buttonPagination(interaction, embeds, false, [buttonRow]);
 		}
 		catch (err) {
 			console.error(err);

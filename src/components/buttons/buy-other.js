@@ -1,7 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, ComponentType } = require('discord.js');
 const { selectionOptions, getCollectionFilter } = require('../../util/Utils');
 const { xpToLevel, getUser, sendToInventory } = require('../../util/User');
-const { Item } = require('../../schemas/ItemSchema');
+const { Item, ItemData } = require('../../schemas/ItemSchema');
 
 module.exports = {
 	customId: 'buy-other',
@@ -39,6 +39,7 @@ const getSelectionOptions = async () => {
 		...(await selectionOptions('item')),
 		...(await selectionOptions('gacha')),
 		...(await selectionOptions('buff')),
+		...(await selectionOptions('license')),
 	]);
 	options = options.filter((option) => option !== undefined);
 	return options;
@@ -114,8 +115,15 @@ const processItemSelection = async (selection, userData) => {
 		});
 	}
 	else {
+		let content = 'You do not meet the requirements to buy this item!\n';
+		if (originalItem.toJSON().requirements.level) {
+			content += `- You need to be at least level ${originalItem.toJSON().requirements.level || 0}.\n`;
+		}
+		if (originalItem.prerequisites) {
+			content += `- You need to have the following item(s): ${originalItem.prerequisites.join(', ')}.\n`;
+		}
 		await selection.reply({
-			content: `You need to be level ${originalItem.requirements.level} to buy this item!`,
+			content: content,
 			ephemeral: true,
 			components: [],
 		});
@@ -127,6 +135,11 @@ const getItemById = async (itemId) => {
 };
 
 const checkItemRequirements = async (item, userData) => {
+	item = item.toJSON();
 	const userLevel = await xpToLevel(userData.xp);
-	return userLevel >= (item.toJSON().requirements?.level || 0);
+	const meetsLevelRequirement = userLevel >= (item.requirements?.level || 0);
+
+	const items = await Promise.all(userData.inventory.items.map(async (i) => await ItemData.findById(i)));
+	const meetsPrerequisites = item.prerequisites ? item.prerequisites.every((prereq) => items.some((i) => i.name === prereq)) : true;
+	return meetsLevelRequirement && meetsPrerequisites;
 };

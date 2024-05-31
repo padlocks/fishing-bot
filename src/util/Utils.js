@@ -7,6 +7,7 @@ const { Item, ItemData } = require('../schemas/ItemSchema');
 const { BaitData } = require('../schemas/BaitSchema');
 const { User } = require('../schemas/UserSchema');
 const { StringSelectMenuOptionBuilder } = require('discord.js');
+const { LicenseData } = require('../schemas/LicenseSchema');
 
 /**
  * Logs a message with optional styling.
@@ -149,6 +150,10 @@ const clone = async (object, userId) => {
 			originalObject = await Item.findById(object.id);
 			break;
 		}
+		case 'license': {
+			originalObject = await Item.findById(object.id);
+			break;
+		}
 		default: {
 			originalObject = await Item.findById(object.id);
 			break;
@@ -243,6 +248,16 @@ const clone = async (object, userId) => {
 			});
 			break;
 		}
+		case 'license': {
+			clonedObject = new LicenseData({
+				...originalObject.toObject(),
+				_id: new mongoose.Types.ObjectId(),
+				user: userId,
+				obtained: Date.now(),
+				__t: 'LicenseData',
+			});
+			break;
+		}
 		}
 
 		await clonedObject.save();
@@ -256,7 +271,7 @@ const clone = async (object, userId) => {
 };
 
 const selectionOptions = async (type) => {
-	const shopItems = await Item.find({ shopItem: true, type: type });
+	const shopItems = await Item.find({ shopItem: true, type: type }).sort({ name: 1 });
 	const uniqueValues = new Set();
 
 	return shopItems.map(async (objectId) => {
@@ -275,7 +290,7 @@ const selectionOptions = async (type) => {
 
 				return new StringSelectMenuOptionBuilder()
 					.setLabel(item.name)
-					.setDescription(`$${item.price} | ${item.description}`)
+					.setDescription(`$${item.price.toLocaleString()} | ${item.description}`)
 					.setEmoji(item.toJSON().icon.data.split(':')[1])
 					.setValue(value);
 			}
@@ -292,6 +307,10 @@ const getCollectionFilter = (customIds, user) => {
 	};
 };
 
+const capitalizeWords = (str) => {
+	return str.toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
+};
+
 module.exports = {
 	log,
 	time,
@@ -304,4 +323,5 @@ module.exports = {
 	sumCountsInArrays,
 	selectionOptions,
 	getCollectionFilter,
+	capitalizeWords,
 };

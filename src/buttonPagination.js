@@ -1,10 +1,10 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 
-module.exports = async (interaction, pages, components = [], time = 30 * 1000) => {
+module.exports = async (interaction, pages, deferred = false, components = [], time = 30 * 1000) => {
 	try {
 		if (!interaction || !pages || !pages.length > 0) throw new Error('Invalid arguments');
 
-		await interaction.deferReply();
+		if (!deferred) await interaction.deferReply();
 
 		if (pages.length === 1) {
 			return await interaction.editReply({

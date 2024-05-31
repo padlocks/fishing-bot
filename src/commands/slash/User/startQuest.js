@@ -1,7 +1,6 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
 const { Quest } = require('../../../schemas/QuestSchema');
 const { getUser, xpToLevel } = require('../../../util/User');
-const { log } = require('../../../util/Utils');
 const { startQuest, getQuests } = require('../../../util/Quest');
 
 module.exports = {
