@@ -33,7 +33,7 @@ module.exports = {
 		}
 
 		// check if the code has reached the maximum number of redemptions
-		if (redemption.uses >= redemption.usesLeft) {
+		if (redemption.usesLeft <= 0) {
 			return await interaction.followUp('This code has reached the maximum number of redemptions.');
 		}
 
