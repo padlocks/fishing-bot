@@ -1,7 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, ComponentType } = require('discord.js');
 const { selectionOptions, getCollectionFilter } = require('../../util/Utils');
 const { xpToLevel, getUser, sendToInventory } = require('../../util/User');
-const { Item } = require('../../schemas/ItemSchema');
+const { Item, ItemData } = require('../../schemas/ItemSchema');
 
 module.exports = {
 	customId: 'buy-other',
@@ -138,6 +138,8 @@ const checkItemRequirements = async (item, userData) => {
 	item = item.toJSON();
 	const userLevel = await xpToLevel(userData.xp);
 	const meetsLevelRequirement = userLevel >= (item.requirements?.level || 0);
-	const meetsPrerequisites = item.prerequisites?.every((prereq) => userData.inventory.items.some((i) => i.name === prereq));
+
+	const items = await Promise.all(userData.inventory.items.map(async (i) => await ItemData.findById(i)));
+	const meetsPrerequisites = item.prerequisites ? item.prerequisites.every((prereq) => items.some((i) => i.name === prereq)) : true;
 	return meetsLevelRequirement && meetsPrerequisites;
 };

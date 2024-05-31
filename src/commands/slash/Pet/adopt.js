@@ -1,10 +1,10 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { getUser } = require('../../../util/User');
+const { capitalizeWords } = require('../../../util/Utils');
 const { Pet } = require('../../../class/Pet');
 const { FishData, Fish } = require('../../../schemas/FishSchema');
 const { Habitat } = require('../../../schemas/HabitatSchema');
 const { Aquarium } = require('../../../class/Aquarium');
-const { capitalizeWords } = require('../../../util/Utils');
 const { PetFish } = require('../../../schemas/PetSchema');
 
 module.exports = {

@@ -1,9 +1,9 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { getUser } = require('../../../util/User');
+const { capitalizeWords } = require('../../../util/Utils');
 const { Aquarium } = require('../../../class/Aquarium');
 const { Habitat } = require('../../../schemas/HabitatSchema');
 const { ItemData } = require('../../../schemas/ItemSchema');
-const { capitalizeWords } = require('../../../util/Utils');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -67,7 +67,7 @@ module.exports = {
 				return !l.aquarium.waterType.includes(waterType);
 			});
 			// find the license with the highest size constraint
-			const sortedLicenses = await Promise.all(waterLicenses.sort(async (a, b) => b.aquarium.size - a.aquarium.size));
+			const sortedLicenses = await waterLicenses.sort((a, b) => b.aquarium.size - a.aquarium.size);
 			license = sortedLicenses[0];
 		}
 		if (!license) return interaction.followUp({ content: 'You do not have an aquarium license for that water type!', ephemeral: true });
@@ -77,10 +77,8 @@ module.exports = {
 		if (license) {
 			newAquarium = new Aquarium({
 				name,
-				size: 1,
+				size: license.aquarium.size,
 				waterType,
-				temperature: 75,
-				cleanliness: 100,
 				owner: user.userId,
 			});
 

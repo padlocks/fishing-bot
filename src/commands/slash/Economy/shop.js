@@ -65,7 +65,7 @@ module.exports = {
 			const buttonRow = new ActionRowBuilder()
 				.addComponents(buyRod, buyBait, buyOther);
 
-			await buttonPagination(interaction, embeds, [buttonRow]);
+			await buttonPagination(interaction, embeds, false, [buttonRow]);
 		}
 		catch (err) {
 			console.error(err);

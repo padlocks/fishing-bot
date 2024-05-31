@@ -8,6 +8,7 @@ const AquariumSchema = new Schema({
 	size: {
 		type: Number,
 		required: true,
+		default: 1,
 	},
 	fish: [{
 		type: Schema.Types.ObjectId,
@@ -21,10 +22,12 @@ const AquariumSchema = new Schema({
 	temperature: {
 		type: Number,
 		required: true,
+		default: 0,
 	},
 	cleanliness: {
 		type: Number,
 		required: true,
+		default: 100,
 	},
 	createdAt: {
 		type: Date,

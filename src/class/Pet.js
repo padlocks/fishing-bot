@@ -1,3 +1,4 @@
+const { Habitat } = require('../schemas/HabitatSchema');
 const { PetFish } = require('../schemas/PetSchema');
 
 class Pet {
@@ -11,6 +12,15 @@ class Pet {
 
 	async getId() {
 		return this.pet.id;
+	}
+
+	async getHabitat() {
+		return await Habitat.findById(this.pet.aquarium);
+	}
+
+	async updateHabitat(habitatId) {
+		this.pet.habitat = habitatId;
+		return this.save();
 	}
 
 	async updateHealth(amount) {
