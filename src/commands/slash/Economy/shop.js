@@ -30,7 +30,7 @@ module.exports = {
 			let fields = [];
 			fields = shopItems.map((item) => ({
 				name: item.name,
-				value: `${item.description}\n**Price:** $${item.price}`,
+				value: `${item.description}\n**Price:** $${item.price.toLocaleString()}`,
 				inline: false,
 			}));
 

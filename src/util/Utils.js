@@ -271,7 +271,7 @@ const clone = async (object, userId) => {
 };
 
 const selectionOptions = async (type) => {
-	const shopItems = await Item.find({ shopItem: true, type: type });
+	const shopItems = await Item.find({ shopItem: true, type: type }).sort({ name: 1 });
 	const uniqueValues = new Set();
 
 	return shopItems.map(async (objectId) => {
@@ -290,7 +290,7 @@ const selectionOptions = async (type) => {
 
 				return new StringSelectMenuOptionBuilder()
 					.setLabel(item.name)
-					.setDescription(`$${item.price} | ${item.description}`)
+					.setDescription(`$${item.price.toLocaleString()} | ${item.description}`)
 					.setEmoji(item.toJSON().icon.data.split(':')[1])
 					.setValue(value);
 			}

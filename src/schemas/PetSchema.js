@@ -64,6 +64,11 @@ const PetSchema = new Schema({
 		required: true,
 		default: Date.now(),
 	},
+	lastUpdated: {
+		type: Date,
+		required: true,
+		default: Date.now(),
+	},
 	species: {
 		type: String,
 		required: true,

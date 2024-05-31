@@ -75,6 +75,10 @@ class Pet {
 		return this.pet.lastBred;
 	}
 
+	async getLastUpdated() {
+		return this.pet.lastUpdated;
+	}
+
 	async updateName(name) {
 		this.pet.name = name;
 		return this.save();
@@ -83,9 +87,9 @@ class Pet {
 	async updateStatus() {
 		const now = Date.now();
 		const elapsedTimeSinceAdoption = (now - await this.getAdoptionDate()) / 86_400_000;
-		const elapsedTimeSinceFed = (now - await this.getLastFed()) / 60_000 * 10;
-		const elapsedTimeSincePlayed = (now - await this.getLastPlayed()) / 60_000 * 5;
-		const elapsedTimeSinceSeen = (now - await this.getLastPlayed()) / 60_000 * 60;
+		const elapsedTimeSinceFed = (now - await this.getLastFed()) / (60_000 * 120);
+		const elapsedTimeSincePlayed = (now - await this.getLastPlayed()) / (60_000 * 60);
+		const elapsedTimeSinceSeen = (now - await this.getLastUpdated()) / (60_000 * 120);
 
 		const newAge = this.pet.age + Math.floor(elapsedTimeSinceAdoption);
 		const newHunger = this.pet.hunger + Math.floor(elapsedTimeSinceFed);
@@ -96,6 +100,7 @@ class Pet {
 		this.pet.hunger = Math.min(newHunger, 100);
 		this.pet.mood = Math.max(newMood, 0);
 		this.pet.stress = Math.max(newStress, 0);
+		this.pet.lastUpdated = now;
 		return this.save();
 	}
 
@@ -123,7 +128,7 @@ class Pet {
 		const currentTime = Date.now();
 		this.pet.lastPlayed = currentTime;
 		this.pet.mood = Math.max(Math.min(this.pet.mood + 25, 100), 0);
-		this.pet.stress = Math.max(Math.min(this.pet.stress - 50, 100), 0);
+		this.pet.stress = Math.max(Math.min(this.pet.stress - 25, 100), 0);
 		this.pet.xp += 10;
 		return this.save();
 	}
@@ -150,6 +155,7 @@ class Pet {
 	}
 
 	async breed() {
+		if (await this.getAge() < 18) return false;
 		const currentTime = Date.now();
 		this.pet.lastBred = currentTime;
 		this.pet.xp += 50;
