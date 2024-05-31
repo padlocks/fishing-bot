@@ -254,7 +254,7 @@ const sendToInventory = async (userId, item) => {
 		break;
 	case 'bait':
 		items = await Promise.all(user.inventory.baits.map(async (b) => await ItemData.findById(b)));
-		existingItem = items.find((b) => b.name === itemObject.name);
+		existingItem = items.find((b) => b?.name === itemObject.name);
 		if (existingItem) {
 			existingItem.count += itemObject.count;
 			await existingItem.save();
@@ -276,7 +276,7 @@ const sendToInventory = async (userId, item) => {
 		break;
 	case 'buff':
 		items = await Promise.all(user.inventory.buffs.map(async (b) => await ItemData.findById(b)));
-		existingItem = items.find((b) => b.name === itemObject.name);
+		existingItem = items.find((b) => b?.name === itemObject.name);
 		if (existingItem) {
 			existingItem.count += itemObject.count;
 			await existingItem.save();
@@ -292,7 +292,7 @@ const sendToInventory = async (userId, item) => {
 		break;
 	case 'gacha':
 		items = await Promise.all(user.inventory.gacha.map(async (b) => await ItemData.findById(b)));
-		existingItem = items.find((b) => b.name === itemObject.name);
+		existingItem = items.find((b) => b?.name === itemObject.name);
 		if (existingItem) {
 			existingItem.count += itemObject.count;
 			await existingItem.save();

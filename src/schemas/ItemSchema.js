@@ -9,6 +9,9 @@ const itemSchema = new Schema({
 		type: String,
 		required: true,
 	},
+	prerequisites: {
+		type: [String],
+	},
 	rarity: {
 		type: String,
 		required: true,

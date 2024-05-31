@@ -56,6 +56,10 @@ const UserSchema = new Schema ({
 			type: Schema.Types.ObjectId,
 			ref: 'Bait',
 		},
+		items: [{
+			type: Schema.Types.ObjectId,
+			ref: 'Item',
+		}],
 		baits: [{
 			type: Schema.Types.ObjectId,
 			ref: 'Bait',
@@ -79,6 +83,10 @@ const UserSchema = new Schema ({
 		gacha: [{
 			type: Schema.Types.ObjectId,
 			ref: 'Gacha',
+		}],
+		aquariums: [{
+			type: Schema.Types.ObjectId,
+			ref: 'Aquarium',
 		}],
 	},
 });

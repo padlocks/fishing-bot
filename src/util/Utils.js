@@ -7,6 +7,7 @@ const { Item, ItemData } = require('../schemas/ItemSchema');
 const { BaitData } = require('../schemas/BaitSchema');
 const { User } = require('../schemas/UserSchema');
 const { StringSelectMenuOptionBuilder } = require('discord.js');
+const { LicenseData } = require('../schemas/LicenseSchema');
 
 /**
  * Logs a message with optional styling.
@@ -149,6 +150,10 @@ const clone = async (object, userId) => {
 			originalObject = await Item.findById(object.id);
 			break;
 		}
+		case 'license': {
+			originalObject = await Item.findById(object.id);
+			break;
+		}
 		default: {
 			originalObject = await Item.findById(object.id);
 			break;
@@ -243,6 +248,16 @@ const clone = async (object, userId) => {
 			});
 			break;
 		}
+		case 'license': {
+			clonedObject = new LicenseData({
+				...originalObject.toObject(),
+				_id: new mongoose.Types.ObjectId(),
+				user: userId,
+				obtained: Date.now(),
+				__t: 'LicenseData',
+			});
+			break;
+		}
 		}
 
 		await clonedObject.save();
@@ -292,6 +307,10 @@ const getCollectionFilter = (customIds, user) => {
 	};
 };
 
+const capitalizeWords = (str) => {
+	return str.toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
+};
+
 module.exports = {
 	log,
 	time,
@@ -304,4 +323,5 @@ module.exports = {
 	sumCountsInArrays,
 	selectionOptions,
 	getCollectionFilter,
+	capitalizeWords,
 };
