@@ -86,6 +86,7 @@ module.exports = {
 				hunger: 50,
 				stress: 20,
 				xp: 0,
+				species: fishInInventory.name,
 			});
 
 			success = await newPet.save();

@@ -42,6 +42,10 @@ class Aquarium {
 		return this.aquarium.owner;
 	}
 
+	async getFish() {
+		return this.aquarium.fish;
+	}
+
 	async addFish(fishId) {
 		this.aquarium.fish.push(fishId);
 		return this.save();
@@ -84,12 +88,8 @@ class Aquarium {
 		return this.save();
 	}
 
-	async feed() {
-		// pass
-	}
-
 	async clean() {
-		this.aquarium.cleanliness = 100;
+		this.aquarium.cleanliness += 10;
 		return this.save();
 	}
 

@@ -18,7 +18,9 @@ module.exports = {
 			.addStringOption((p) => p.setName('name').setDescription('The name of the aquarium you want to clean.').setRequired(true)))
 		.addSubcommand((o) => o.setName('feed').setDescription('Feed your fish.')
 			.addStringOption((p) => p.setName('name').setDescription('The name of the aquarium you want to feed.').setRequired(true)))
-		.addSubcommand((o) => o.setName('adjust').setDescription('Adjust the temperature of your aquarium.'))
+		.addSubcommand((o) => o.setName('adjust').setDescription('Adjust the temperature of your aquarium.')
+			.addStringOption((p) => p.setName('name').setDescription('The name of the aquarium you want to adjust.').setRequired(true))
+			.addIntegerOption((p) => p.setName('temperature').setDescription('The temperature you want to set the aquarium to.').setRequired(true)))
 		.addSubcommandGroup((o) => o.setName('fish').setDescription('Manage the fish in your aquarium.')
 			.addSubcommand((p) => p.setName('move').setDescription('Add a fish to your aquarium.')
 				.addStringOption(q => q.setName('fish').setDescription('The name of the pet fish you want to move').setRequired(true))
@@ -26,7 +28,7 @@ module.exports = {
 			),
 		),
 	options: {
-		cooldown: 10_000,
+		cooldown: 3_000,
 	},
 	run: async (client, interaction) => {
 		const subcommand = interaction.options.getSubcommand();
@@ -100,6 +102,47 @@ module.exports = {
 			}
 
 			return await interaction.followUp(`You have upgraded the aquarium named **${aquariumName}**. It can now hold ${await aquarium.getSize()} fish.`);
+		}
+
+		if (subcommand === 'clean') {
+			const aquariumName = interaction.options.getString('name');
+			const aquariumData = await Habitat.findOne({ name: aquariumName, owner: interaction.user.id });
+			if (!aquariumData) return await interaction.followUp(`You do not own an aquarium named **${aquariumName}**.`);
+
+			const aquarium = new Aquarium(aquariumData);
+			await aquarium.clean();
+
+			return await interaction.followUp(`You have cleaned the aquarium named **${aquariumName}**.`);
+		}
+
+		if (subcommand === 'feed') {
+			const aquariumName = interaction.options.getString('name');
+			const aquariumData = await Habitat.findOne({ name: aquariumName, owner: interaction.user.id });
+			if (!aquariumData) return await interaction.followUp(`You do not own an aquarium named **${aquariumName}**.`);
+
+			const aquarium = new Aquarium(aquariumData);
+			const fishIds = await aquarium.getFish();
+			const fish = await Promise.all(fishIds.map(async fishId => { return await PetFish.findById(fishId); }));
+			for (const f of fish) {
+				const pet = new Pet(f);
+				await pet.feed();
+			}
+
+			return await interaction.followUp(`You have fed the fish in the aquarium named **${aquariumName}**.`);
+		}
+
+		if (subcommand === 'adjust') {
+			const aquariumName = interaction.options.getString('name');
+			const aquariumData = await Habitat.findOne({ name: aquariumName, owner: interaction.user.id });
+			if (!aquariumData) return await interaction.followUp(`You do not own an aquarium named **${aquariumName}**.`);
+
+			const aquarium = new Aquarium(aquariumData);
+			const temperature = interaction.options.getInteger('temperature');
+			if (temperature < -30 || temperature > 30) return await interaction.followUp('The temperature must be between -30 and 30 degrees Celsius.');
+
+			await aquarium.adjustTemperature(temperature);
+
+			return await interaction.followUp(`You have set the temperature of the aquarium named **${aquariumName}** to ${temperature}°C.`);
 		}
 
 		if (subcommand === 'fish') {
