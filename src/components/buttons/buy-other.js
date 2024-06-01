@@ -1,7 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, ComponentType } = require('discord.js');
 const { selectionOptions, getCollectionFilter } = require('../../util/Utils');
-const { xpToLevel, getUser, sendToInventory } = require('../../util/User');
 const { Item, ItemData } = require('../../schemas/ItemSchema');
+const { User, getUser } = require('../../class/User');
 
 module.exports = {
 	customId: 'buy-other',
@@ -85,7 +85,7 @@ const getSelection = async (response, userId) => {
 	const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['select-item'], userId), time: 30000 });
 
 	collector.on('collect', async i => {
-		const userData = await getUser(userId);
+		const userData = new User(await getUser(userId));
 		return await processItemSelection(i, userData);
 	});
 };
@@ -96,7 +96,7 @@ const processItemSelection = async (selection, userData) => {
 
 	const canBuy = await checkItemRequirements(originalItem, userData);
 
-	if (userData.inventory.money < originalItem.price && canBuy) {
+	if (await userData.getMoney() < originalItem.price && canBuy) {
 		return await selection.reply({
 			content: 'You do not have enough money to buy this item!',
 			ephemeral: true,
@@ -104,10 +104,9 @@ const processItemSelection = async (selection, userData) => {
 		});
 	}
 	else if (canBuy) {
-		userData.inventory.money -= originalItem.price;
-		await sendToInventory(userData.userId, originalItem);
+		await userData.addMoney(-originalItem.price);
+		await userData.sendToInventory(originalItem);
 
-		userData.save();
 		await selection.reply({
 			components: [],
 			content: `You have successfully bought a ${originalItem.name}!`,
@@ -136,10 +135,10 @@ const getItemById = async (itemId) => {
 
 const checkItemRequirements = async (item, userData) => {
 	item = item.toJSON();
-	const userLevel = await xpToLevel(userData.xp);
+	const userLevel = await userData.getLevel();
 	const meetsLevelRequirement = userLevel >= (item.requirements?.level || 0);
 
-	const items = await Promise.all(userData.inventory.items.map(async (i) => await ItemData.findById(i)));
+	const items = await Promise.all((await userData.getItems()).map(async (i) => await ItemData.findById(i)));
 	const meetsPrerequisites = item.prerequisites ? item.prerequisites.every((prereq) => items.some((i) => i.name === prereq)) : true;
 	return meetsLevelRequirement && meetsPrerequisites;
 };

@@ -1,11 +1,12 @@
 const { clone } = require('./Utils');
-const { xpToLevel } = require('./User');
+const { User, getUser } = require('../class/User');
 const { Quest, QuestData } = require('../schemas/QuestSchema');
-const { User } = require('../schemas/UserSchema');
 const { Gacha } = require('../schemas/GachaSchema');
 
 const generateDailyQuest = async (userId) => {
-	const user = await User.findOne({ userId: userId });
+	const user = new User(await getUser(userId));
+	const inventory = await user.getInventory();
+	const stats = await user.getStats();
 
 	const dailies = await Quest.find({ daily: true });
 	const randomIndex = Math.floor(Math.random() * dailies.length);
@@ -14,21 +15,21 @@ const generateDailyQuest = async (userId) => {
 	if (!user) {
 		throw new Error('User not found');
 	}
-	if (user.inventory.quests.includes(originalQuest.id)) {
+	if (inventory.quests.includes(originalQuest.id)) {
 		return await generateDailyQuest(userId);
 	}
 
-	const hasDailyQuest = await Promise.all(user.inventory.quests.map(async (questId) => {
+	const hasDailyQuest = await Promise.all(inventory.quests.map(async (questId) => {
 		const quest = await QuestData.findById(questId);
 		return (quest.daily && quest.status === 'in_progress');
 	})).then(results => results.some(Boolean));
 
-	if (hasDailyQuest || Date.now() - user.stats.lastDailyQuest < 86400000) {
+	if (hasDailyQuest || Date.now() - stats.lastDailyQuest < 86400000) {
 		return false;
 	}
 	else {
 		// check requirements
-		const level = await xpToLevel(user.xp);
+		const level = await user.getLevel();
 		if (originalQuest.requirements.level > level) {
 			return await generateDailyQuest(userId);
 		}
@@ -48,15 +49,17 @@ const generateDailyQuest = async (userId) => {
 		quest.reward = [];
 		quest.reward.push(await Gacha.findOne({ name: 'Daily Box' }));
 		await quest.save();
-		user.inventory.quests.push(quest._id);
-		user.stats.lastDailyQuest = Date.now();
-		await user.save();
+		await user.addQuest(quest._id);
+
+		stats.lastDailyQuest = Date.now();
+		await user.setStats(stats);
 		return quest;
 	}
 };
 
 const startQuest = async (userId, questId) => {
-	const user = await User.findOne({ userId: userId });
+	const user = new User(await getUser(userId));
+	const inventory = await user.getInventory();
 	const originalQuest = await Quest.findById(questId);
 	const quest = await clone(originalQuest);
 	if (!user) {
@@ -65,7 +68,7 @@ const startQuest = async (userId, questId) => {
 	if (!quest) {
 		throw new Error('Quest not found');
 	}
-	if (user.inventory.quests.includes(questId)) {
+	if (inventory.quests.includes(questId)) {
 		throw new Error('User already has this quest');
 	}
 
@@ -73,14 +76,14 @@ const startQuest = async (userId, questId) => {
 	quest.user = userId;
 	quest.startDate = Date.now();
 	await quest.save();
-	user.inventory.quests.push(quest._id);
-	await user.save();
+	await user.addQuest(quest._id);
 	return quest;
 };
 
 const getQuests = async (userId) => {
-	const user = await User.findOne({ userId: userId });
-	const questIds = user.inventory.quests;
+	const user = new User(await getUser(userId));
+	const inventory = await user.getInventory();
+	const questIds = inventory.quests;
 	const quests = await QuestData.find({ _id: { $in: questIds } });
 	return quests;
 };

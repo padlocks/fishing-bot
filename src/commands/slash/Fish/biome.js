@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
-const { getUser, xpToLevel } = require('../../../util/User');
 const { Biome } = require('../../../schemas/BiomeSchema');
+const { User, getUser } = require('../../../class/User');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -60,7 +60,7 @@ module.exports = {
 
 		collector.on('collect', async i => {
 			const selection = i.values[0];
-			const userData = await getUser(user.id);
+			const userData = new User(await getUser(user.id));
 			const originalBiome = await Biome.findById(selection);
 
 			// check if user meets biome requirements
@@ -69,7 +69,7 @@ module.exports = {
 			for (const requirement of originalBiome.requirements) {
 				if (requirement.toLowerCase().includes('level')) {
 					reqLevel = requirement.split(' ')[1];
-					const level = await xpToLevel(userData.xp);
+					const level = await userData.getLevel();
 
 					if (level < reqLevel) {
 						unlocked = false;
@@ -79,8 +79,7 @@ module.exports = {
 			}
 
 			if (unlocked) {
-				userData.currentBiome = originalBiome.name;
-				userData.save();
+				await userData.setCurrentBiome(originalBiome.name);
 				await i.reply(`${i.user} has switched to the **${originalBiome.name}**!`);
 			}
 			else {

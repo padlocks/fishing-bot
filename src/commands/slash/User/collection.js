@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { getUser } = require('../../../util/User');
+const { User, getUser } = require('../../../class/User');
 const buttonPagination = require('../../../buttonPagination');
 const { getFishByName } = require('../../../util/Fish');
 
@@ -18,14 +18,16 @@ module.exports = {
 		try {
 			const embeds = [];
 			const target = interaction.options.getUser('user') || interaction.user;
-			const user = await getUser(target.id);
+			const user = new User(await getUser(target.id));
 
 			const fields = [];
-			for (const [key] of user.stats.fishStats) {
+			const stats = await user.getStats();
+			for (const [key] of stats.fishStats) {
 				const fish = await getFishByName(key);
+				if (!fish) continue;
 				const value = `
 				${fish.description}
-				**Caught:** ${user.stats.fishStats.get(key)}
+				**Caught:** ${stats.fishStats.get(key)}
 				`;
 				fields.push({
 					name: fish.name,

@@ -1,10 +1,9 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { getUser } = require('../../../util/User');
-const { PetFish } = require('../../../schemas/PetSchema');
 const { Pet } = require('../../../class/Pet');
-const buttonPagination = require('../../../buttonPagination');
 const { Aquarium } = require('../../../class/Aquarium');
+const { PetFish } = require('../../../schemas/PetSchema');
 const { Habitat } = require('../../../schemas/HabitatSchema');
+const buttonPagination = require('../../../buttonPagination');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -27,9 +26,6 @@ module.exports = {
 	run: async (client, interaction) => {
 		const subcommand = interaction.options.getSubcommand();
 		await interaction.deferReply();
-
-		const user = await getUser(interaction.user.id);
-		if (!user) return await interaction.followUp('There was an issue retrieving your data. Please try again later.');
 
 		if (subcommand === 'view') {
 			// get pets owned by the user

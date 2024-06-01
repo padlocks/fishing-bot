@@ -1,7 +1,6 @@
 const { ButtonStyle, ActionRowBuilder, ButtonBuilder, EmbedBuilder } = require('discord.js');
 const { RodData } = require('../../schemas/RodSchema');
-const { getEquippedRod } = require('../../util/User');
-const { User } = require('../../schemas/UserSchema');
+const { User, getUser } = require('../../class/User');
 
 module.exports = {
 	customId: 'repair-rod',
@@ -11,7 +10,8 @@ module.exports = {
 	 * @param {ButtonInteraction} interaction
 	 */
 	run: async (client, interaction) => {
-		const rod = await getEquippedRod(interaction.user.id);
+		const user = new User(await getUser(interaction.user.id));
+		const rod = await user.getEquippedRod();
 		if (!rod) {
 			await interaction.reply({
 				content: 'You do not have a rod equipped!',
@@ -62,9 +62,7 @@ module.exports = {
 			const confirmation = await response.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
 
 			if (confirmation.customId === 'confirm') {
-				const user = await User.findOne({ userId: interaction.user.id });
-
-				if (user.money < rod.repairCost) {
+				if (await user.getMoney() < rod.repairCost) {
 					await confirmation.update({
 						// content: 'You do not have enough money to repair your rod!',
 						embeds: [
@@ -100,8 +98,7 @@ module.exports = {
 					return;
 				}
 
-				user.money -= rod.repairCost;
-				await user.save();
+				await user.addMoney(-rod.repairCost);
 
 				await confirmation.update({
 					components: [],

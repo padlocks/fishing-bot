@@ -1,11 +1,10 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { getUser } = require('../../../util/User');
+const { User, getUser } = require('../../../class/User');
 const { Habitat } = require('../../../schemas/HabitatSchema');
 const { PetFish } = require('../../../schemas/PetSchema');
 const { Aquarium } = require('../../../class/Aquarium');
 const { Pet } = require('../../../class/Pet');
 const buttonPagination = require('../../../buttonPagination');
-const { ItemData } = require('../../../schemas/ItemSchema');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -34,7 +33,7 @@ module.exports = {
 		const subcommand = interaction.options.getSubcommand();
 		await interaction.deferReply();
 
-		const user = await getUser(interaction.user.id);
+		const user = new User(await getUser(interaction.user.id));
 		if (!user) return await interaction.followUp('There was an issue retrieving your data. Please try again later.');
 
 		if (subcommand === 'view') {
@@ -82,22 +81,7 @@ module.exports = {
 
 			const aquarium = new Aquarium(aquariumData);
 
-			let license;
-			if (user.inventory.items) {
-				// check if user has an aquarium license
-				const licenses = await user.inventory.items.filter(async (i) => i.type !== 'license');
-				const licensesData = await Promise.all(licenses.map(async (l) => await ItemData.findById(l)));
-				const aquariumLicenses = await licensesData.filter(async (l) => {
-					return !l.name.toLowerCase().includes('aquarium');
-				});
-				// find the license that matches the waterType
-				const waterLicenses = await aquariumLicenses.filter(async (l) => {
-					return !l.aquarium.waterType.includes(await aquarium.getWaterType());
-				});
-				// find the license with the highest size constraint
-				const sortedLicenses = await waterLicenses.sort((a, b) => b.aquarium.size - a.aquarium.size);
-				license = sortedLicenses[0];
-			}
+			const license = await user.getAquariumLicense(await aquarium.getWaterType());
 			if (license.aquarium.size <= await aquarium.getSize()) {
 				return await interaction.followUp(`The aquarium named **${aquariumName}** is already at the maximum size allowed by your license.`);
 			}

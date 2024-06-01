@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { FishData } = require('../../../schemas/FishSchema');
 const buttonPagination = require('../../../buttonPagination');
-const { getUser, getEquippedRod, getInventoryValue, xpToLevel, xpToNextLevel, getEquippedBait } = require('../../../util/User');
+const { User, getUser } = require('../../../class/User');
 const { getFishCount } = require('../../../util/Fish');
 const { Biome } = require('../../../schemas/BiomeSchema');
 const { ItemData } = require('../../../schemas/ItemSchema');
@@ -31,16 +31,16 @@ module.exports = {
 				lucky: [],
 			};
 
-			const user = await getUser(interaction.user.id);
-
-			if (user.inventory.fish && Array.isArray(user.inventory.fish)) {
+			const user = new User(await getUser(interaction.user.id));
+			const inventory = await user.getInventory();
+			if (inventory.fish && Array.isArray(inventory.fish)) {
 				const fishNames = new Set();
 				await Promise.all(
-					user.inventory.fish.map(async (fishObject) => {
+					inventory.fish.map(async (fishObject) => {
 						const fish = await FishData.findById(fishObject.valueOf());
 						if (!fishNames.has(fish.name)) {
 							fishNames.add(fish.name);
-							const fishCount = await getFishCount(user.userId, fish.name);
+							const fishCount = await getFishCount(await user.getUserId(), fish.name);
 							fishInventory[fish.rarity.toLowerCase()].push(`**${fishCount}** <${fish.icon?.animated ? 'a' : ''}:${fish.icon?.data}> ${fish.name} ${fish.locked ? '🔒' : ''}\n`);
 						}
 					}),
@@ -54,29 +54,30 @@ module.exports = {
 				}
 			}
 
-			const equippedRod = await getEquippedRod(user.userId);
-			const equippedBait = await getEquippedBait(user.userId);
-			const inventoryValue = await getInventoryValue(user.userId);
-			const userBiome = user.currentBiome.charAt(0).toUpperCase() + user.currentBiome.slice(1);
+			const equippedRod = await user.getEquippedRod();
+			const equippedBait = await user.getEquippedBait();
+			const inventoryValue = await user.getInventoryValue();
+			const currentBiome = await user.getCurrentBiome();
+			const userBiome = currentBiome.charAt(0).toUpperCase() + currentBiome.slice(1);
 			const biome = await Biome.findOne({ name: userBiome });
 			const balance = `
-			**Balance:** $${user.inventory.money.toLocaleString()}\n`;
-			const level = `**Level ${await xpToLevel(user.xp)}**. ${await xpToNextLevel(user.xp)} to next level.\n`;
+			**Balance:** $${inventory.money.toLocaleString()}\n`;
+			const level = `**Level ${await user.getLevel()}**. ${await user.getXPToNextLevel()} to next level.\n`;
 			const rod = `**Currently using**: <${equippedRod?.icon?.animated ? 'a' : ''}:${equippedRod?.icon?.data || ''}> ${equippedRod?.name || 'None'}\n${equippedRod?.durability || 0} / ${equippedRod?.maxDurability || 0}\n`;
 			const bait = `**With**: <${equippedBait?.icon?.animated ? 'a' : ''}:${equippedBait?.icon?.data || ''}>${equippedBait?.name || 'None'}\n`;
 			const biomeString = `**Current biome**: <${biome.icon?.animated ? 'a' : ''}:${biome.icon?.data || ''}> ${biome.name.charAt(0).toUpperCase() + biome.name.slice(1) || 'Ocean'}\n`;
 			const inventoryValueString = `**Inventory value**: $${await inventoryValue.toLocaleString()}\n\n`;
 			const description = balance + level + rod + (equippedBait ? bait : '') + biomeString + inventoryValueString;
 
-			if (user.inventory.fish.length === 0) {
+			if (inventory.fish.length === 0) {
 				fields.push({ name: 'No fish', value: 'You have no fish in your inventory.' });
 			}
 
 			const rods = {};
-			for (let i = 0; i < user.inventory.rods.length; i++) {
-				const rodId = user.inventory.rods[i].valueOf();
+			for (let i = 0; i < inventory.rods.length; i++) {
+				const rodId = inventory.rods[i].valueOf();
 				const rodObject = await ItemData.findById(rodId);
-				const rodsOfType = await ItemData.find({ name: rodObject.name, user: user.userId });
+				const rodsOfType = await ItemData.find({ name: rodObject.name, user: await user.getUserId() });
 				const count = rodsOfType.length;
 				rods[rodObject.name] = `x${count} <${rodObject.icon.animated ? 'a' : ''}:${rodObject.icon.data || ''}> ${rodObject.name || ''}\n`;
 			}
@@ -89,8 +90,8 @@ module.exports = {
 			}
 
 			const baits = {};
-			for (let i = 0; i < user.inventory.baits.length; i++) {
-				const baitId = user.inventory.baits[i].valueOf();
+			for (let i = 0; i < inventory.baits.length; i++) {
+				const baitId = inventory.baits[i].valueOf();
 				const baitObject = await ItemData.findById(baitId);
 				baits[baitObject.name] = `x${baitObject.count} <${baitObject.icon.animated ? 'a' : ''}:${baitObject.icon.data || ''}> ${baitObject.name || ''}\n`;
 			}
@@ -103,23 +104,23 @@ module.exports = {
 			}
 
 			const items = {};
-			for (let i = 0; i < user.inventory.items?.length; i++) {
-				const itemId = user.inventory.items[i].valueOf();
+			for (let i = 0; i < inventory.items?.length; i++) {
+				const itemId = inventory.items[i].valueOf();
 				const itemObject = await ItemData.findById(itemId);
-				const itemsOfType = await ItemData.find({ name: itemObject.name, user: user.userId });
+				const itemsOfType = await ItemData.find({ name: itemObject.name, user: await user.getUserId() });
 				const count = itemsOfType.length;
 				items[itemObject.name] = `x${count} <${itemObject.icon.animated ? 'a' : ''}:${itemObject.icon.data || ''}> ${itemObject.name || ''}\n`;
 			}
 
-			for (let i = 0; i < user.inventory.gacha?.length; i++) {
-				const itemId = user.inventory.gacha[i].valueOf();
+			for (let i = 0; i < inventory.gacha?.length; i++) {
+				const itemId = inventory.gacha[i].valueOf();
 				const itemObject = await ItemData.findById(itemId);
 				const count = itemObject.count;
 				items[itemObject.name] = `x${count} <${itemObject.icon.animated ? 'a' : ''}:${itemObject.icon.data || ''}> ${itemObject.name || ''}\n`;
 			}
 
-			for (let i = 0; i < user.inventory.buffs?.length; i++) {
-				const itemId = user.inventory.buffs[i].valueOf();
+			for (let i = 0; i < inventory.buffs?.length; i++) {
+				const itemId = inventory.buffs[i].valueOf();
 				const itemObject = await ItemData.findById(itemId);
 				const count = itemObject.count;
 				items[itemObject.name] = `x${count} <${itemObject.icon.animated ? 'a' : ''}:${itemObject.icon.data || ''}> ${itemObject.name || ''}\n`;

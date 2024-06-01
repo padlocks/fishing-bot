@@ -2,9 +2,9 @@ const {
 	SlashCommandBuilder,
 	EmbedBuilder,
 } = require('discord.js');
-const { FishData } = require('../../../schemas/FishSchema');
 const { getUser } = require('../../../util/User');
 const { log } = require('../../../util/Utils');
+const { User } = require('../../../class/User');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -24,7 +24,7 @@ module.exports = {
 		await interaction.deferReply();
 
 		const name = interaction.options.getString('name');
-		const user = await getUser(interaction.user.id);
+		const user = new User(await getUser(interaction.user.id));
 
 		if (!user) {
 			log('User not found.', 'err');
@@ -40,8 +40,7 @@ module.exports = {
 		}
 
 		// Find all fish objects with the specified name and update their 'locked' property
-		const fishPromises = await user.inventory.fish.map(async x => await FishData.findById(x.valueOf()));
-		const fishList = await Promise.all(fishPromises);
+		const fishList = await user.getFish();
 		fishList.forEach(async fish => {
 			if (fish.name.toLowerCase() === name.toLowerCase()) {
 				fish.locked = true;

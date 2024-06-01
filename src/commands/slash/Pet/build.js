@@ -1,9 +1,8 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { getUser } = require('../../../util/User');
 const { capitalizeWords } = require('../../../util/Utils');
 const { Aquarium } = require('../../../class/Aquarium');
 const { Habitat } = require('../../../schemas/HabitatSchema');
-const { ItemData } = require('../../../schemas/ItemSchema');
+const { User, getUser } = require('../../../class/User');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -31,12 +30,12 @@ module.exports = {
 	run: async (client, interaction) => {
 		await interaction.deferReply();
 
-		const user = await getUser(interaction.user.id);
+		const user = new User(await getUser(interaction.user.id));
 		if (!user) return interaction.followUp({ content: 'There was an error retrieving your data!', ephemeral: true });
 
 		const name = interaction.options.getString('name');
 		// check to see if user already has an aquarium with that name
-		const exists = await Habitat.exists({ name: name, owner: user.userId });
+		const exists = await Habitat.exists({ name: name, owner: await user.getUserId() });
 		if (exists) return interaction.followUp({ content: 'You already have an aquarium with that name!', ephemeral: true });
 
 		let waterType = interaction.options.getString('watertype');
@@ -54,22 +53,7 @@ module.exports = {
 			});
 		}
 
-		let license;
-		if (user.inventory.items) {
-			// check if user has an aquarium license
-			const licenses = await user.inventory.items.filter(async (i) => i.type !== 'license');
-			const licensesData = await Promise.all(licenses.map(async (l) => await ItemData.findById(l)));
-			const aquariumLicenses = await licensesData.filter(async (l) => {
-				return !l.name.toLowerCase().includes('aquarium');
-			});
-			// find the license that matches the waterType
-			const waterLicenses = await aquariumLicenses.filter(async (l) => {
-				return !l.aquarium.waterType.includes(waterType);
-			});
-			// find the license with the highest size constraint
-			const sortedLicenses = await waterLicenses.sort((a, b) => b.aquarium.size - a.aquarium.size);
-			license = sortedLicenses[0];
-		}
+		const license = await user.getAquariumLicense(waterType);
 		if (!license) return interaction.followUp({ content: 'You do not have an aquarium license for that water type!', ephemeral: true });
 
 		let success = false;
@@ -79,12 +63,12 @@ module.exports = {
 				name,
 				size: license.aquarium.size,
 				waterType,
-				owner: user.userId,
+				owner: await user.getUserId(),
 			});
 
 			success = await newAquarium.save();
 			if (success) {
-				user.inventory.aquariums.push(await newAquarium.getId());
+				(await user.getInventory()).aquariums.push(await newAquarium.getId());
 				await user.save();
 			}
 		}

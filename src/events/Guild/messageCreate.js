@@ -1,9 +1,7 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const { ChannelType } = require('discord.js');
 const config = require('../../config');
-const { log, generateXP, generateCash } = require('../../util/Utils');
 const GuildSchema = require('../../schemas/GuildSchema');
-const { getUser } = require('../../util/User');
 
 const cooldown = new Map();
 
@@ -17,12 +15,6 @@ module.exports = {
      */
 	run: async (client, message) => {
 		if (message.author.bot || message.channel.type === ChannelType.DM) return;
-
-		// const userData = (await getUser(message.author.id));
-
-		// userData.xp += generateXP();
-		// userData.inventory.money += generateCash();
-		// userData.save();
 
 		if (!config.handler.commands.prefix) return;
 

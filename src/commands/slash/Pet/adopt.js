@@ -1,11 +1,11 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { getUser } = require('../../../util/User');
 const { capitalizeWords } = require('../../../util/Utils');
 const { Pet } = require('../../../class/Pet');
-const { FishData, Fish } = require('../../../schemas/FishSchema');
+const { Fish } = require('../../../schemas/FishSchema');
 const { Habitat } = require('../../../schemas/HabitatSchema');
 const { Aquarium } = require('../../../class/Aquarium');
 const { PetFish } = require('../../../schemas/PetSchema');
+const { User, getUser } = require('../../../class/User');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -55,24 +55,23 @@ module.exports = {
 		const aquariumExists = await Habitat.exists({ name: aquariumName, owner: interaction.user.id });
 		if (!aquariumExists) return interaction.editReply({ content: 'That aquarium does not exist! Use the `build` command to construct one.', ephemeral: true });
 
-		const user = await getUser(interaction.user.id);
+		const user = new User(await getUser(interaction.user.id));
 		if (!user) return interaction.editReply({ content: 'There was an error retrieving your data!', ephemeral: true });
 
 		// find the desired aquarium
-		const aquariums = await Promise.all(user.inventory.aquariums.map(async (a) => await Habitat.findById(a)));
+		const aquariums = await Promise.all((await user.getInventory()).aquariums.map(async (a) => await Habitat.findById(a)));
 		const aquariumData = await aquariums.find((a) => a.name.toLowerCase() === aquariumName.toLowerCase());
 		const aquarium = new Aquarium(aquariumData);
 
 		// find the desired fish in user's inventory
-		const fishes = await Promise.all(user.inventory.fish.map(async (f) => await FishData.findById(f)));
+		const fishes = await user.getFish();
 		const fishInInventory = await fishes.find((f) => f.name.toLowerCase() === species.toLowerCase() && !f.locked);
 
 		// check if biome origin is the same as the aquarium's water type
 		if (await aquarium.compareBiome(fishInInventory.biome)) return await interaction.followUp(`**${fishInInventory.name}** cannot live in a ${await aquarium.getWaterType()} aquarium.`);
 
 		// remove fish from inventory
-		user.inventory.fish = user.inventory.fish.filter((f) => !f.equals(fishInInventory.id));
-		await user.save();
+		await user.removeFish(fishInInventory.id);
 
 		let success = false;
 		let newPet;
@@ -82,7 +81,7 @@ module.exports = {
 				aquarium: await aquarium.getId(),
 				name: name,
 				age: 1,
-				owner: user.userId,
+				owner: await user.getUserId(),
 				traits: [],
 				health: 100,
 				mood: 100,

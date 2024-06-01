@@ -1,7 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, ButtonStyle, ButtonBuilder, ComponentType } = require('discord.js');
-const { clone, selectionOptions, getCollectionFilter } = require('../../util/Utils');
-const { xpToLevel, getUser, getAllBaits } = require('../../util/User');
+const { selectionOptions, getCollectionFilter } = require('../../util/Utils');
 const { Item, ItemData } = require('../../schemas/ItemSchema');
+const { User, getUser } = require('../../class/User');
 
 module.exports = {
 	customId: 'buy-bait',
@@ -77,7 +77,7 @@ const getBaitSelection = async (response, user) => {
 	const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['select-bait'], user), time: 30000 });
 
 	collector.on('collect', async i => {
-		const userData = await getUser(user);
+		const userData = new User(await getUser(user));
 		return await processBaitSelection(i, userData, user);
 	});
 };
@@ -110,7 +110,7 @@ const processBaitSelection = async (selection, userData, user) => {
 		const amountChoice = i.customId;
 		const amount = await getAmountFromChoice(amountChoice);
 
-		if (!hasEnoughMoney(userData, originalItem, amount)) {
+		if (!await hasEnoughMoney(userData, originalItem, amount)) {
 			return await i.reply({
 				content: 'You do not have enough money to buy this item!',
 				ephemeral: true,
@@ -133,7 +133,7 @@ const getItemById = async (itemId) => {
 };
 
 const meetsItemRequirements = async (userData, item) => {
-	const userLevel = await xpToLevel(userData.xp);
+	const userLevel = await userData.getLevel();
 	return userLevel >= item.toJSON().requirements.level;
 };
 
@@ -161,14 +161,14 @@ const getAmountFromChoice = async (amountChoice) => {
 	}
 };
 
-const hasEnoughMoney = (userData, item, amount) => {
-	return userData.inventory.money >= item.price * amount;
+const hasEnoughMoney = async (userData, item, amount) => {
+	return (await userData.getMoney()) >= item.price * amount;
 };
 
 const buyItem = async (userData, item, amount) => {
-	userData.inventory.money -= item.price * amount;
+	await userData.addMoney(-item.price * amount);
 	let baitItem;
-	const baits = await getAllBaits(userData.userId);
+	const baits = await userData.getAllBaits();
 	const itemId = baits.find((bait) => bait.name === item.name);
 	if (itemId) {
 		baitItem = await ItemData.findById(itemId) || {};
@@ -176,10 +176,6 @@ const buyItem = async (userData, item, amount) => {
 		await baitItem.save();
 	}
 	else {
-		baitItem = await clone(item, userData.userId);
-		baitItem.count = amount;
-		userData.inventory.baits.push(baitItem);
-		await baitItem.save();
-		await userData.save();
+		await userData.sendToInventory(item);
 	}
 };

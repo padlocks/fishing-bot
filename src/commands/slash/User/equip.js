@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
-const { getUser, setEquippedRod, setEquippedBait, startBooster } = require('../../../util/User');
+const { User, getUser } = require('../../../class/User');
 const { ItemData } = require('../../../schemas/ItemSchema');
 
 const selectionOptions = async (inventoryPath, userData, allowNone = true) => {
@@ -9,7 +9,7 @@ const selectionOptions = async (inventoryPath, userData, allowNone = true) => {
 	const desc = {};
 
 	// Loop through inventory items
-	for (const objectId of userData.inventory[inventoryPath]) {
+	for (const objectId of (await userData.getInventory())[inventoryPath]) {
 		try {
 			const item = await ItemData.findById(objectId.valueOf());
 			const name = item.name;
@@ -117,11 +117,11 @@ module.exports = {
 
 		try {
 			const choice = await buttonResponse.awaitMessageComponent({ filter: collectorFilter, time: 30_000 });
-			const userData = await getUser(user.id);
+			const userData = new User(await getUser(user.id));
 
 			if (choice.customId === 'equip-rod') {
 				let options = [];
-				options = await Promise.all(await selectionOptions('rods', userData));
+				options = await Promise.all(await selectionOptions('rods', userData, true));
 				options = options.filter((option) => option !== undefined);
 
 				if (options.length === 0) {
@@ -154,16 +154,28 @@ module.exports = {
 
 				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 30_000 });
 				const rodChoice = selection.values[0];
-				const newRod = await setEquippedRod(user.id, rodChoice);
+				const newRod = await userData.setEquippedRod(rodChoice);
 
-				await selection.update({
-					components: [],
-					embeds: [
-						new EmbedBuilder()
-							.setTitle('Equipment')
-							.setDescription(`Equipped fishing rod: **${newRod.name}**`),
-					],
-				});
+				if (newRod === null) {
+					return await selection.update({
+						embeds: [
+							new EmbedBuilder()
+								.setTitle('Equipment')
+								.setDescription('Unequipped fishing rod.'),
+						],
+						components: [],
+					});
+				}
+				else {
+					await selection.update({
+						components: [],
+						embeds: [
+							new EmbedBuilder()
+								.setTitle('Equipment')
+								.setDescription(`Equipped fishing rod: **${newRod.name}**`),
+						],
+					});
+				}
 			}
 			else if (choice.customId === 'equip-bait') {
 				let options = [];
@@ -204,11 +216,11 @@ module.exports = {
 				let newBait = {};
 				let description = '';
 				if (chosenBait === 'none') {
-					newBait = await setEquippedBait(user.id, null);
+					newBait = await userData.setEquippedBait(null);
 					description = 'Unequipped bait.';
 				}
 				else {
-					newBait = await setEquippedBait(user.id, chosenBait);
+					newBait = await userData.setEquippedBait(chosenBait);
 					description = `Equipped bait: **${newBait.name}**`;
 				}
 
@@ -259,7 +271,7 @@ module.exports = {
 
 				let newBooster = {};
 				let description = '';
-				newBooster = await startBooster(user.id, chosenBooster);
+				newBooster = await userData.startBooster(chosenBooster);
 				description = `Equipped booster: **${newBooster.name}**`;
 
 				await selection.update({
