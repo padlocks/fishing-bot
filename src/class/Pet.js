@@ -157,7 +157,7 @@ class Pet {
 		this.pet.lastFed = currentTime;
 		// max 100, min 0
 		this.pet.hunger = Math.max(Math.min(this.pet.hunger - 50, 100), 0);
-		this.pet.xp += 10;
+		this.pet.xp += 50;
 		return this.save();
 	}
 
@@ -166,7 +166,7 @@ class Pet {
 		this.pet.lastPlayed = currentTime;
 		this.pet.mood = Math.max(Math.min(this.pet.mood + 25, 100), 0);
 		this.pet.stress = Math.max(Math.min(this.pet.stress - 25, 100), 0);
-		this.pet.xp += 10;
+		this.pet.xp += 50;
 		return this.save();
 	}
 
@@ -195,7 +195,7 @@ class Pet {
 		if (await this.getAge() < 18) return false;
 		const currentTime = Date.now();
 		this.pet.lastBred = currentTime;
-		this.pet.xp += 50;
+		this.pet.xp += 250;
 		return this.save();
 	}
 }
