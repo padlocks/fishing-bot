@@ -67,6 +67,9 @@ module.exports = {
 		const fishes = await Promise.all(user.inventory.fish.map(async (f) => await FishData.findById(f)));
 		const fishInInventory = await fishes.find((f) => f.name.toLowerCase() === species.toLowerCase() && !f.locked);
 
+		// check if biome origin is the same as the aquarium's water type
+		if (await aquarium.compareBiome(fishInInventory.biome)) return await interaction.followUp(`**${fishInInventory.name}** cannot live in a ${await aquarium.getWaterType()} aquarium.`);
+
 		// remove fish from inventory
 		user.inventory.fish = user.inventory.fish.filter((f) => !f.equals(fishInInventory.id));
 		await user.save();
@@ -104,7 +107,7 @@ module.exports = {
 					new EmbedBuilder()
 						.setTitle('Adoption Agency')
 						.addFields(
-							{ name: 'Congratulations!', value: `You have successfully adopted the ${species} **${name}**! They have been added to aquarium **${aquariumName}**.` },
+							{ name: 'Congratulations!', value: `You have successfully adopted the <${fishInInventory.icon?.animated ? 'a' : ''}:${fishInInventory.icon?.data}> ${species} **${name}**! They have been added to aquarium **${aquariumName}**.` },
 						),
 				],
 			});

@@ -45,12 +45,16 @@ module.exports = {
 			const embeds = [];
 			const fields = [];
 
-			for (const aquarium of aquariums) {
-				const fish = await Promise.all(aquarium.fish.map(async fishId => { return await PetFish.findById(fishId); }));
-				const information = { name: `Aquarium: ${aquarium.name}`, value: `**Fish**: ${aquarium.fish.length}/${aquarium.size}\n**Cleanliness**: ${aquarium.cleanliness}%\n**Temperature**: ${aquarium.temperature}°C\n**Inhabitants**: ` };
+			for (const a of aquariums) {
+				const aquarium = new Aquarium(a);
+				await aquarium.updateStatus();
+				const fish = await Promise.all((await aquarium.getFish()).map(async fishId => { return await PetFish.findById(fishId); }));
+				const information = { name: `Aquarium: ${await aquarium.getName()}`, value: `**Fish**: ${(await aquarium.getFish()).length}/${await aquarium.getSize()}\n**Cleanliness**: ${await aquarium.getCleanliness()}%\n**Temperature**: ${await aquarium.getTemperature()}°C\n**Inhabitants**: ` };
 				if (!fish.length) information.value += 'None';
 				for (const f of fish) {
-					information.value += `${f.name}\n`;
+					const pet = new Pet(f);
+					const fishData = await pet.getFishData();
+					information.value += `<${fishData.icon?.animated ? 'a' : ''}:${fishData.icon?.data}> ${f.name} `;
 				}
 				fields.push(information);
 			}
@@ -71,7 +75,7 @@ module.exports = {
 			return await buttonPagination(interaction, embeds, true);
 		}
 
-		if (subcommand === 'upgrade') {
+		else if (subcommand === 'upgrade') {
 			const aquariumName = interaction.options.getString('name');
 			const aquariumData = await Habitat.findOne({ name: aquariumName, owner: interaction.user.id });
 			if (!aquariumData) return await interaction.followUp(`You do not own an aquarium named **${aquariumName}**.`);
@@ -104,7 +108,7 @@ module.exports = {
 			return await interaction.followUp(`You have upgraded the aquarium named **${aquariumName}**. It can now hold ${await aquarium.getSize()} fish.`);
 		}
 
-		if (subcommand === 'clean') {
+		else if (subcommand === 'clean') {
 			const aquariumName = interaction.options.getString('name');
 			const aquariumData = await Habitat.findOne({ name: aquariumName, owner: interaction.user.id });
 			if (!aquariumData) return await interaction.followUp(`You do not own an aquarium named **${aquariumName}**.`);
@@ -115,7 +119,7 @@ module.exports = {
 			return await interaction.followUp(`You have cleaned the aquarium named **${aquariumName}**.`);
 		}
 
-		if (subcommand === 'feed') {
+		else if (subcommand === 'feed') {
 			const aquariumName = interaction.options.getString('name');
 			const aquariumData = await Habitat.findOne({ name: aquariumName, owner: interaction.user.id });
 			if (!aquariumData) return await interaction.followUp(`You do not own an aquarium named **${aquariumName}**.`);
@@ -131,7 +135,7 @@ module.exports = {
 			return await interaction.followUp(`You have fed the fish in the aquarium named **${aquariumName}**.`);
 		}
 
-		if (subcommand === 'adjust') {
+		else if (subcommand === 'adjust') {
 			const aquariumName = interaction.options.getString('name');
 			const aquariumData = await Habitat.findOne({ name: aquariumName, owner: interaction.user.id });
 			if (!aquariumData) return await interaction.followUp(`You do not own an aquarium named **${aquariumName}**.`);
@@ -145,12 +149,12 @@ module.exports = {
 			return await interaction.followUp(`You have set the temperature of the aquarium named **${aquariumName}** to ${temperature}°C.`);
 		}
 
-		if (subcommand === 'fish') {
+		else if (subcommand === 'fish') {
 			await interaction.followUp('Please provide a subcommand.');
 			return;
 		}
 
-		if (subcommand === 'move') {
+		else if (subcommand === 'move') {
 			const fish = interaction.options.getString('fish');
 			// find the pet fish owned by user
 			const petFishData = await PetFish.findOne({ name: fish, owner: interaction.user.id });
@@ -167,6 +171,10 @@ module.exports = {
 
 			const pet = new Pet(petFishData);
 			const aquarium = new Aquarium(aquariumData);
+
+			// check if biome origin is the same as the aquarium's water type
+			const petBiome = await pet.getBiome();
+			if (await aquarium.compareBiome(petBiome)) return await interaction.followUp(`The fish named **${fish}** cannot live in a ${await aquarium.getWaterType()} aquarium.`);
 
 			// move pet to aquarium
 			await aquarium.moveFish(pet, aquarium);
