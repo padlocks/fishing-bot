@@ -46,6 +46,31 @@ class Aquarium {
 		return this.aquarium.fish;
 	}
 
+	async getLastCleaned() {
+		return this.aquarium.lastCleaned;
+	}
+
+	async getLastAdjusted() {
+		return this.aquarium.lastAdjusted;
+	}
+
+	async updateStatus() {
+		const now = new Date();
+		const lastCleaned = new Date(this.aquarium.lastCleaned);
+		const lastAdjusted = new Date(this.aquarium.lastAdjusted);
+
+		const timeSinceCleaned = now - lastCleaned;
+		const timeSinceAdjusted = now - lastAdjusted;
+
+		const cleanlinessDecay = Math.floor(timeSinceCleaned / 3600000);
+		const temperatureDecay = Math.floor(timeSinceAdjusted / 3600000);
+
+		this.aquarium.cleanliness -= cleanlinessDecay;
+		this.aquarium.temperature += temperatureDecay;
+
+		return this.save();
+	}
+
 	async addFish(fishId) {
 		this.aquarium.fish.push(fishId);
 		return this.save();
@@ -92,12 +117,14 @@ class Aquarium {
 	}
 
 	async clean() {
-		this.aquarium.cleanliness += 10;
+		this.aquarium.cleanliness = 100;
+		this.aquarium.lastCleaned = new Date();
 		return this.save();
 	}
 
 	async adjustTemperature(newTemperature) {
 		this.aquarium.temperature = newTemperature;
+		this.aquarium.lastAdjusted = new Date();
 		return this.save();
 	}
 

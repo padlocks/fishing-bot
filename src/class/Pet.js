@@ -94,7 +94,10 @@ class Pet {
 		return this.save();
 	}
 
-	async updateStatus() {
+	async updateStatus(aquarium) {
+		const cleanliness = await aquarium.getCleanliness();
+		const temperature = await aquarium.getTemperature();
+
 		const now = Date.now();
 		const elapsedTimeSinceAdoption = (now - await this.getAdoptionDate()) / 86_400_000;
 		const elapsedTimeSinceFed = (now - await this.getLastFed()) / (60_000 * 120);
@@ -102,9 +105,9 @@ class Pet {
 		const elapsedTimeSinceSeen = (now - await this.getLastUpdated()) / (60_000 * 120);
 
 		const newAge = this.pet.age + Math.floor(elapsedTimeSinceAdoption);
-		const newHunger = this.pet.hunger + Math.floor(elapsedTimeSinceFed);
-		const newMood = this.pet.mood - Math.floor(elapsedTimeSincePlayed);
-		const newStress = this.pet.stress - Math.floor(elapsedTimeSinceSeen);
+		const newHunger = await this.calculateHunger(elapsedTimeSinceFed, cleanliness, temperature);
+		const newMood = await this.calculateMood(elapsedTimeSincePlayed, cleanliness, temperature);
+		const newStress = await this.calculateStress(elapsedTimeSinceSeen, cleanliness, temperature);
 
 		this.pet.age = newAge;
 		this.pet.hunger = Math.min(newHunger, 100);
@@ -112,6 +115,30 @@ class Pet {
 		this.pet.stress = Math.max(newStress, 0);
 		this.pet.lastUpdated = now;
 		return this.save();
+	}
+
+	async calculateHunger(elapsedTimeSinceFed, cleanliness, temperature) {
+		const baseHungerIncrease = Math.floor(elapsedTimeSinceFed);
+		const cleanlinessFactor = 1 - (cleanliness / 100);
+		const temperatureFactor = 1 - (Math.abs(temperature - 25) / 25);
+		const hungerIncrease = baseHungerIncrease * cleanlinessFactor * temperatureFactor;
+		return this.pet.hunger + hungerIncrease;
+	}
+
+	async calculateMood(elapsedTimeSincePlayed, cleanliness, temperature) {
+		const baseMoodDecrease = Math.floor(elapsedTimeSincePlayed);
+		const cleanlinessFactor = 1 - (cleanliness / 100);
+		const temperatureFactor = 1 - (Math.abs(temperature - 25) / 25);
+		const moodDecrease = baseMoodDecrease * cleanlinessFactor * temperatureFactor;
+		return this.pet.mood - moodDecrease;
+	}
+
+	async calculateStress(elapsedTimeSinceSeen, cleanliness, temperature) {
+		const baseStressDecrease = Math.floor(elapsedTimeSinceSeen);
+		const cleanlinessFactor = 1 - (cleanliness / 100);
+		const temperatureFactor = 1 - (Math.abs(temperature - 25) / 25);
+		const stressDecrease = baseStressDecrease * cleanlinessFactor * temperatureFactor;
+		return this.pet.stress - stressDecrease;
 	}
 
 	async updateHabitat(habitatId) {

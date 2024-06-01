@@ -4,6 +4,7 @@ const { PetFish } = require('../../../schemas/PetSchema');
 const { Pet } = require('../../../class/Pet');
 const buttonPagination = require('../../../buttonPagination');
 const { Aquarium } = require('../../../class/Aquarium');
+const { Habitat } = require('../../../schemas/HabitatSchema');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -40,7 +41,8 @@ module.exports = {
 
 			for (const p of pets) {
 				const pet = new Pet(p);
-				await pet.updateStatus();
+				const aquarium = new Aquarium(await Habitat.findById(await pet.getHabitat()));
+				await pet.updateStatus(aquarium);
 				const petData = await pet.getFishData();
 				fields.push({ name: `${await pet.getName()}`, value: `**Species**: <${petData.icon?.animated ? 'a' : ''}:${petData.icon?.data}> ${await pet.getSpecies()}\n**Age**: ${await pet.getAge()}\n**Hunger**: ${await pet.getHunger()}%\n**Mood**: ${await pet.getMood()}%\n**Stress**: ${await pet.getStress()}%\n**XP**: ${await pet.getXP()}` });
 			}

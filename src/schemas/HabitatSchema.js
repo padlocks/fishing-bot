@@ -37,6 +37,14 @@ const AquariumSchema = new Schema({
 		type: String,
 		required: true,
 	},
+	lastCleaned: {
+		type: Date,
+		default: Date.now,
+	},
+	lastAdjusted: {
+		type: Date,
+		default: Date.now,
+	},
 	type: {
 		type: String,
 		default: 'aquarium',
