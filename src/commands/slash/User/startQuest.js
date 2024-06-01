@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
 const { Quest } = require('../../../schemas/QuestSchema');
-const { getUser, xpToLevel } = require('../../../util/User');
+const { User, getUser } = require('../../../class/User');
 const { startQuest, getQuests } = require('../../../util/Quest');
 
 module.exports = {
@@ -62,12 +62,12 @@ module.exports = {
 		collector.on('collect', async i => {
 			let canAccept = true;
 			const selection = i.values[0];
-			const userData = await getUser(user.id);
+			const userData = new User(await getUser(user.id));
 			const originalQuest = await Quest.findById(selection);
 
 			// Check if user meets quest requirements
 			const reqLevel = originalQuest.requirements.level;
-			const level = await xpToLevel(userData.xp);
+			const level = await userData.getLevel();
 			if (level < reqLevel) {
 				canAccept = false;
 				await i.reply({
@@ -102,7 +102,7 @@ module.exports = {
 				return;
 			}
 			else if (canAccept) {
-				await startQuest(userData.userId, originalQuest._id);
+				await startQuest(await userData.getUserId(), originalQuest._id);
 				await i.reply(`${i.user} has started quest **${originalQuest.title}**!`);
 			}
 		});

@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { getUser, sendToInventory } = require('../../../util/User');
 const { Code } = require('../../../schemas/CodeSchema');
+const { User, getUser } = require('../../../class/User');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -20,7 +20,7 @@ module.exports = {
      * @param {ChatInputCommandInteraction} interaction
      */
 	run: async (client, interaction) => {
-		const user = await getUser(interaction.user.id);
+		const user = new User(await getUser(interaction.user.id));
 		await interaction.deferReply();
 
 		const code = interaction.options.getString('code');
@@ -28,7 +28,7 @@ module.exports = {
 		if (!redemption) return await interaction.followUp('That code is invalid.');
 
 		// check if the user has already redeemed the code
-		if (user.inventory.codes.includes(redemption._id)) {
+		if ((await user.getCodes()).includes(redemption._id)) {
 			return await interaction.followUp('You have already redeemed this code.');
 		}
 
@@ -47,17 +47,15 @@ module.exports = {
 		await redemption.save();
 
 		// add the code to the user's inventory
-		user.inventory.codes.push(redemption._id);
+		await user.addCode(redemption._id);
 
 		// add the money to the user's balance
-		user.inventory.money += redemption.money;
-
-		await user.save();
+		await user.addMoney(redemption.money);
 
 		// add the items to the user's inventory
 		const addedItems = [];
 		for (const item of redemption.items) {
-			addedItems.push(await sendToInventory(user.userId, item));
+			addedItems.push(await user.sendToInventory(item));
 		}
 
 		let value = '';

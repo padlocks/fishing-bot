@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { getUser } = require('../../../util/User');
+const { User, getUser } = require('../../../class/User');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -17,9 +17,9 @@ module.exports = {
 		await interaction.deferReply();
 
 		let money = 0;
-		const user = await getUser(interaction.user.id);
+		const user = new User(await getUser(interaction.user.id));
 		if (user) {
-			money = user.inventory.money;
+			money = await user.getMoney();
 		}
 
 		await interaction.followUp({

@@ -1,7 +1,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, ComponentType } = require('discord.js');
-const { clone, selectionOptions, getCollectionFilter } = require('../../util/Utils');
-const { xpToLevel, getUser } = require('../../util/User');
+const { selectionOptions, getCollectionFilter } = require('../../util/Utils');
 const { Item } = require('../../schemas/ItemSchema');
+const { User, getUser } = require('../../class/User');
 
 module.exports = {
 	customId: 'buy-rod',
@@ -80,7 +80,7 @@ const getSelection = async (response, userId) => {
 	const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['select-rod'], userId), time: 30000 });
 
 	collector.on('collect', async i => {
-		const userData = await getUser(userId);
+		const userData = new User(await getUser(userId));
 		return await processRodSelection(i, userData);
 	});
 };
@@ -91,7 +91,7 @@ const processRodSelection = async (selection, userData) => {
 
 	const canBuy = await checkItemRequirements(originalItem, userData);
 
-	if (userData.inventory.money < originalItem.price && canBuy) {
+	if (await userData.getMoney() < originalItem.price && canBuy) {
 		return await selection.reply({
 			content: 'You do not have enough money to buy this item!',
 			ephemeral: true,
@@ -120,13 +120,11 @@ const getItemById = async (itemId) => {
 };
 
 const checkItemRequirements = async (item, userData) => {
-	const userLevel = await xpToLevel(userData.xp);
+	const userLevel = await userData.getLevel();
 	return userLevel >= item.toJSON().requirements.level;
 };
 
 const buyItem = async (item, userData) => {
-	userData.inventory.money -= item.price;
-	const clonedItem = await clone(item, userData.userId);
-	userData.inventory.rods.push(clonedItem);
-	userData.save();
+	await userData.addMoney(-item.price);
+	await userData.sendToInventory(item);
 };

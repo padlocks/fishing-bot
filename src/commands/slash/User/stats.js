@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const buttonPagination = require('../../../buttonPagination');
-const { RodData } = require('../../../schemas/RodSchema');
-const { getUser } = require('../../../util/User');
+const { User, getUser } = require('../../../class/User');
+
 module.exports = {
 	structure: new SlashCommandBuilder()
 		.setName('stats')
@@ -16,12 +16,13 @@ module.exports = {
 	run: async (client, interaction) => {
 		try {
 			const embeds = [];
-			const user = await getUser(interaction.user.id);
-			const rods = await RodData.find({ user: interaction.user.id });
+			const user = new User(await getUser(interaction.user.id));
+			const rods = await user.getRods();
+			const stats = await user.getStats();
 
 			let fields = [{
 				name: 'Total Fish Caught',
-				value: `${user.stats.fishCaught || 0}`,
+				value: `${stats.fishCaught || 0}`,
 				inline: false,
 			}];
 
@@ -31,7 +32,7 @@ module.exports = {
 				inline: true,
 			})));
 
-			user.stats.fishStats.forEach((value, key) => {
+			stats.fishStats.forEach((value, key) => {
 				fields.push({
 					name: key[0].toUpperCase() + key.slice(1),
 					value: value.toLocaleString(),

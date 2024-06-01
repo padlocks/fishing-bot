@@ -1,7 +1,6 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const config = require('../../config');
-const { clone } = require('../../util/Utils');
-const { getEquippedRod, getUser, endBooster } = require('../../util/User');
+const { User, getUser } = require('../../class/User');
 const { Item } = require('../../schemas/ItemSchema');
 const { Guild } = require('../../schemas/GuildSchema');
 const { Pond } = require('../../schemas/PondSchema');
@@ -158,15 +157,14 @@ module.exports = {
 				}
 			}
 
-			const data = (await getUser(interaction.user.id));
-			const equippedRod = await getEquippedRod(interaction.user.id);
+			const data = new User(await getUser(interaction.user.id));
+			const equippedRod = await data.getEquippedRod();
 			if (!equippedRod || (equippedRod.name === 'Old Rod' && equippedRod.state === 'destroyed')) {
 				const rod = await Item.findOne({ name: 'Old Rod' });
-				const clonedRod = await clone(rod, interaction.user.id);
-				clonedRod.obtained = Date.now();
-				data.inventory.rods = [];
-				data.inventory.rods.push(clonedRod);
-				data.inventory.equippedRod = clonedRod;
+				await data.sendToInventory(rod)
+					.then(async (newRod) => {
+						return await data.setEquippedRod(newRod.item.id);
+					});
 			}
 
 			data.commands += 1;
@@ -177,7 +175,7 @@ module.exports = {
 			// check if it has ended
 			for (const buff of activeBuffs) {
 				if (buff.endTime && buff.endTime <= Date.now()) {
-					await endBooster(interaction.user.id, buff.id);
+					await data.endBooster(buff.id);
 				}
 			}
 

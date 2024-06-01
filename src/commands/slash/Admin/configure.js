@@ -8,8 +8,11 @@ module.exports = {
 		.setDescription('Configure the bot for your server')
 		.setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)
 		.addSubcommandGroup((o) => o.setName('pond').setDescription('Manage your ponds')
-			.addSubcommand((o) => o.setName('add').setDescription('Add this channel as a pond - To set the current channel as a pond, don\'t provide a channel').addChannelOption(p => p.setName('channel').setRequired(false).setDescription('To set the current channel as a pond, don\'t provide this option')))
-			.addSubcommand((o) => o.setName('remove').setDescription('Remove this channel as a pond - To remove the current channel as a pond, don\'t provide a channel').addChannelOption(p => p.setName('channel').setRequired(false).setDescription('To remove the current channel as a pond, don\'t provide this option'))),
+			.addSubcommand((o) => o.setName('add').setDescription('Add this channel as a pond - To set the current channel as a pond, don\'t provide a channel')
+				.addChannelOption(p => p.setName('channel').setRequired(false).setDescription('To set the current channel as a pond, don\'t provide this option'))
+				.addIntegerOption(p => p.setName('max').setDescription('The maximum number of fish in the pond').setRequired(false)))
+			.addSubcommand((o) => o.setName('remove').setDescription('Remove this channel as a pond - To remove the current channel as a pond, don\'t provide a channel')
+				.addChannelOption(p => p.setName('channel').setRequired(false).setDescription('To remove the current channel as a pond, don\'t provide this option'))),
 		),
 	options: {
 		cooldown: 10_000,
@@ -31,7 +34,9 @@ module.exports = {
 				return;
 			}
 
-			const pond = new Pond({ id: channel.id });
+			const max = interaction.options.getInteger('max') || 2000;
+
+			const pond = new Pond({ id: channel.id, maximum: max, count: max });
 			await pond.save();
 			const guild = await Guild.findOne({ id: interaction.guild.id });
 			guild.ponds.push(channel.id);

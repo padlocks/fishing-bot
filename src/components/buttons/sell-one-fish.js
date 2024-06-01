@@ -1,8 +1,6 @@
-const { User } = require('../../schemas/UserSchema');
+const { User, getUser } = require('../../class/User');
 const { FishData } = require('../../schemas/FishSchema');
 const { BuffData } = require('../../schemas/BuffSchema');
-const { getUser } = require('../../util/User');
-const { log } = require('../../util/Utils');
 
 module.exports = {
 	customId: 'sell-one-fish',
@@ -12,26 +10,23 @@ module.exports = {
 	 * @param {ButtonInteraction} interaction
 	 */
 	run: async (client, interaction) => {
-		const userData = await getUser(interaction.user.id);
+		const userData = new User(await getUser(interaction.user.id));
 		if (!userData) return;
 
-		const fishArray = userData.stats.latestFish;
-		let newFish = userData.inventory.fish;
+		const fishArray = (await userData.getStats()).latestFish;
+		// let newFish = (await userData.getInventory()).fish;
 
 		// check for buffs
-		const activeBuffs = await BuffData.find({ user: userData.userId, active: true });
+		const activeBuffs = await BuffData.find({ user: await userData.getUserId(), active: true });
 		const cashBuff = activeBuffs.find((buff) => buff.capabilities.includes('cash'));
-		const cashMultiplier = cashBuff ? parseFloat(cashBuff.capabilities[1]) : 1;
+		const cashMultiplier = cashBuff ? parseFloat(cashBuff?.capabilities[1]) : 1;
 
 		for (const fish of fishArray) {
 			const fishData = await FishData.findById(fish.valueOf());
 			const value = fishData.value * cashMultiplier * fish.count;
 			// newFish.push(...userData.inventory.fish.filter(x => x._id.valueOf() !== fishData._id.valueOf()));
-			newFish = newFish.filter(x => {
-				return x._id.valueOf() != fishData._id.valueOf();
-			});
-
-			userData.inventory.money += value;
+			await userData.removeFish(fishData._id);
+			await userData.addMoney(value);
 		}
 
 		if (userData.stats.soldLatestFish) {
@@ -42,37 +37,37 @@ module.exports = {
 			return;
 		}
 
-		try {
-			const updatedUser = await User.findOneAndUpdate(
-				{ userId: userData.userId },
-				{ $set: {
-					'inventory.fish': newFish,
-					'inventory.money': userData.inventory.money,
-					'stats.soldLatestFish': true,
-				} },
-				{ $unset: { 'stats.latestFish': '' } },
-				{ new: true },
-			);
+		// try {
+		// 	const updatedUser = await UserSchema.findOneAndUpdate(
+		// 		{ userId: userData.userId },
+		// 		{ $set: {
+		// 			'inventory.fish': newFish,
+		// 			'inventory.money': await userData.getMoney(),
+		// 			'stats.soldLatestFish': true,
+		// 		} },
+		// 		{ $unset: { 'stats.latestFish': '' } },
+		// 		{ new: true },
+		// 	);
 
-			if (!updatedUser) {
-				await interaction.reply({
-					content: 'There was an error updating your userdata! Your userdata was not changed.',
-					ephemeral: true,
-				});
-			}
+		// 	if (!updatedUser) {
+		// 		await interaction.reply({
+		// 			content: 'There was an error updating your userdata! Your userdata was not changed.',
+		// 			ephemeral: true,
+		// 		});
+		// 	}
 
-			await interaction.reply({
-				content: 'Successfully sold your recent catch!',
-				ephemeral: true,
-			});
-		}
-		catch (err) {
-			console.error(err);
-			await interaction.reply({
-				content: 'There was an error updating your userdata!',
-				ephemeral: true,
-			});
-		}
+		// 	await interaction.reply({
+		// 		content: 'Successfully sold your recent catch!',
+		// 		ephemeral: true,
+		// 	});
+		// }
+		// catch (err) {
+		// 	console.error(err);
+		// 	await interaction.reply({
+		// 		content: 'There was an error updating your userdata!',
+		// 		ephemeral: true,
+		// 	});
+		// }
 
 	},
 };

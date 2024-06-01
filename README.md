@@ -22,6 +22,54 @@ Did you like my project? Click on the star button (⭐️) right above your scre
 - Statistics
 - Crafting
 
+## Commands
+### Info Commands
+- **/help**: Lists all commands.
+- **/leaderboard**: Shows monthly leaderboard of fish caught.
+
+### Economy Commands
+- **/balance**: Displays your current balance.
+- **/open <box>**: Opens a lootbox.
+- **/redeem <redemption_code>**: Redeems a code for both cash and item rewards.
+- **/shop**: Displays the shop. You can also use the modal to purchase items.
+
+### Fish Commands
+- **/biome**: Allows you to switch your current fishing biome.
+- **/fish**: The main fishing command, allows you to fish again and sell directly from the modal.
+- **/lock <species>**: Locks a fish species, preventing it from being sold or adopted.
+- **/sell <rarity>**: Sells all of your fish by rarity, alternatively you can target all instead of a specific rarity.
+- **/unlock <species>**: Unlocks a fish species, allowing it to be sold or adopted.
+
+### Pet Commands
+- **/adopt <species> <name> <aquarium_name>**: Adopts a fish, giving it a name and placing it in an aquarium. If you don't own an aquarium you must use the build command.
+- **/aquarium view**: Displays all of your aquariums, their statuses and inhabitants.
+- **/aquarium upgrade <name>**: Upgrades your aquarium's size according to your highest license.
+- **/aquarium clean <name>**: Cleans your aquarium, making your fish happier. Your aquarium gets dirtier over time.
+- **/aquarium feed <name>**: Feed all of the fish in your aquarium. Your fish get hungrier over time.
+- **/aquarium adjust <name> <temperature>**: Adjust the temperature of the aquarium. Your aquarium gets warmer overtime.
+- **/aquarium fish move <pet_name> <target_aquarium>**: Moves your pet fish from one aquarium to the target aquarium.
+- **/build <name> <freshwater | saltwater>**: Builds an aquarium of specified name using either freshwater or saltwater.
+- **/pet view**: Displays all of your pets and their statuses.
+- **/pet rename <pet_name> <new_name>**: Renames one of your pet fish.
+- **/pet feed <pet_name>**: Feeds one of your pet fish. It will get hungry over time.
+- **/pet play <pet_name>**: Play with one of your pet fish, improving its mood and reducing stress.
+- **/pet sell <pet_name>**: Sells your pet fish for the amount of XP it has collected.
+
+### User Commands
+- **/boosters**: Displays your current and stored boosters. Boosters are buffs for your fishing journey.
+- **/collection**: A small encyclopedia for your caught species.
+- **/daily**: Generates a daily quest with XP, money and a Daily Lootbox as a reward.
+- **/equip**: Equips a specified item type (i.e. fishing rod, bait, booster) using the included modal.
+- **/inventory**: Displays your FishingRPG status and lists all fish and items via rarity.
+- **/profile**: Displays your FishingRPG profile. This is currently a work-in-progress.
+- **/quests**: Displays your in-progress quests, their status and rewards.
+- **/start-quest**: Starts a quest from a list of repeatable commissions.
+
+- **/stats**: Displays your fishing stats. Including fish caught using specific rods and of a particular fish species.
+## Admin Commands
+- **/configure pond add <channel> <amount>**: Sets the desired channel as a fishing pond which has a limited amount of fish per day.
+- **/configure pond remove <channel>**: Removes a pond from the specified channel.
+
 ## Requirements
 ### Packages:
 - **chalk** v2.4.2

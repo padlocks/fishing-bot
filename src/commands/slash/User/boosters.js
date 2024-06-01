@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { BuffData } = require('../../../schemas/BuffSchema');
+const { User, getUser } = require('../../../class/User');
 const buttonPagination = require('../../../buttonPagination');
-const { getUser } = require('../../../util/User');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -21,12 +21,12 @@ module.exports = {
 
 			const buffInventory = [];
 
-			const user = await getUser(interaction.user.id);
-
-			if (user.inventory.buffs && Array.isArray(user.inventory.buffs)) {
+			const user = new User(await getUser(interaction.user.id));
+			const inventory = await user.getInventory();
+			if (inventory.buffs && Array.isArray(inventory.buffs)) {
 				const buffNames = new Set();
 				await Promise.all(
-					user.inventory.buffs.map(async (buffObject) => {
+					inventory.buffs.map(async (buffObject) => {
 						const buff = await BuffData.findById(buffObject.valueOf());
 						if (!buffNames.has(buff.name)) {
 							buffNames.add(buff.name);
@@ -47,7 +47,7 @@ module.exports = {
 				fields.push({ name: 'No Active Boosters', value: 'You have no active boosters.' });
 			}
 
-			if (user.inventory.buffs.length === 0) {
+			if (inventory.buffs.length === 0) {
 				fields.push({ name: 'No boosters', value: 'You have no boosters in your inventory.' });
 			}
 			else {

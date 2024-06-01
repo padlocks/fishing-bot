@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const buttonPagination = require('../../../buttonPagination');
 const { RodData } = require('../../../schemas/RodSchema');
-const { getUser, xpToLevel, xpToNextLevel } = require('../../../util/User');
+const { User, getUser } = require('../../../class/User');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -23,18 +23,19 @@ module.exports = {
 		try {
 			const embeds = [];
 			const target = interaction.options.getUser('user') || interaction.user;
-			const user = await getUser(target.id);
+			const user = new User(await getUser(target.id));
 			const rods = await RodData.find({ user: interaction.user.id });
+			const stats = await user.getStats();
 
 			let fields = [{
-				name: `Level ${await xpToLevel(user.xp) || 0}`,
-				value: `${await xpToNextLevel(user.xp)}`,
+				name: `Level ${await user.getLevel() || 0}`,
+				value: `${await user.getXPToNextLevel()}`,
 				inline: false,
 			}];
 
 			fields = fields.concat([{
 				name: 'Total Fish Caught',
-				value: `${user.stats.fishCaught || 0}`,
+				value: `${stats.fishCaught || 0}`,
 				inline: false,
 			}]);
 

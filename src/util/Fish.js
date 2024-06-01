@@ -1,11 +1,11 @@
 const { Fish, FishData } = require('../schemas/FishSchema');
-const { User } = require('../schemas/UserSchema');
 const { Item, ItemData } = require('../schemas/ItemSchema');
 const { BuffData } = require('../schemas/BuffSchema');
-const { log, clone, getWeightedChoice, sumArrays, sumCountsInArrays } = require('./Utils');
+const { getWeightedChoice, sumArrays, sumCountsInArrays } = require('./Utils');
+const { User, getUser } = require('../class/User');
 
 const fish = async (rod, bait, biome, user) => {
-	const rodObject = await ItemData.findOne({ name: rod, user: user });
+	const rodObject = await ItemData.findOne({ name: rod, user: await user.getUserId() });
 	const rarities = Object.keys(rodObject.weights);
 	let capabilities = rodObject.capabilities;
 	let weights = Object.values(rodObject.weights);
@@ -20,10 +20,11 @@ const fish = async (rod, bait, biome, user) => {
 };
 
 const generateFish = async (capabilities, choices, weights, user) => {
-	const userData = await User.findOne({ userId: user });
+	// const userData = await User.findOne({ userId: user });
 	let draw = await getWeightedChoice(choices, weights);
 	draw = draw.charAt(0).toUpperCase() + draw.slice(1);
-	const biome = userData.currentBiome.charAt(0).toUpperCase() + userData.currentBiome.slice(1);
+	const currentBiome = await user.getCurrentBiome();
+	const biome = currentBiome.charAt(0).toUpperCase() + currentBiome.slice(1);
 
 	let f = await Fish.find({ rarity: draw, biome: biome });
 	if (draw === 'Lucky') {
@@ -57,11 +58,12 @@ const generateFish = async (capabilities, choices, weights, user) => {
 	const random = Math.floor(Math.random() * validChoices.length);
 	const choice = validChoices[random];
 
-	const clonedChoice = await clone(choice, user);
+	// const clonedChoice = await clone(choice, user);
+	const clonedChoice = await user.sendToInventory(choice, 1);
 
 	// Check for locked status and update the cloned fish as necessary.
-	if (userData) {
-		const fishIds = userData.inventory.fish;
+	if (user) {
+		const fishIds = (await user.getInventory()).fish;
 		const lockedFishToUpdate = await FishData.find({ _id: { $in: fishIds }, name: clonedChoice.name, locked: true });
 
 		if (lockedFishToUpdate.length > 0) {
@@ -101,68 +103,47 @@ const sendFishToUser = async (capabilities, choices, weights, user) => {
 			oneFish.count = count;
 		}
 
-		const existingFish = uniqueFishArray.find(f => f.name === oneFish.name);
+		const existingFish = uniqueFishArray.find(f => f.item.name === oneFish.item.name);
 		if (existingFish) {
-			existingFish.count++;
+			existingFish.item.count++;
 		}
 		else {
 			uniqueFishArray.push(oneFish);
 		}
 
-		oneFish.save();
+		oneFish.item.save();
 	});
 
-	return await uniqueFishArray;
+	return await uniqueFishArray.map(element => element.item);
 };
 
 const sellFishByRarity = async (userId, targetRarity) => {
 	let totalValue = 0;
-	let newFish = [];
-	const user = await User.findOne({ userId: userId });
+	const fishToRemove = [];
+	const user = new User(await getUser(userId));
 
 	// check for buffs
 	const activeBuffs = await BuffData.find({ user: userId, active: true });
 	const cashBuff = activeBuffs.find((buff) => buff.capabilities.includes('cash'));
 	const cashMultiplier = cashBuff ? parseFloat(cashBuff.capabilities[1]) : 1;
 
-	const updatedFish = await Promise.all(user.inventory.fish.map(async (f) => {
-		const fishToSell = await FishData.findById(f.valueOf());
-		if (!fishToSell) {
-			return null;
+	const fishList = await user.getFish();
+	fishList.forEach(async (f) => {
+		if (f.rarity.toLowerCase() === targetRarity.toLowerCase() || targetRarity.toLowerCase() === 'all') {
+			totalValue += f.value * cashMultiplier * f.count;
+			fishToRemove.push(f._id);
 		}
-		if (!fishToSell.locked && (targetRarity.toLowerCase() === 'all' || fishToSell.rarity.toLowerCase() === targetRarity.toLowerCase())) {
-			totalValue += fishToSell.value * cashMultiplier * fishToSell.count;
-			return null;
-		}
-		return f;
-	}));
+	});
 
-	newFish = updatedFish.filter(f => f !== null);
+	await user.removeListOfFish(fishToRemove);
+	await user.addMoney(totalValue);
 
-	const newMoney = user.inventory.money + totalValue;
-
-	try {
-		const updatedUser = await User.findOneAndUpdate(
-			{ userId: user.userId },
-			{ $set: { 'inventory.fish': newFish, 'inventory.money': newMoney } },
-			{ new: true },
-		);
-
-		if (!updatedUser) {
-			return 0;
-		}
-
-		return totalValue;
-	}
-	catch (err) {
-		log('Error updating user:' + err, 'err');
-		return 0;
-	}
+	return totalValue;
 };
 
 const getFishCount = async (userId, fishName) => {
-	const user = await User.findOne({ userId: userId });
-	const fishIds = user.inventory.fish;
+	const user = new User(await getUser(userId));
+	const fishIds = (await user.getInventory()).fish;
 	const fishList = await FishData.find({ _id: { $in: fishIds }, name: fishName });
 
 	let total = 0;

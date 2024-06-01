@@ -1,24 +1,24 @@
 const { SlashCommandBuilder, EmbedBuilder, ButtonStyle, ActionRowBuilder, ButtonBuilder, ComponentType } = require('discord.js');
-const { getEquippedRod, getUser, decreaseRodDurability, getEquippedBait, setEquippedBait } = require('../../../util/User');
 const { fish } = require('../../../util/Fish');
-const { generateBoostedXP, sendToInventory } = require('../../../util/User');
 const { findQuests } = require('../../../util/Quest');
 const { Pond } = require('../../../schemas/PondSchema');
 const { Item } = require('../../../schemas/ItemSchema');
+const { User, getUser } = require('../../../class/User');
 
 const updateUserWithFish = async (interaction, userId) => {
+	const user = new User(await getUser(userId));
 	const pond = await Pond.findOne({ id: interaction.channel.id });
 	if (pond && pond.count <= 0) {
 		return { fish: [], questsCompleted: [], xp: 0, rodState: '', success: false, message: 'The pond is empty!' };
 	}
-	let rod = await getEquippedRod(userId);
-	const bait = await getEquippedBait(userId);
-	const biome = (await getUser(userId)).currentBiome;
-	const fishArray = await fish(rod.name, bait, biome, userId);
+	let rod = await user.getEquippedRod();
+	const bait = await user.getEquippedBait();
+	const biome = await user.getCurrentBiome();
+	const fishArray = await fish(rod.name, bait, biome, user);
 	let xp = 0;
 
 	for (let i = 0; i < fishArray.length; i++) {
-		xp += await generateBoostedXP(userId);
+		xp += await user.generateBoostedXP();
 	}
 
 	if (bait) {
@@ -26,34 +26,23 @@ const updateUserWithFish = async (interaction, userId) => {
 	}
 
 	const completedQuests = [];
-	const user = await getUser(userId);
+	// const user = await getUser(userId);
 	if (user) {
-		user.stats.latestFish = [];
+		const stats = await user.getStats();
+		stats.latestFish = [];
 		if (bait) {
 			bait.count--;
 			if (bait.count <= 0) {
-				await setEquippedBait(userId, null);
+				await user.setEquippedBait(null);
 				// delete bait from user inventory
-				user.inventory.baits.find((b, index) => {
-					if (b.valueOf() === bait._id.valueOf()) {
-						user.inventory.baits.splice(index, 1);
-					}
-				}, 0);
+				await user.removeBait(bait._id);
 			}
 		}
 		for (let i = 0; i < fishArray.length; i++) {
 			const f = fishArray[i];
 			if (!f.count) f.count = 1;
 
-			if (f.name.toLowerCase().includes('rod')) {
-				user.inventory.rods.push(f);
-			}
-			else if (f.name.toLowerCase().includes('trophy')) {
-				user.inventory.items.push(f);
-			}
-			else {
-				user.inventory.fish.push(f);
-			}
+			// await user.sendToInventory(f._id, f.count);
 
 			let message = '';
 			switch (rod.state) {
@@ -72,15 +61,16 @@ const updateUserWithFish = async (interaction, userId) => {
 				return { fish: [], questsCompleted: [], xp: 0, rodState: rod.state, success: false, message: message };
 			}
 			else {
-				rod = await decreaseRodDurability(userId, f.count || 1);
+				rod = await user.decreaseRodDurability(f.count || 1);
 			}
 
 			rod.fishCaught += f.count || 1;
-			user.stats.fishCaught += f.count || 1;
-			user.stats.latestFish.push(f);
-			user.stats.soldLatestFish = false;
-			user.stats.fishStats.set(f.name.toLowerCase(), (user.stats.fishStats.get(f.name.toLowerCase()) || 0) + (f.count || 1));
-			user.xp += xp;
+			stats.fishCaught += f.count || 1;
+			stats.latestFish.push(f);
+			stats.soldLatestFish = false;
+			stats.fishStats.set(f.name.toLowerCase(), (stats.fishStats.get(f.name.toLowerCase()) || 0) + (f.count || 1));
+			await user.setStats(stats);
+			await user.addXP(xp);
 
 			if (pond) {
 				pond.count -= f.count || 1;
@@ -127,12 +117,11 @@ const updateUserWithFish = async (interaction, userId) => {
 				});
 				if (quest.progress >= quest.progressMax) {
 					quest.status = 'completed';
-					user.xp += quest.xp;
-					user.inventory.money += quest.cash;
+					await user.addXP(quest.xp);
+					await user.addMoney(quest.cash);
 					if (quest.reward && quest.reward.length > 0) {
 						quest.reward.forEach(async reward => {
-							await user.save();
-							await sendToInventory(user.userId, reward);
+							await user.sendToInventory(reward);
 						});
 					}
 
@@ -148,7 +137,7 @@ const updateUserWithFish = async (interaction, userId) => {
 
 		await rod.save();
 		if (bait) await bait.save();
-		await user.save();
+		// await user.save();
 		return { fish: fishArray, questsCompleted: completedQuests.filter((quest, index, self) => self.findIndex(q => q.title === quest.title) === index), xp: xp, rodState: rod.state, bait: bait, success: true, message: '' };
 	}
 };
