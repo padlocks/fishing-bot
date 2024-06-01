@@ -151,7 +151,7 @@ module.exports = {
 				const lastFished = new Date(pond.lastFished);
 				const now = new Date();
 				if (now.getDate() > lastFished.getDate()) {
-					pond.count = 1000;
+					pond.count = pond.maximum;
 					pond.lastFished = now;
 					pond.warning = false;
 					await pond.save();

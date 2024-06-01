@@ -8,7 +8,11 @@ const PondSchema = new Schema({
 	},
 	count: {
 		type: Number,
-		default: 1000,
+		default: 2000,
+	},
+	maximum: {
+		type: Number,
+		default: 2000,
 	},
 	lastFished: {
 		type: Number,
