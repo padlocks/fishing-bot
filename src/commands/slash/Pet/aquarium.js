@@ -23,7 +23,7 @@ module.exports = {
 			.addIntegerOption((p) => p.setName('temperature').setDescription('The temperature you want to set the aquarium to.').setRequired(true)))
 		.addSubcommandGroup((o) => o.setName('fish').setDescription('Manage the fish in your aquarium.')
 			.addSubcommand((p) => p.setName('move').setDescription('Add a fish to your aquarium.')
-				.addStringOption(q => q.setName('fish').setDescription('The name of the pet fish you want to move').setRequired(true))
+				.addStringOption(q => q.setName('pet').setDescription('The name of the pet fish you want to move').setRequired(true))
 				.addStringOption(q => q.setName('aquarium').setDescription('The name of the aquarium you want to add the fish to').setRequired(true)),
 			),
 		),
