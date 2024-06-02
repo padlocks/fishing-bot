@@ -142,7 +142,7 @@ class Aquarium {
 		if (!biomeType) return false;
 		const waterType = await this.getWaterType();
 
-		return biomeType !== waterType;
+		return biomeType === waterType;
 	}
 }
 

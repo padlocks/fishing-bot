@@ -68,7 +68,7 @@ module.exports = {
 		const fishInInventory = await fishes.find((f) => f.name.toLowerCase() === species.toLowerCase() && !f.locked);
 
 		// check if biome origin is the same as the aquarium's water type
-		if (await aquarium.compareBiome(fishInInventory.biome)) return await interaction.followUp(`**${fishInInventory.name}** cannot live in a ${await aquarium.getWaterType()} aquarium.`);
+		if (!await aquarium.compareBiome(fishInInventory.biome)) return await interaction.followUp(`**${fishInInventory.name}** cannot live in a ${await aquarium.getWaterType()} aquarium.`);
 
 		// remove fish from inventory
 		await user.removeFish(fishInInventory.id);
@@ -82,7 +82,7 @@ module.exports = {
 				name: name,
 				age: 1,
 				owner: await user.getUserId(),
-				traits: [],
+				traits: {},
 				health: 100,
 				mood: 100,
 				hunger: 50,
@@ -90,6 +90,8 @@ module.exports = {
 				xp: 0,
 				species: fishInInventory.name,
 			});
+
+			await newPet.generateTraits();
 
 			success = await newPet.save();
 			if (success) {

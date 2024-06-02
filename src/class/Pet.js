@@ -70,6 +70,22 @@ class Pet {
 		return this.pet.traits;
 	}
 
+	async getTraitNames() {
+		const traits = await this.getTraits();
+		return Object.keys(traits).map(trait => traits[trait].trait);
+	}
+
+	async getUnlockedTraits() {
+		const traits = await this.getTraits();
+		return Object.keys(traits).filter(trait => traits[trait].unlocked);
+	}
+
+	async getUnlockedTraitNames() {
+		const traits = await this.getTraits();
+		const unlockedTraitNames = Object.keys(traits).filter(trait => traits[trait].unlocked).map(trait => traits[trait].trait);
+		return unlockedTraitNames.length !== 0 ? unlockedTraitNames : ['Still developing..'];
+	}
+
 	async getHabitat() {
 		return await Habitat.findById(this.pet.aquarium);
 	}
@@ -462,11 +478,10 @@ class Pet {
 		return;
 	}
 
-	async breed() {
-		if (await this.getAge() < 18) return false;
+	async updateBreeding() {
 		const currentTime = Date.now();
 		this.pet.lastBred = currentTime;
-		this.pet.xp += 250;
+		this.pet.xp += 250 * (this.pet.multiplier || 1);
 		return this.save();
 	}
 
@@ -600,4 +615,64 @@ class Pet {
 	}
 }
 
-module.exports = { Pet };
+const breed = async (firstPet, secondPet, babyName, aquariumId) => {
+	// if (await firstPet.getAge() < 20) return false;
+	// if (await secondPet.getAge() < 20) return false;
+
+	// Generate a new pet with the same species as the parents
+	const speciesOptions = [await firstPet.getFishData(), await secondPet.getFishData()];
+	const species = speciesOptions[Math.floor(Math.random() * speciesOptions.length)];
+
+	// Randomize traits
+	const firstPetTraits = await firstPet.getTraits();
+	const secondPetTraits = await secondPet.getTraits();
+	const traitWeights = [1000, 1000, 300];
+	const traitOptions = {
+		mood: [firstPetTraits.mood.trait, secondPetTraits.mood.trait, 'Random'],
+		hunger: [firstPetTraits.hunger.trait, secondPetTraits.hunger.trait, 'Random'],
+		size: [firstPetTraits.size.trait, secondPetTraits.size.trait, 'Random'],
+		health: [firstPetTraits.health.trait, secondPetTraits.health.trait, 'Random'],
+		finSize: [firstPetTraits.finSize.trait, secondPetTraits.finSize.trait, 'Random'],
+		finShape: [firstPetTraits.finShape.trait, secondPetTraits.finShape.trait, 'Random'],
+		color: [firstPetTraits.color.trait, secondPetTraits.color.trait, 'Random'],
+		geneticDrift: [firstPetTraits.geneticDrift.trait, secondPetTraits.geneticDrift.trait, 'Random'],
+	};
+
+	const newTraits = {
+		mood: { trait: await getWeightedChoice(traitOptions.mood, traitWeights), unlocked: false },
+		hunger: { trait: await getWeightedChoice(traitOptions.hunger, traitWeights), unlocked: false },
+		size: { trait: await getWeightedChoice(traitOptions.size, traitWeights), unlocked: false },
+		health: { trait: await getWeightedChoice(traitOptions.health, traitWeights), unlocked: false },
+		finSize: { trait: await getWeightedChoice(traitOptions.finSize, traitWeights), unlocked: false },
+		finShape: { trait: await getWeightedChoice(traitOptions.finShape, traitWeights), unlocked: false },
+		color: { trait: await getWeightedChoice(traitOptions.color, traitWeights), unlocked: false },
+		geneticDrift: { trait: await getWeightedChoice(traitOptions.geneticDrift, traitWeights), unlocked: false },
+	};
+
+	const newPet = new PetFish({
+		name: babyName,
+		fish: species.id,
+		age: 1,
+		owner: await firstPet.getOwner(),
+		traits: newTraits,
+		health: 100,
+		mood: 100,
+		hunger: 0,
+		stress: 0,
+		xp: 0,
+		lastFed: Date.now(),
+		lastPlayed: Date.now(),
+		lastBred: Date.now(),
+		lastUpdated: Date.now(),
+		multiplier: 1.0,
+		attraction: 0,
+		aquarium: aquariumId,
+		species: species.name,
+	});
+
+	await firstPet.updateBreeding();
+	await secondPet.updateBreeding();
+	return newPet.save();
+};
+
+module.exports = { Pet, breed };
