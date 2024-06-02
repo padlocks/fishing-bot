@@ -486,13 +486,14 @@ class Pet {
 
 	async sell(aquarium) {
 		const user = await User.findOne({ userId: await this.getOwner() });
-		user.inventory.money += await this.getXP() * this.pet.attraction;
+		const amount = await this.getXP() * this.pet.attraction;
+		user.inventory.money += amount;
 		await user.save();
 
 		await this.removeFromHabitat();
 		await aquarium.removeFish(await this.getId());
 		await this.disown();
-		return;
+		return amount;
 	}
 
 	async updateBreeding(success) {

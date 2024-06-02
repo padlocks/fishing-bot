@@ -105,9 +105,8 @@ module.exports = {
 
 			const pet = new Pet(petData);
 			const aquarium = new Aquarium(await pet.getHabitat());
-			await pet.sell(aquarium);
 
-			return await interaction.followUp(`Successfully sold ${name} for $${(await pet.getXP()).toLocaleString()}.`);
+			return await interaction.followUp(`Successfully sold ${name} for $${(await pet.sell(aquarium)).toLocaleString()}.`);
 		}
 
 		if (subcommand === 'breed') {
