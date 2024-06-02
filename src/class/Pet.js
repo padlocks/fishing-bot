@@ -2,6 +2,7 @@ const { FishData } = require('../schemas/FishSchema');
 const { Habitat } = require('../schemas/HabitatSchema');
 const { PetFish } = require('../schemas/PetSchema');
 const { User } = require('../schemas/UserSchema');
+const { getWeightedChoice } = require('../util/Utils');
 
 class Pet {
 	constructor(data) {
@@ -95,50 +96,278 @@ class Pet {
 	}
 
 	async updateStatus(aquarium) {
+		if ((await this.getTraits()).length <= 1) {
+			await this.generateTraits();
+		}
+
 		const cleanliness = await aquarium.getCleanliness();
 		const temperature = await aquarium.getTemperature();
 
 		const now = Date.now();
 		const elapsedTimeSinceAdoption = (now - await this.getAdoptionDate()) / 86_400_000;
-		const elapsedTimeSinceFed = (now - await this.getLastFed()) / (60_000 * 120);
-		const elapsedTimeSincePlayed = (now - await this.getLastPlayed()) / (60_000 * 60);
+		const elapsedTimeSinceFed = (now - await this.getLastFed()) / 60_000;
+		const elapsedTimeSincePlayed = (now - await this.getLastPlayed()) / 60_000;
 		const elapsedTimeSinceSeen = (now - await this.getLastUpdated()) / (60_000 * 120);
 
-		const newAge = this.pet.age + Math.floor(elapsedTimeSinceAdoption);
+		await this.tryUnlockTraits();
+
+		const newAge = 1 + Math.floor(elapsedTimeSinceAdoption);
 		const newHunger = await this.calculateHunger(elapsedTimeSinceFed, cleanliness, temperature);
 		const newMood = await this.calculateMood(elapsedTimeSincePlayed, cleanliness, temperature);
 		const newStress = await this.calculateStress(elapsedTimeSinceSeen, cleanliness, temperature);
+		const newHealth = await this.updateHealth(cleanliness, temperature);
+		const multiplier = await this.calculateMultiplier();
+		const attraction = await this.calculateAttraction();
+
+		const traits = await this.getTraits();
+
+		if (newAge > this.pet.age && traits.geneticDrift.trait === 'Unstable' && traits.geneticDrift.unlocked) {
+			await this.regenerateTrait();
+		}
 
 		this.pet.age = newAge;
-		this.pet.hunger = Math.min(newHunger, 100);
-		this.pet.mood = Math.max(newMood, 0);
-		this.pet.stress = Math.max(newStress, 0);
+		this.pet.hunger = newHunger;
+		this.pet.mood = newMood;
+		this.pet.stress = newStress;
+		this.pet.multiplier = multiplier;
+		this.pet.health = newHealth;
+		this.pet.attraction = attraction;
 		this.pet.lastUpdated = now;
 		return this.save();
 	}
 
 	async calculateHunger(elapsedTimeSinceFed, cleanliness, temperature) {
-		const baseHungerIncrease = Math.floor(elapsedTimeSinceFed);
-		const cleanlinessFactor = 1 - (cleanliness / 100);
-		const temperatureFactor = 1 - (Math.abs(temperature - 25) / 25);
-		const hungerIncrease = baseHungerIncrease * cleanlinessFactor * temperatureFactor;
-		return this.pet.hunger + hungerIncrease;
+		// Hunger should be at 100% after 12 hours (720 minutes)
+		const baseHungerIncreasePerMinute = 100 / 720;
+
+		// Calculate the total base hunger increase over the elapsed time
+		const baseHungerIncrease = elapsedTimeSinceFed * baseHungerIncreasePerMinute;
+
+		// Calculate the cleanliness factor (low cleanliness increases hunger)
+		const cleanlinessFactor = 1 + ((100 - cleanliness) / 100);
+
+		// Calculate the temperature factor (deviation from 25°C increases hunger)
+		const temperatureFactor = 1 + (Math.abs(temperature - 25) / 25);
+
+		// Retrieve traits
+		const traits = await this.getTraits();
+
+		// Define trait multipliers
+		const hungerTraits = ['Big Eater', 'Light Eater', 'Normal Eater'];
+		const hungerTraitFactors = [1.5, 0.5, 1];
+		const sizeTraits = ['Extra Small', 'Small', 'Medium', 'Large', 'Extra Large'];
+		const sizeTraitFactors = [0.5, 0.75, 1, 1.25, 1.5];
+
+		let hungerIncrease = baseHungerIncrease;
+
+		// Apply hunger trait factor
+		const hungerTraitIndex = hungerTraits.indexOf(traits.hunger.trait);
+		if (hungerTraitIndex !== -1 && traits.hunger.unlocked) {
+			hungerIncrease *= hungerTraitFactors[hungerTraitIndex];
+		}
+
+		// Apply size trait factor
+		const sizeTraitIndex = sizeTraits.indexOf(traits.size.trait);
+		if (sizeTraitIndex !== -1 && traits.size.unlocked) {
+			hungerIncrease *= sizeTraitFactors[sizeTraitIndex];
+		}
+
+		// Apply cleanliness and temperature factors
+		hungerIncrease *= cleanlinessFactor * temperatureFactor;
+
+		// Ensure the final hunger increase is within the range 0 to 100
+		return Math.floor(Math.min(Math.max(hungerIncrease, 0), 100));
 	}
 
 	async calculateMood(elapsedTimeSincePlayed, cleanliness, temperature) {
-		const baseMoodDecrease = Math.floor(elapsedTimeSincePlayed);
-		const cleanlinessFactor = 1 - (cleanliness / 100);
-		const temperatureFactor = 1 - (Math.abs(temperature - 25) / 25);
-		const moodDecrease = baseMoodDecrease * cleanlinessFactor * temperatureFactor;
-		return this.pet.mood - moodDecrease;
+		// Mood decreases and should be at 0 after 6 hours (360 minutes).
+		const baseMoodDecreasePerMinute = 100 / 360;
+		const baseMoodDecrease = elapsedTimeSincePlayed * baseMoodDecreasePerMinute;
+
+		const cleanlinessFactor = cleanliness / 100;
+
+		// Calculate the temperature factor (deviation from 0 negatively impacts mood)
+		const temperatureDeviation = Math.abs(temperature);
+		const temperatureFactor = 1 - (temperatureDeviation / 100);
+
+		const traits = await this.getTraits();
+		const moodTraits = ['Aggressive', 'Calm', 'Friendly', 'Timid', 'Curious'];
+		const moodTraitFactors = [0.7, 1, 1.3, 0.9, 1.1];
+
+		let moodDecrease = baseMoodDecrease;
+
+		// Apply cleanliness and temperature factors
+		moodDecrease *= cleanlinessFactor * temperatureFactor;
+
+		// Adjust mood based on self-traits
+		if (moodTraits.includes(traits.mood.trait) && traits.mood.unlocked) {
+			const traitIndex = moodTraits.indexOf(traits.mood.trait);
+			moodDecrease *= moodTraitFactors[traitIndex];
+		}
+
+		// Adjust mood based on other fish in the same habitat
+		// Aggressive fish should negatively impact the mood of other fish
+		// Friendly fish should positively impact the mood of other fish
+		const aquarium = await this.getHabitat();
+		let otherFish = aquarium.fish.filter(fish => fish.id !== this.pet.id);
+		otherFish = await Promise.all(otherFish.map(async (fishId) => await PetFish.findById(fishId)));
+
+		// Adjust mood based on other fish
+		for (const fish of otherFish) {
+			if (fish.traits.mood.unlocked) {
+				if (fish.traits.mood.trait === 'Aggressive') {
+					moodDecrease *= 1.1;
+				}
+				else if (fish.traits.mood.trait === 'Friendly') {
+					moodDecrease *= 0.9;
+				}
+			}
+		}
+
+		return Math.floor(Math.max(Math.min(100 - moodDecrease, 100), 0));
 	}
 
 	async calculateStress(elapsedTimeSinceSeen, cleanliness, temperature) {
-		const baseStressDecrease = Math.floor(elapsedTimeSinceSeen);
-		const cleanlinessFactor = 1 - (cleanliness / 100);
-		const temperatureFactor = 1 - (Math.abs(temperature - 25) / 25);
-		const stressDecrease = baseStressDecrease * cleanlinessFactor * temperatureFactor;
-		return this.pet.stress - stressDecrease;
+		// Stress increases and should be at 100 after 24 hours.
+		const baseStressIncreasePerMinute = 100 / 1440;
+
+		const baseStressIncrease = elapsedTimeSinceSeen * baseStressIncreasePerMinute * 60;
+
+		const cleanlinessFactor = cleanliness / 100;
+
+		const temperatureDeviation = Math.abs(temperature);
+		const temperatureFactor = 1 + (temperatureDeviation / 100);
+
+		const traits = await this.getTraits();
+		const stressTraits = ['Aggressive', 'Timid'];
+		const stressTraitFactors = [1.3, 1.1];
+
+		let stressIncrease = baseStressIncrease;
+
+		// Apply cleanliness and temperature factors
+		stressIncrease *= cleanlinessFactor * temperatureFactor;
+
+		// Adjust mood based on self-traits
+		if (stressTraits.includes(traits.mood.trait) && traits.mood.unlocked) {
+			const traitIndex = stressTraits.indexOf(traits.mood.trait);
+			stressIncrease *= stressTraitFactors[traitIndex];
+		}
+
+		// Adjust mood based on other fish in the same habitat
+		// Aggressive fish should negatively impact the mood of other fish
+		// Friendly fish should positively impact the mood of other fish
+		const aquarium = await this.getHabitat();
+		let otherFish = aquarium.fish.filter(fish => fish.id !== this.pet.id);
+		otherFish = await Promise.all(otherFish.map(async (fishId) => await PetFish.findById(fishId)));
+
+		// Adjust mood based on other fish
+		for (const fish of otherFish) {
+			if (fish.traits.mood.unlocked) {
+				if (fish.traits.mood.trait === 'Aggressive') {
+					stressIncrease *= 1.3;
+				}
+				else if (fish.traits.mood.trait === 'Timid') {
+					stressIncrease *= 1.1;
+				}
+			}
+		}
+
+		return Math.floor(Math.max(Math.min(0 + stressIncrease, 100), 0));
+	}
+
+	async calculateMultiplier() {
+		const traits = await this.getTraits();
+		const finSize = traits.finSize.trait;
+		const finShape = traits.finShape.trait;
+		const color = traits.color.trait;
+
+		let multiplier = 1;
+
+		// Fin Size Traits:
+		// Long Fins: Greatly improves XP gain.
+		// Short Fins: Normal XP gain.
+		if (finSize === 'Long Fins') {
+			multiplier += 0.2;
+		}
+
+		// Fin Shape Traits
+		// Rounded Fins: Normal XP gain.
+		// Pointed Fins: Increases XP gain slightly.
+		// Frilly Fins: Increases XP gain slightly.
+		if (finShape === 'Pointed Fins') {
+			multiplier += 0.1;
+		}
+		else if (finShape === 'Frilly Fins') {
+			multiplier += 0.1;
+		}
+
+		// Color Traits:
+		// Normal: No effect on XP.
+		// Golden: Increases XP slightly.
+		// Platinum: Increases XP moderately.
+		// Diamond: Increases XP significantly.
+		// Rainbow: Increases XP greatly.
+		// Striped: No effect on XP.
+		// Spotted: No effect on XP.
+		if (color === 'Golden') {
+			multiplier += 0.1;
+		}
+		else if (color === 'Platinum') {
+			multiplier += 0.2;
+		}
+		else if (color === 'Diamond') {
+			multiplier += 0.3;
+		}
+		else if (color === 'Rainbow') {
+			multiplier += 0.4;
+		}
+
+		return multiplier;
+	}
+
+	async calculateAttraction() {
+		const traits = await this.getTraits();
+		const color = traits.color.unlocked ? traits.color.trait : 'Locked';
+		const finShape = traits.finShape.unlocked ? traits.finShape.trait : 'Locked';
+
+		let attraction = 0;
+
+		// Fin Shape Traits
+		// Rounded Fins: Normal XP gain.
+		// Pointed Fins: Increases XP gain slightly.
+		// Frilly Fins: Increases attraction slightly.
+		if (finShape === 'Frilly Fins') {
+			attraction += 5;
+		}
+
+		// Color Traits:
+		// Normal: No effect on attraction.
+		// Golden: Increases attraction slightly.
+		// Platinum: Increases attraction moderately.
+		// Diamond: Increases attraction significantly.
+		// Rainbow: Increases attraction greatly.
+		// Striped: Increases attraction slightly.
+		// Spotted: Increases attraction slightly.
+		if (color === 'Golden') {
+			attraction += 5;
+		}
+		else if (color === 'Platinum') {
+			attraction += 10;
+		}
+		else if (color === 'Diamond') {
+			attraction += 15;
+		}
+		else if (color === 'Rainbow') {
+			attraction += 20;
+		}
+		else if (color === 'Striped') {
+			attraction += 5;
+		}
+		else if (color === 'Spotted') {
+			attraction += 5;
+		}
+
+		return attraction;
 	}
 
 	async updateHabitat(habitatId) {
@@ -146,27 +375,69 @@ class Pet {
 		return this.save();
 	}
 
-	async updateHealth(amount) {
+	async updateHealth(cleanliness, temperature) {
+		const cleanlinessFactor = 1 - (cleanliness / 100);
+		const temperatureFactor = 1 - (Math.abs(temperature - 25) / 25);
+
+		// Health Traits:
+		// Sickly: Health decreases faster.
+		// Healthy: No effect.
+		// Robust: Health decreases slower.
 		// max 100, min 0
-		this.pet.health = Math.max(Math.min(this.pet.health + amount, 100), 0);
-		return this.save();
+
+		const traits = await this.getTraits();
+		const healthTraits = ['Sickly', 'Healthy', 'Robust'];
+		const healthTraitFactors = [-2, 0, 2];
+		let health = this.pet.health;
+
+		for (let i = 0; i < healthTraits.length; i++) {
+			if (traits.health.trait === healthTraits[i] && traits.health.unlocked) {
+				health += healthTraitFactors[i];
+			}
+		}
+
+		health = Math.max(Math.min(health * cleanlinessFactor * temperatureFactor, 100), 0);
+		return Math.max(Math.min(health, 100), 0);
 	}
 
 	async feed() {
 		const currentTime = Date.now();
 		this.pet.lastFed = currentTime;
-		// max 100, min 0
-		this.pet.hunger = Math.max(Math.min(this.pet.hunger - 50, 100), 0);
-		this.pet.xp += 50;
+
+		// Retrieve traits
+		const traits = await this.getTraits();
+
+		// Define trait multipliers
+		const hungerTraits = ['Big Eater', 'Light Eater', 'Normal Eater'];
+		const hungerTraitFactors = [0.75, 1.5, 1];
+
+		// Determine the hunger reduction factor based on the trait
+		const hungerTraitIndex = hungerTraits.indexOf(traits.hunger.trait);
+		let hungerReduction = 50;
+
+		if (hungerTraitIndex !== -1) {
+			hungerReduction *= hungerTraitFactors[hungerTraitIndex];
+		}
+
+		// Update hunger, max 100, min 0
+		this.pet.hunger = Math.floor(Math.max(Math.min(this.pet.hunger - hungerReduction, 100), 0));
+
+		// Calculate XP increase based on pet multiplier
+		const xpIncrease = 50 * (this.pet.multiplier || 1);
+		this.pet.xp += xpIncrease;
+
 		return this.save();
 	}
+
 
 	async play() {
 		const currentTime = Date.now();
 		this.pet.lastPlayed = currentTime;
-		this.pet.mood = Math.max(Math.min(this.pet.mood + 25, 100), 0);
-		this.pet.stress = Math.max(Math.min(this.pet.stress - 25, 100), 0);
-		this.pet.xp += 50;
+
+		this.pet.mood = Math.max(Math.min(this.pet.mood + 30, 100), 0);
+
+		const xpIncrease = 50 * (this.pet.multiplier || 1);
+		this.pet.xp += xpIncrease;
 		return this.save();
 	}
 
@@ -182,7 +453,7 @@ class Pet {
 
 	async sell(aquarium) {
 		const user = await User.findOne({ userId: await this.getOwner() });
-		user.inventory.money += await this.getXP();
+		user.inventory.money += await this.getXP() * this.pet.attraction;
 		await user.save();
 
 		await this.removeFromHabitat();
@@ -196,6 +467,135 @@ class Pet {
 		const currentTime = Date.now();
 		this.pet.lastBred = currentTime;
 		this.pet.xp += 250;
+		return this.save();
+	}
+
+	async tryUnlockTraits() {
+		const traits = await this.getTraits();
+		const age = await this.getAge();
+
+		if (age >= 3) {
+			traits.mood.unlocked = true;
+			traits.hunger.unlocked = true;
+			traits.health.unlocked = true;
+		}
+		if (age >= 7) {
+			traits.size.unlocked = true;
+			traits.finSize.unlocked = true;
+			traits.finShape.unlocked = true;
+		}
+		if (age >= 14) {
+			traits.color.unlocked = true;
+		}
+		if (age >= 20) {
+			traits.geneticDrift.unlocked = true;
+		}
+
+		return this.save();
+	}
+
+	async regenerateTrait() {
+		const traits = await this.getTraits();
+		const traitKeys = Object.keys(traits);
+		const trait = traitKeys[Math.floor(Math.random() * traitKeys.length)];
+		await this.generateTraits(trait);
+		return;
+	}
+
+	async generateTraits(t = null) {
+		// Mood Traits:
+		// Aggressive: Negatively impacts stress of other fish in the same habitat.
+		// Calm: No effect.
+		// Friendly: Positively impacts mood of other fish in the same habitat.
+		// Timid: Negatively impacts stress of self.
+		// Curious: Positively impacts mood of self.
+		const moodTraits = ['Aggressive', 'Calm', 'Friendly', 'Timid', 'Curious', 'Playful'];
+		const moodWeights = [10, 10, 10, 10, 10, 10];
+
+		// Hunger Traits:
+		// Big Eater: Hunger increases faster.
+		// Light Eater: Hunger increases slower.
+		// Normal Eater: No effect.
+		const hungerTraits = ['Big Eater', 'Light Eater', 'Normal Eater'];
+		const hungerWeights = [10, 10, 10];
+
+		// Size Traits:
+		// Extra Small: Hunger increases much slower.
+		// Small: Hunger increases slightly slower.
+		// Medium: No effect.
+		// Large: Hunger increases slightly faster.
+		// Extra Large: Hunger increases much faster.
+		const sizeTraits = ['Extra Small', 'Small', 'Medium', 'Large', 'Extra Large'];
+		const sizeWeights = [5, 7, 10, 7, 5];
+
+		// Health Traits:
+		// Sickly: Health decreases faster.
+		// Healthy: No effect.
+		// Robust: Health decreases slower.
+		const healthTraits = ['Sickly', 'Healthy', 'Robust'];
+		const healthWeights = [3, 10, 3];
+
+		// Fin Size Traits:
+		// Long Fins: Greatly improves XP gain.
+		// Short Fins: Normal XP gain.
+		const finSizeTraits = ['Long Fins', 'Short Fins'];
+		const finSizeWeights = [10, 10];
+
+		// Fin Shape Traits
+		// Rounded Fins: Normal XP gain.
+		// Pointed Fins: Increases XP gain slightly.
+		// Frilly Fins: Increases attraction slightly.
+		const finShapeTraits = ['Rounded Fins', 'Pointed Fins', 'Frilly Fins'];
+		const finShapeWeights = [10, 5, 5];
+
+		// Color Traits:
+		// Normal: No effect on attraction or XP.
+		// Golden: Increases attraction slightly, increases XP slightly.
+		// Platinum: Increases attraction moderately, increases XP moderately.
+		// Diamond: Increases attraction significantly, increases XP significantly.
+		// Rainbow: Increases attraction greatly, increases XP greatly.
+		// Striped: Increases attraction slightly.
+		// Spotted: Increases attraction slightly.
+		const colorTraits = ['Normal', 'Golden', 'Platinum', 'Diamond', 'Rainbow', 'Striped', 'Spotted'];
+		const colorWeights = [10000, 5000, 2000, 1000, 50, 7500, 7500];
+
+		// Genetic Drift Traits:
+		// Stable: No effect.
+		// Unstable: Traits may change over time.
+		// Adaptive: Traits may change over time, but will adapt to the environment.
+		const geneticDriftTraits = ['Stable', 'Unstable', 'Adaptive'];
+		const geneticDriftWeights = [1000, 300, 300];
+
+		const moodTrait = await getWeightedChoice(moodTraits, moodWeights);
+		const hungerTrait = await getWeightedChoice(hungerTraits, hungerWeights);
+		const sizeTrait = await getWeightedChoice(sizeTraits, sizeWeights);
+		const healthTrait = await getWeightedChoice(healthTraits, healthWeights);
+		const finSizeTrait = await getWeightedChoice(finSizeTraits, finSizeWeights);
+		const finShapeTrait = await getWeightedChoice(finShapeTraits, finShapeWeights);
+		const colorTrait = await getWeightedChoice(colorTraits, colorWeights);
+		const geneticDriftTrait = await getWeightedChoice(geneticDriftTraits, geneticDriftWeights);
+
+		const generatedTraits = {
+			mood: { trait: moodTrait, unlocked: false },
+			hunger: { trait: hungerTrait, unlocked: false },
+			size: { trait: sizeTrait, unlocked: false },
+			health: { trait: healthTrait, unlocked: false },
+			finSize: { trait: finSizeTrait, unlocked: false },
+			finShape: { trait: finShapeTrait, unlocked: false },
+			color: { trait: colorTrait, unlocked: false },
+			geneticDrift: { trait: geneticDriftTrait, unlocked: false },
+		};
+
+		let finalTraits = {};
+		if (t !== null) {
+			finalTraits = await this.getTraits();
+			finalTraits[t] = generatedTraits[t];
+		}
+		else {
+			finalTraits = generatedTraits;
+		}
+
+		this.pet.traits = finalTraits;
 		return this.save();
 	}
 }
