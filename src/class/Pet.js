@@ -400,7 +400,7 @@ class Pet {
 	async updateHealth(cleanliness, temperature) {
 		const cleanlinessFactor = cleanliness / 100;
 		const temperatureDeviation = Math.abs(temperature);
-		const temperatureFactor = 1 + (temperatureDeviation / 100);
+		const temperatureFactor = temperatureDeviation > 0 ? 1 - (temperatureDeviation / 100) : 1;
 
 		// Health Traits:
 		// Sickly: Health decreases faster.
@@ -495,10 +495,12 @@ class Pet {
 		return;
 	}
 
-	async updateBreeding() {
+	async updateBreeding(success) {
+		let xp = 250;
+		if (!success) xp = 25;
 		const currentTime = Date.now();
 		this.pet.lastBred = currentTime;
-		this.pet.xp += 250 * (this.pet.multiplier || 1);
+		this.pet.xp += (xp * (this.pet.multiplier || 1));
 		return this.save();
 	}
 
@@ -633,10 +635,22 @@ class Pet {
 }
 
 const breed = async (firstPet, secondPet, babyName, aquariumId) => {
-	if (await firstPet.getAge() < 20) return false;
-	if (await secondPet.getAge() < 20) return false;
-	if (await firstPet.getHealth() < 50) return false;
-	if (await secondPet.getHealth() < 50) return false;
+	if (await firstPet.getAge() < 20) return { success: false, child: null, reason: `${await firstPet.getName()} is underaged. The minimum requirement is 20 days.` };
+	if (await secondPet.getAge() < 20) return { success: false, child: null, reason: `${await firstPet.getName()} is underaged. The minimum requirement is 20 days.` };
+	if (await firstPet.getHealth() < 50) return { success: false, child: null, reason: `${await firstPet.getName()} is unhealthy. Health must be greater than 50%.` };
+	if (await secondPet.getHealth() < 50) return { success: false, child: null, reason: `${await secondPet.getName()} is unhealthy. Health must be greater than 50%.` };
+
+	let success = false;
+
+	// Determine success of breeding
+	const stress = (await firstPet.getStress() + await secondPet.getStress()) / 2;
+	const health = (await firstPet.getHealth() + await secondPet.getHealth()) / 2;
+
+	// Add a random factor to the success rate
+	const successRate = Math.max(Math.min(0.65, (50 - stress) / 50), Math.max(Math.min(0.6, health / 100 - 0.5), 0.1));
+	const randomFactor = Math.random() * 100;
+	if (randomFactor < successRate) success = true;
+	if (!success) return { success, reason: 'Unlucky. You can try improving the health of your pets and reducing their stress.' };
 
 	// Generate a new pet with the same species as the parents
 	const speciesOptions = [await firstPet.getFishData(), await secondPet.getFishData()];
@@ -691,7 +705,8 @@ const breed = async (firstPet, secondPet, babyName, aquariumId) => {
 
 	await firstPet.updateBreeding();
 	await secondPet.updateBreeding();
-	return newPet.save();
+	await newPet.save();
+	return { success: success, child: newPet, reason: '' };
 };
 
 module.exports = { Pet, breed };

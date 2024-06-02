@@ -125,6 +125,9 @@ module.exports = {
 			if (!aquarium) return await interaction.followUp('You do not own an aquarium with that name.');
 			aquarium = new Aquarium(aquarium);
 
+			const babyExists = await PetFish.exists({ name: babyName, owner: interaction.user.id });
+			if (babyExists) return await interaction.followUp(`You already own a pet with the name ${babyName}.`);
+
 			// check if the user has enough space in the aquarium
 			const aquariumPets = await aquarium.getFish();
 			if (aquariumPets.length >= aquarium.getSize()) return await interaction.followUp('Your aquarium is full. You need to upgrade it to breed more pets.');
@@ -137,10 +140,12 @@ module.exports = {
 			const secondPetCompatibility = await aquarium.compareBiome(await secondPet.getBiome());
 			if (!firstPetCompatibility || !secondPetCompatibility) return await interaction.followUp('The pets you are trying to breed are not compatible because they require different water types.');
 
-			let baby = await breed(firstPet, secondPet, babyName, await aquarium.getId());
-			if (!baby) return await interaction.followUp('The pets you are trying to breed are not compatible. Are they both at least 20 days old and above 50% health?');
-			baby = new Pet(baby);
+			await firstPet.updateStatus(aquarium);
+			await secondPet.updateStatus(aquarium);
+			const result = await breed(firstPet, secondPet, babyName, await aquarium.getId());
+			if (!result.success) return await interaction.followUp(`Failed to breed pets: ${result.reason}.`);
 
+			const baby = new Pet(result.child);
 			return await interaction.followUp(`Successfully bred **${await firstPet.getName()}** and **${await secondPet.getName()}** to create ${await baby.getSpecies()} **${babyName}**.`);
 		}
 	},
