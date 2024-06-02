@@ -189,7 +189,9 @@ class Pet {
 		}
 
 		// Apply cleanliness and temperature factors
-		hungerIncrease *= cleanlinessFactor * temperatureFactor;
+		if (!traits.geneticDrift.trait === 'Adaptive' && traits.geneticDrift.unlocked) {
+			hungerIncrease *= cleanlinessFactor * temperatureFactor;
+		}
 
 		// Ensure the final hunger increase is within the range 0 to 100
 		return Math.floor(Math.min(Math.max(hungerIncrease, 0), 100));
@@ -213,7 +215,9 @@ class Pet {
 		let moodDecrease = baseMoodDecrease;
 
 		// Apply cleanliness and temperature factors
-		moodDecrease *= cleanlinessFactor * temperatureFactor;
+		if (!traits.geneticDrift.trait === 'Adaptive' && traits.geneticDrift.unlocked) {
+			moodDecrease *= cleanlinessFactor * temperatureFactor;
+		}
 
 		// Adjust mood based on self-traits
 		if (moodTraits.includes(traits.mood.trait) && traits.mood.unlocked) {
@@ -261,7 +265,9 @@ class Pet {
 		let stressIncrease = baseStressIncrease;
 
 		// Apply cleanliness and temperature factors
-		stressIncrease *= cleanlinessFactor * temperatureFactor;
+		if (!traits.geneticDrift.trait === 'Adaptive' && traits.geneticDrift.unlocked) {
+			stressIncrease *= cleanlinessFactor * temperatureFactor;
+		}
 
 		// Adjust mood based on self-traits
 		if (stressTraits.includes(traits.mood.trait) && traits.mood.unlocked) {
@@ -392,8 +398,9 @@ class Pet {
 	}
 
 	async updateHealth(cleanliness, temperature) {
-		const cleanlinessFactor = 1 - (cleanliness / 100);
-		const temperatureFactor = 1 - (Math.abs(temperature - 25) / 25);
+		const cleanlinessFactor = cleanliness / 100;
+		const temperatureDeviation = Math.abs(temperature);
+		const temperatureFactor = 1 + (temperatureDeviation / 100);
 
 		// Health Traits:
 		// Sickly: Health decreases faster.
@@ -403,18 +410,28 @@ class Pet {
 
 		const traits = await this.getTraits();
 		const healthTraits = ['Sickly', 'Healthy', 'Robust'];
-		const healthTraitFactors = [-2, 0, 2];
-		let health = this.pet.health;
+		const healthTraitFactors = [0.8, 1, 1.2];
+		let health = 100;
 
 		for (let i = 0; i < healthTraits.length; i++) {
 			if (traits.health.trait === healthTraits[i] && traits.health.unlocked) {
-				health += healthTraitFactors[i];
+				health *= healthTraitFactors[i];
 			}
 		}
 
-		health = Math.max(Math.min(health * cleanlinessFactor * temperatureFactor, 100), 0);
-		return Math.max(Math.min(health, 100), 0);
+		let finalHealth = health;
+
+		if (cleanlinessFactor < 1) {
+			finalHealth *= cleanlinessFactor;
+		}
+
+		if (temperatureDeviation > 0) {
+			finalHealth *= temperatureFactor;
+		}
+
+		return Math.floor(Math.max(Math.min(finalHealth, 100), 0));
 	}
+
 
 	async feed() {
 		const currentTime = Date.now();
@@ -616,8 +633,10 @@ class Pet {
 }
 
 const breed = async (firstPet, secondPet, babyName, aquariumId) => {
-	// if (await firstPet.getAge() < 20) return false;
-	// if (await secondPet.getAge() < 20) return false;
+	if (await firstPet.getAge() < 20) return false;
+	if (await secondPet.getAge() < 20) return false;
+	if (await firstPet.getHealth() < 50) return false;
+	if (await secondPet.getHealth() < 50) return false;
 
 	// Generate a new pet with the same species as the parents
 	const speciesOptions = [await firstPet.getFishData(), await secondPet.getFishData()];

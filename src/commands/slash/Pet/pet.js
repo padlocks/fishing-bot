@@ -45,7 +45,7 @@ module.exports = {
 				const aquarium = new Aquarium(await Habitat.findById(await pet.getHabitat()));
 				await pet.updateStatus(aquarium);
 				const petData = await pet.getFishData();
-				fields.push({ name: `${await pet.getName()}`, value: `**Species**: <${petData.icon?.animated ? 'a' : ''}:${petData.icon?.data}> ${await pet.getSpecies()}\n**Age**: ${await pet.getAge()}\n**Hunger**: ${await pet.getHunger()}%\n**Mood**: ${await pet.getMood()}%\n**Stress**: ${await pet.getStress()}%\n**XP**: ${await pet.getXP()}\n\n**Traits**: ${(await pet.getUnlockedTraitNames()).join(', ')}` });
+				fields.push({ name: `<${petData.icon?.animated ? 'a' : ''}:${petData.icon?.data}> ${await pet.getName()}`, value: `**Species**: ${await pet.getSpecies()}\n**Age**: ${await pet.getAge()}\n**Health**: ${await pet.getHealth()}%\n**Hunger**: ${await pet.getHunger()}%\n**Mood**: ${await pet.getMood()}%\n**Stress**: ${await pet.getStress()}%\n**XP**: ${await pet.getXP()}\n\n**Traits**: ${(await pet.getUnlockedTraitNames()).join(', ')}` });
 			}
 
 			const chunkSize = 1;
@@ -138,7 +138,7 @@ module.exports = {
 			if (!firstPetCompatibility || !secondPetCompatibility) return await interaction.followUp('The pets you are trying to breed are not compatible because they require different water types.');
 
 			let baby = await breed(firstPet, secondPet, babyName, await aquarium.getId());
-			if (!baby) return await interaction.followUp('The pets you are trying to breed are not compatible. Are they both at least 20 days old?');
+			if (!baby) return await interaction.followUp('The pets you are trying to breed are not compatible. Are they both at least 20 days old and above 50% health?');
 			baby = new Pet(baby);
 
 			return await interaction.followUp(`Successfully bred **${await firstPet.getName()}** and **${await secondPet.getName()}** to create ${await baby.getSpecies()} **${babyName}**.`);
