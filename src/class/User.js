@@ -109,8 +109,17 @@ class User {
 	}
 
 	async removeFish(fishId) {
-		this.user.inventory.fish = this.user.inventory.fish.filter((f) => f.valueOf() !== fishId);
-		await this.save();
+		// if fish count is greater than 1, decrement count
+		const fish = await FishData.findById(fishId);
+		if (fish.count > 1) {
+			fish.count--;
+			await fish.save();
+			return;
+		}
+		else {
+			this.user.inventory.fish = this.user.inventory.fish.filter((f) => f.valueOf() !== fishId);
+			await this.save();
+		}
 	}
 
 	async removeListOfFish(fishIds) {
