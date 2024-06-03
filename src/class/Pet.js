@@ -130,7 +130,7 @@ class Pet {
 		const newAge = 1 + Math.floor(elapsedTimeSinceAdoption);
 		const newHunger = await this.calculateHunger(elapsedTimeSinceFed, cleanliness, temperature);
 		const newMood = await this.calculateMood(elapsedTimeSincePlayed, cleanliness, temperature);
-		const newStress = await this.calculateStress(elapsedTimeSinceSeen, cleanliness, temperature);
+		const newStress = await this.calculateStress(elapsedTimeSinceSeen, elapsedTimeSincePlayed, elapsedTimeSinceFed, cleanliness, temperature);
 		const newHealth = await this.updateHealth(cleanliness, temperature);
 		const multiplier = await this.calculateMultiplier();
 		const attraction = await this.calculateAttraction();
@@ -247,11 +247,13 @@ class Pet {
 		return Math.floor(Math.max(Math.min(100 - moodDecrease, 100), 0));
 	}
 
-	async calculateStress(elapsedTimeSinceSeen, cleanliness, temperature) {
+	async calculateStress(elapsedTimeSinceSeen, elapsedTimeSincePlayed, elapsedTimeSinceFed, cleanliness, temperature) {
 		// Stress increases and should be at 100 after 24 hours.
 		const baseStressIncreasePerMinute = 100 / 1440;
 
-		const baseStressIncrease = elapsedTimeSinceSeen * baseStressIncreasePerMinute * 60;
+		const stressOverTime = (elapsedTimeSinceSeen + elapsedTimeSincePlayed + elapsedTimeSinceFed) / 3;
+
+		const baseStressIncrease = stressOverTime * baseStressIncreasePerMinute;
 
 		const cleanlinessFactor = cleanliness / 100;
 
