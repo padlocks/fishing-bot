@@ -26,8 +26,7 @@ const PetSchema = new Schema({
 		type: String,
 	},
 	traits: {
-		type: [String],
-		required: true,
+		type: Object,
 	},
 	health: {
 		type: Number,
@@ -72,6 +71,16 @@ const PetSchema = new Schema({
 	species: {
 		type: String,
 		required: true,
+	},
+	multiplier: {
+		type: Number,
+		required: true,
+		default: 1.0,
+	},
+	attraction: {
+		type: Number,
+		required: true,
+		default: 0,
 	},
 	type: {
 		type: String,

@@ -158,7 +158,7 @@ module.exports = {
 
 			// check if biome origin is the same as the aquarium's water type
 			const petBiome = await pet.getBiome();
-			if (await aquarium.compareBiome(petBiome)) return await interaction.followUp(`The fish named **${fish}** cannot live in a ${await aquarium.getWaterType()} aquarium.`);
+			if (!await aquarium.compareBiome(petBiome)) return await interaction.followUp(`The fish named **${fish}** cannot live in a ${await aquarium.getWaterType()} aquarium.`);
 
 			// move pet to aquarium
 			await aquarium.moveFish(pet, aquarium);
