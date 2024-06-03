@@ -502,7 +502,7 @@ const createUser = async (userId) => {
 	});
 	await data.save();
 	await data.sendToInventory(rod);
-	data.inventory.equippedRod = data.inventory.rods[0];
+	await data.setEquippedRod((await data.getInventory()).rods[0]);
 	await data.save();
 
 	return data;
