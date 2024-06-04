@@ -5,7 +5,7 @@ const { getWeightedChoice, sumArrays, sumCountsInArrays } = require('./Utils');
 const { User, getUser } = require('../class/User');
 
 const fish = async (rod, bait, biome, user) => {
-	const rodObject = await ItemData.findOne({ name: rod, user: await user.getUserId() });
+	const rodObject = await ItemData.findById(rod);
 	const rarities = Object.keys(rodObject.weights);
 	let capabilities = rodObject.capabilities;
 	let weights = Object.values(rodObject.weights);

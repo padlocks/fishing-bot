@@ -258,7 +258,58 @@ const clone = async (object, userId) => {
 			});
 			break;
 		}
+		case 'customrod': {
+			clonedObject = new RodData({
+				...originalObject.toObject(),
+				_id: new mongoose.Types.ObjectId(),
+				user: userId,
+				obtained: Date.now(),
+				fishCaught: 0,
+				__t: 'CustomRodData',
+			});
+			break;
 		}
+		case 'part_rod': {
+			clonedObject = new ItemData({
+				...originalObject.toObject(),
+				_id: new mongoose.Types.ObjectId(),
+				user: userId,
+				obtained: Date.now(),
+				__t: 'PartRodData',
+			});
+			break;
+		}
+		case 'part_reel': {
+			clonedObject = new ItemData({
+				...originalObject.toObject(),
+				_id: new mongoose.Types.ObjectId(),
+				user: userId,
+				obtained: Date.now(),
+				__t: 'PartReelData',
+			});
+			break;
+		}
+		case 'part_hook': {
+			clonedObject = new ItemData({
+				...originalObject.toObject(),
+				_id: new mongoose.Types.ObjectId(),
+				user: userId,
+				obtained: Date.now(),
+				__t: 'PartHookData',
+			});
+			break;
+		}
+		case 'part_handle': {
+			clonedObject = new ItemData({
+				...originalObject.toObject(),
+				_id: new mongoose.Types.ObjectId(),
+				user: userId,
+				obtained: Date.now(),
+				__t: 'PartHandleData',
+			});
+			break;
+		}
+	}
 
 		await clonedObject.save();
 

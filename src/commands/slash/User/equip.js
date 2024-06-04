@@ -63,6 +63,15 @@ const selectionOptions = async (inventoryPath, userData, allowNone = true) => {
 	return options;
 };
 
+const checkItemRequirements = async (item, userData) => {
+	const requirements = item.requirements;
+	if (requirements.level && userData.level < requirements.level) {
+		return false;
+	}
+
+	return true;
+}
+
 module.exports = {
 	structure: new SlashCommandBuilder()
 		.setName('equip')
@@ -154,6 +163,18 @@ module.exports = {
 
 				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 30_000 });
 				const rodChoice = selection.values[0];
+				const item = await ItemData.findById(rodChoice);
+				if (!await checkItemRequirements(item, userData)) {
+					return await selection.update({
+						embeds: [
+							new EmbedBuilder()
+								.setTitle('Equipment')
+								.setDescription('You do not meet the requirements to equip this item.'),
+						],
+						components: [],
+					});
+				}
+
 				const newRod = await userData.setEquippedRod(rodChoice);
 
 				if (newRod === null) {
@@ -212,6 +233,18 @@ module.exports = {
 
 				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 30_000 });
 				const chosenBait = selection.values[0];
+
+				const item = await ItemData.findById(chosenBait);
+				if (!await checkItemRequirements(item, userData)) {
+					return await selection.update({
+						embeds: [
+							new EmbedBuilder()
+								.setTitle('Equipment')
+								.setDescription('You do not meet the requirements to equip this item.'),
+						],
+						components: [],
+					});
+				}
 
 				let newBait = {};
 				let description = '';

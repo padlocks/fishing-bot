@@ -14,7 +14,7 @@ const updateUserWithFish = async (interaction, userId) => {
 	let rod = await user.getEquippedRod();
 	const bait = await user.getEquippedBait();
 	const biome = await user.getCurrentBiome();
-	const fishArray = await fish(rod.name, bait, biome, user);
+	const fishArray = await fish(rod._id, bait, biome, user);
 	let xp = 0;
 
 	for (let i = 0; i < fishArray.length; i++) {
@@ -31,7 +31,7 @@ const updateUserWithFish = async (interaction, userId) => {
 		const stats = await user.getStats();
 		stats.latestFish = [];
 		if (bait) {
-			bait.count--;
+			bait.count -= fishArray.length;
 			if (bait.count <= 0) {
 				await user.setEquippedBait(null);
 				// delete bait from user inventory
@@ -165,9 +165,11 @@ const followUpMessage = async (interaction, user, fishArray, completedQuests, xp
 				questString += `**${quest.title}** completed\n`;
 				totalQuestXp += quest.xp;
 				totalQuestCash += quest.cash;
-				for await (const reward of quest.reward) {
-					const r = await Item.findById(reward);
-					questRewards.push(r.name);
+				if (quest.reward && quest.reward.length > 0) {
+					for await (const reward of quest.reward) {
+						const r = await Item.findById(reward);
+						questRewards.push(r.name);
+					}
 				}
 				// fields.push({ name: 'Quest Completed!', value: `**${quest.title}** completed!` });
 			}
