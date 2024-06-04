@@ -8,6 +8,11 @@ const { getCollectionFilter } = require('../../../util/Utils');
 const getSelectionOptions = async (parts) => {
 	if (!parts) return [];
 
+	// sort parts alphabetically
+	parts.sort((a, b) => {
+		return a.name.localeCompare(b.name);
+	});
+
 	const uniqueValues = new Set();
 	let options = [];
 	const partPromises = parts.map(async (part) => {
