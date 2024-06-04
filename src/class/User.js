@@ -48,7 +48,7 @@ class User {
 	}
 
 	async addMoney(amount) {
-		this.user.inventory.money += amount;
+		this.user.inventory.money += parseInt(amount);
 		await this.save();
 	}
 
@@ -181,6 +181,8 @@ class User {
 			return null;
 		}
 		else {
+			if (rodId.valueOf()) rodId = rodId.valueOf();
+
 			// Find the rod in user's inventory by name
 			const rod = user.inventory.rods.find((r) => r.valueOf() === rodId);
 
@@ -371,6 +373,45 @@ class User {
 		}
 	}
 
+	async removeItems(itemIds) {
+		const user = this.user;
+		const inventory = user.inventory;
+		const items = await ItemData.find({ _id: { $in: itemIds } });
+
+		items.forEach(async (item) => {
+			switch (item.type) {
+			case 'rod':
+				inventory.rods = inventory.rods.filter((r) => r.valueOf() !== item.id);
+				break;
+			case 'bait':
+				inventory.baits = inventory.baits.filter((b) => b.valueOf() !== item.id);
+				break;
+			case 'fish':
+				inventory.fish = inventory.fish.filter((f) => f.valueOf() !== item.id);
+				break;
+			case 'buff':
+				inventory.buffs = inventory.buffs.filter((b) => b.valueOf() !== item.id);
+				break;
+			case 'gacha':
+				inventory.gacha = inventory.gacha.filter((g) => g.valueOf() !== item.id);
+				break;
+			case 'quest':
+				inventory.quests = inventory.quests.filter((q) => q.valueOf() !== item.id);
+				break;
+			default:
+				inventory.items = inventory.items.filter((i) => i.valueOf() !== item.id);
+				break;
+			}
+		});
+
+		await this.save();
+	}
+
+	async addCustomRodToInventory(rodId) {
+		(await this.getInventory()).rods.push(rodId);
+		await this.save();
+	}
+
 	async sendToInventory(item, count = 1) {
 		const user = this.user;
 		const userId = await this.getUserId();
@@ -485,7 +526,7 @@ class User {
 
 const createUser = async (userId) => {
 	const rod = await Item.findOne({ name: 'Old Rod' });
-	const data = new User({
+	const data = new UserSchema({
 		userId: userId,
 		commands: 0,
 		xp: 0,
@@ -501,11 +542,11 @@ const createUser = async (userId) => {
 		type: 'user',
 	});
 	await data.save();
-	await data.sendToInventory(rod);
-	await data.setEquippedRod((await data.getInventory()).rods[0]);
-	await data.save();
+	const user = new User(data);
+	await user.sendToInventory(rod);
+	await user.setEquippedRod((await user.getInventory()).rods[0]);
 
-	return data;
+	return await UserSchema.findOne({ userId: userId });
 };
 
 const getUser = async (userId) => {
