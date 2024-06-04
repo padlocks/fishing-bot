@@ -19,7 +19,7 @@ module.exports = {
 			const shopItems = await Item.find({ shopItem: true });
 
 			// sort the shopItems by item.type and item.price
-			const order = ['rod', 'bait', 'other'];
+			const order = ['rod', 'bait', 'gacha', 'license', 'other', 'boost', 'item'];
 			shopItems.sort((a, b) => {
 				if (a.type === b.type) {
 					return a.price - b.price;

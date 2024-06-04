@@ -17,6 +17,18 @@ module.exports = {
 		if (user === null) user = interaction.user;
 
 		const biomes = await Biome.find({});
+		
+		// sort biomes by level requirement
+		biomes.sort((a, b) => {
+			const aLevel = a.requirements.find((req) => req.toLowerCase().includes('level'));
+			const bLevel = b.requirements.find((req) => req.toLowerCase().includes('level'));
+
+			if (aLevel && bLevel) {
+				return aLevel.split(' ')[1] - bLevel.split(' ')[1];
+			}
+			return 0;
+		});
+
 		const uniqueValues = new Set();
 
 		let options = [];
