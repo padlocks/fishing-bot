@@ -73,8 +73,7 @@ const removeAdditionalActionRows = (num, components) => {
 };
 
 const getBaitSelection = async (response, user) => {
-	// return await response.awaitMessageComponent({ filter: getCollectionFilter(['select-bait'], userId), time: 30000 });
-	const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['select-bait'], user), time: 30000 });
+	const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['select-bait'], user), time: 90_000 });
 
 	collector.on('collect', async i => {
 		const userData = new User(await getUser(user));
@@ -102,10 +101,7 @@ const processBaitSelection = async (selection, userData, user) => {
 		components: [...components, amountRow],
 	});
 
-	const amountCollector = await amountResponse.createMessageComponentCollector({ filter: getCollectionFilter(['buy-one', 'buy-five', 'buy-ten', 'buy-hundred'], user), time: 30000 });
-
-	// const amountSelection = await amountResponse.awaitMessageComponent({ filter: getCollectionFilter(['buy-one', 'buy-five', 'buy-ten'], user), time: 30000 });
-
+	const amountCollector = await amountResponse.createMessageComponentCollector({ filter: getCollectionFilter(['buy-one', 'buy-five', 'buy-ten', 'buy-hundred'], user), time: 90_000 });
 	amountCollector.on('collect', async i => {
 		const amountChoice = i.customId;
 		const amount = await getAmountFromChoice(amountChoice);

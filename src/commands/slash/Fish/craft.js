@@ -136,7 +136,7 @@ module.exports = {
 			handle: {id: null, object: null},
 		}
 
-		const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['craft-select-rod', 'craft-select-reel', 'craft-select-hook', 'craft-select-handle', 'craft-rod-submit', 'craft-rod-cancel'], user.id), time: 30_000 });
+		const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['craft-select-rod', 'craft-select-reel', 'craft-select-hook', 'craft-select-handle', 'craft-rod-submit', 'craft-rod-cancel'], user.id), time: 90_000 });
 		collector.on('collect', async i => {
 			try {
 				if (i.customId === 'craft-rod-cancel') {

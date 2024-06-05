@@ -76,8 +76,7 @@ const updateInteraction = async (interaction, row, components) => {
 };
 
 const getSelection = async (response, userId) => {
-	// return await response.awaitMessageComponent({ filter: getCollectionFilter(['select-rod'], userId), time: 30_000 });
-	const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['select-rod'], userId), time: 30000 });
+	const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['select-rod'], userId), time: 90_000 });
 
 	collector.on('collect', async i => {
 		const userData = new User(await getUser(userId));
