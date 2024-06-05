@@ -502,6 +502,7 @@ class User {
 			newItemCount = clonedItem.count || 1;
 			break;
 		}
+		await finalItem.save();
 		await this.save();
 
 		return { item: finalItem, count: newItemCount };
