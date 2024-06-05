@@ -323,6 +323,10 @@ class User {
 			box.count--;
 			await box.save();
 
+			const stats = await this.getStats();
+			stats.gachaBoxesOpened++;
+			await this.setStats(stats);
+
 			// remove box from user inventory
 			if (box.count <= 0) {
 				user.inventory.gacha = user.inventory.gacha.filter((i) => i.valueOf() !== box.id);
