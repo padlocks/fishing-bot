@@ -36,6 +36,16 @@ const itemSchema = new Schema({
 		type: [String],
 		default: ['weak'],
 	},
+	icon: {
+		animated: {
+			type: Boolean,
+			default: false,
+		},
+		data: {
+			type: String,
+			default: 'old_rod:1210508306662301706',
+		},
+	},
 });
 
 const Item = model('Item', itemSchema);
