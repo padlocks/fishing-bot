@@ -5,7 +5,7 @@ const { CustomRod, CustomRodData } = require('../../../schemas/CustomRodSchema')
 const { ItemData } = require('../../../schemas/ItemSchema');
 const { getCollectionFilter } = require('../../../util/Utils');
 
-const getSelectionOptions = async (parts) => {
+const getSelectionOptions = async (parts, userId) => {
 	if (!parts) return [];
 
 	// sort parts alphabetically
@@ -14,17 +14,22 @@ const getSelectionOptions = async (parts) => {
 	});
 
 	const uniqueValues = new Set();
+	const uniqueNames = new Set();
 	let options = [];
 	const partPromises = parts.map(async (part) => {
 		try {
 			const value = part._id.toString();
 
-			if (!uniqueValues.has(value)) {
+			if (!uniqueValues.has(value) && !uniqueNames.has(part.name)) {
 				uniqueValues.add(value);
+				uniqueNames.add(part.name);
+
+				// get the count of the part
+				const count = await ItemData.countDocuments({ name: part.name, user: userId });
 
 				return new StringSelectMenuOptionBuilder()
 					.setLabel(part.name)
-					.setDescription(`${part.description}`)
+					.setDescription(`${count}x | ${part.description}`)
 					// .setEmoji(part.icon.data.split(':')[1])
 					.setValue(value);
 			}
@@ -59,23 +64,24 @@ module.exports = {
 		const name = interaction.options.getString('name');
 
 		const userData = new User(await getUser(user.id));
+		const userId = await userData.getUserId();
 		const items = await userData.getItems();
 		const parts = items.filter((item) => item.type.includes('part_'));
 
 		const rodParts = parts.filter((part) => part.type.includes('part_rod'));
-		const rodOptions = await getSelectionOptions(rodParts);
+		const rodOptions = await getSelectionOptions(rodParts, userId);
 		if (rodOptions.length === 0) return interaction.editReply('You do not have any rod parts!');
 
 		const reelParts = parts.filter((part) => part.type.includes('part_reel'));
-		const reelOptions = await getSelectionOptions(reelParts);
+		const reelOptions = await getSelectionOptions(reelParts, userId);
 		if (reelOptions.length === 0) return interaction.editReply('You do not have any reel parts!');
 
 		const hookParts = parts.filter((part) => part.type.includes('part_hook'));
-		const hookOptions = await getSelectionOptions(hookParts);
+		const hookOptions = await getSelectionOptions(hookParts, userId);
 		if (hookOptions.length === 0) return interaction.editReply('You do not have any hook parts!');
 
 		const handleParts = parts.filter((part) => part.type.includes('part_handle'));
-		const handleOptions = await getSelectionOptions(handleParts);
+		const handleOptions = await getSelectionOptions(handleParts, userId);
 		if (handleOptions.length === 0) return interaction.editReply('You do not have any handle parts!');
 
 		const rodSelect = new StringSelectMenuBuilder()
@@ -130,7 +136,7 @@ module.exports = {
 			handle: {id: null, object: null},
 		}
 
-		const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['craft-select-rod', 'craft-select-reel', 'craft-select-hook', 'craft-select-handle', 'craft-rod-submit', 'craft-rod-cancel'], user.id), time: 30_000 });
+		const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['craft-select-rod', 'craft-select-reel', 'craft-select-hook', 'craft-select-handle', 'craft-rod-submit', 'craft-rod-cancel'], user.id), time: 90_000 });
 		collector.on('collect', async i => {
 			try {
 				if (i.customId === 'craft-rod-cancel') {

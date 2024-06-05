@@ -37,6 +37,10 @@ const UserSchema = new Schema ({
 		lastDailyQuest: {
 			type: Number,
 		},
+		gachaBoxesOpened: {
+			type: Number,
+			default: 0,
+		},
 		fishStats: {
 			type: Map,
 			of: Number,

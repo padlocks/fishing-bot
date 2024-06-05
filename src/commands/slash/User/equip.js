@@ -125,7 +125,7 @@ module.exports = {
 		};
 
 		try {
-			const choice = await buttonResponse.awaitMessageComponent({ filter: collectorFilter, time: 30_000 });
+			const choice = await buttonResponse.awaitMessageComponent({ filter: collectorFilter, time: 90_000 });
 			const userData = new User(await getUser(user.id));
 
 			if (choice.customId === 'equip-rod') {
@@ -161,7 +161,7 @@ module.exports = {
 					components: [row],
 				});
 
-				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 30_000 });
+				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 90_000 });
 				const rodChoice = selection.values[0];
 				const item = await ItemData.findById(rodChoice);
 				if (!await checkItemRequirements(item, userData)) {
@@ -231,7 +231,7 @@ module.exports = {
 					components: [row],
 				});
 
-				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 30_000 });
+				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 90_000 });
 				const chosenBait = selection.values[0];
 
 				const item = await ItemData.findById(chosenBait);
@@ -299,7 +299,7 @@ module.exports = {
 					components: [row],
 				});
 
-				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 30_000 });
+				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 90_000 });
 				const chosenBooster = selection.values[0];
 
 				let newBooster = {};

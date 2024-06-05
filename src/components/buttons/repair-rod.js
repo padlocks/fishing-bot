@@ -59,7 +59,7 @@ module.exports = {
 		};
 
 		try {
-			const confirmation = await response.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
+			const confirmation = await response.awaitMessageComponent({ filter: collectorFilter, time: 90_000 });
 
 			if (confirmation.customId === 'confirm') {
 				if (await user.getMoney() < rod.repairCost) {

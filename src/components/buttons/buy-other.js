@@ -1,4 +1,4 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, ComponentType } = require('discord.js');
+const { ActionRowBuilder, StringSelectMenuBuilder, ComponentType, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { selectionOptions, getCollectionFilter } = require('../../util/Utils');
 const { Item, ItemData } = require('../../schemas/ItemSchema');
 const { User, getUser } = require('../../class/User');
@@ -81,8 +81,7 @@ const updateInteraction = async (interaction, row, components) => {
 };
 
 const getSelection = async (response, userId) => {
-	// return await response.awaitMessageComponent({ filter: getCollectionFilter(['select-item'], userId), time: 30000 });
-	const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['select-item'], userId), time: 30000 });
+	const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['select-item'], userId), time: 90_000 });
 
 	collector.on('collect', async i => {
 		const userData = new User(await getUser(userId));
@@ -104,14 +103,26 @@ const processItemSelection = async (selection, userData) => {
 		});
 	}
 	else if (canBuy) {
-		await userData.addMoney(-originalItem.price);
-		await userData.sendToInventory(originalItem);
+		let amount = 1;
+		if (originalItem.type === 'gacha') {
+			const amountRow = createAmountActionRow();
+			const components = removeAdditionalActionRows(3, selection.message.components);
 
-		await selection.reply({
-			components: [],
-			content: `You have successfully bought a ${originalItem.name}!`,
-			ephemeral: true,
-		});
+			const amountResponse = await selection.update({
+				embeds: selection.message.embeds,
+				components: [...components, amountRow],
+			});
+
+			const amountCollector = await amountResponse.createMessageComponentCollector({ filter: getCollectionFilter(['buy-one', 'buy-five', 'buy-ten', 'buy-hundred'], await userData.getUserId()), time: 90_000 });
+			amountCollector.on('collect', async i => {
+				const amountChoice = i.customId;
+				amount = await getAmountFromChoice(amountChoice);
+				await buyItem(i, originalItem, userData, amount);
+			});
+		}
+		else {
+			await buyItem(selection, originalItem, userData, amount);
+		}
 	}
 	else {
 		let content = 'You do not meet the requirements to buy this item!\n';
@@ -141,4 +152,37 @@ const checkItemRequirements = async (item, userData) => {
 	const items = await Promise.all((await userData.getItems()).map(async (i) => await ItemData.findById(i)));
 	const meetsPrerequisites = item.prerequisites ? item.prerequisites.every((prereq) => items.some((i) => i.name === prereq)) : true;
 	return meetsLevelRequirement && meetsPrerequisites;
+};
+
+const createAmountActionRow = () => {
+	const amount1 = new ButtonBuilder().setCustomId('buy-one').setLabel('Buy 1').setStyle(ButtonStyle.Primary);
+	const amount5 = new ButtonBuilder().setCustomId('buy-five').setLabel('Buy 5').setStyle(ButtonStyle.Primary);
+	const amount10 = new ButtonBuilder().setCustomId('buy-ten').setLabel('Buy 10').setStyle(ButtonStyle.Primary);
+	const amount100 = new ButtonBuilder().setCustomId('buy-hundred').setLabel('Buy 100').setStyle(ButtonStyle.Primary);
+	return new ActionRowBuilder().addComponents(amount1, amount5, amount10, amount100);
+};
+
+const getAmountFromChoice = async (amountChoice) => {
+	if (amountChoice === 'buy-one') {
+		return 1;
+	}
+	else if (amountChoice === 'buy-five') {
+		return 5;
+	}
+	else if (amountChoice === 'buy-ten') {
+		return 10;
+	}
+	else if (amountChoice === 'buy-hundred') {
+		return 100;
+	}
+};
+
+const buyItem = async (i, originalItem, userData, amount) => {
+	await userData.addMoney(-originalItem.price);
+	await userData.sendToInventory(originalItem, amount);
+	return await i.reply({
+		components: [],
+		content: `You have successfully bought ${amount} ${originalItem.name}!`,
+		ephemeral: true,
+	});
 };
