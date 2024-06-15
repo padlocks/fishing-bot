@@ -548,7 +548,7 @@ const createUser = async (userId) => {
 	});
 	await data.save();
 	const user = new User(data);
-	await user.sendToInventory(rod);
+	await user.sendToInventory(rod._id);
 	await user.setEquippedRod((await user.getInventory()).rods[0]);
 
 	return await UserSchema.findOne({ userId: userId });
