@@ -211,7 +211,9 @@ class User {
 	}
 
 	async getLevel() {
-		return Math.floor(0.1 * Math.sqrt(await this.getXP()));
+		const xp = await this.getXP();
+		const level = Math.floor(0.1 * Math.sqrt(xp));
+		return Math.max(level, 1);
 	}
 
 	async getXPToNextLevel() {
@@ -526,6 +528,16 @@ class User {
 
 		user.inventory.buffs = user.inventory.buffs.filter((b) => b.id !== buff.id);
 		await this.save();
+	}
+
+	async updateLevel() {
+		const user = this.user;
+		const level = await this.getLevel();
+		const oldLevel = user.level;
+		user.level = level;
+		await this.save();
+
+		return oldLevel < level;
 	}
 }
 
