@@ -238,15 +238,11 @@ class User {
 		const inventory = await this.getInventory();
 		if (inventory.items) {
 			// check if user has an aquarium license
-			const licenses = await inventory.items.filter(async (i) => i.type !== 'license');
-			const licensesData = await Promise.all(licenses.map(async (l) => await ItemData.findById(l)));
-			const aquariumLicenses = await licensesData.filter(async (l) => {
-				return !l.name.toLowerCase().includes('aquarium');
-			});
+			const items = await Promise.all(inventory.items.map(async (i) => await ItemData.findById(i)));
+			const licenses = (await Promise.all(items.map(async (i) => i))).filter(i => i.type === 'license');
+			const aquariumLicenses = await licenses.filter(async (l) => !l.name.toLowerCase().includes('aquarium'));
 			// find the license that matches the waterType
-			const waterLicenses = await aquariumLicenses.filter(async (l) => {
-				return !l.aquarium.waterType.includes(waterType);
-			});
+			const waterLicenses = await aquariumLicenses.filter(async (l) => !l.aquarium.waterType.includes(waterType));
 			// find the license with the highest size constraint
 			const sortedLicenses = await waterLicenses.sort((a, b) => b.aquarium.size - a.aquarium.size);
 			return sortedLicenses[0];
