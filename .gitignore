@@ -1,6 +1,8 @@
 node_modules
 package-lock.json
 server
+.DS_Store
+.vscode
 
 # DO NOT REMOVE THESE FOR SECURITY
 src/config.js
