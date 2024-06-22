@@ -5,6 +5,10 @@ const UserSchema = new Schema ({
 		type: String,
 		required: true,
 	},
+	level: {
+		type: Number,
+		default: 1,
+	},
 	xp: {
 		type: Number,
 		default: 0,
@@ -38,6 +42,13 @@ const UserSchema = new Schema ({
 			type: Number,
 		},
 		gachaBoxesOpened: {
+			type: Number,
+			default: 0,
+		},
+		lastVoted: {
+			type: Date,
+		},
+		totalVotes: {
 			type: Number,
 			default: 0,
 		},

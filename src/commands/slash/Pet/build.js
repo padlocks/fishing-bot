@@ -3,6 +3,7 @@ const { capitalizeWords } = require('../../../util/Utils');
 const { Aquarium } = require('../../../class/Aquarium');
 const { Habitat } = require('../../../schemas/HabitatSchema');
 const { User, getUser } = require('../../../class/User');
+const config = require('../../../config');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -27,21 +28,37 @@ module.exports = {
      * @param {ExtendedClient} client
      * @param {ChatInputCommandInteraction} interaction
      */
-	run: async (client, interaction) => {
+	run: async (client, interaction, analyticsObject) => {
 		await interaction.deferReply();
 
 		const user = new User(await getUser(interaction.user.id));
-		if (!user) return interaction.followUp({ content: 'There was an error retrieving your data!', ephemeral: true });
+		if (!user) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('User not found.');
+			}
+			return interaction.followUp({ content: 'There was an error retrieving your data!', ephemeral: true });
+		}
 
 		const name = interaction.options.getString('name');
 		// check to see if user already has an aquarium with that name
 		const exists = await Habitat.exists({ name: name, owner: await user.getUserId() });
-		if (exists) return interaction.followUp({ content: 'You already have an aquarium with that name!', ephemeral: true });
+		if (exists) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('Aquarium already exists.');
+			}
+			return interaction.followUp({ content: 'You already have an aquarium with that name!', ephemeral: true });
+		}
 
 		let waterType = interaction.options.getString('watertype');
 		waterType = capitalizeWords(waterType.toLowerCase());
 		// make sure waterType is equal to either freshwater or saltwater
 		if (waterType.toLowerCase() !== 'freshwater' && waterType.toLowerCase() !== 'saltwater') {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('Invalid water type.');
+			}
 			return interaction.followUp({
 				embeds: [
 					new EmbedBuilder()
@@ -54,7 +71,13 @@ module.exports = {
 		}
 
 		const license = await user.getAquariumLicense(waterType);
-		if (!license) return interaction.followUp({ content: 'You do not have an aquarium license for that water type!', ephemeral: true });
+		if (!license) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('No license found.');
+			}
+			return interaction.followUp({ content: 'You do not have an aquarium license for that water type!', ephemeral: true });
+		}
 
 		let success = false;
 		let newAquarium;
@@ -74,6 +97,10 @@ module.exports = {
 		}
 
 		if (success) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Aquarium built.');
+			}
 			await interaction.followUp({
 				embeds: [
 					new EmbedBuilder()
@@ -85,6 +112,10 @@ module.exports = {
 			});
 		}
 		else {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('Aquarium not built.');
+			}
 			await interaction.followUp({
 				embeds: [
 					new EmbedBuilder()

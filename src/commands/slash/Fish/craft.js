@@ -4,6 +4,7 @@ const { FishingRod } = require('../../../class/FishingRod');
 const { CustomRod, CustomRodData } = require('../../../schemas/CustomRodSchema');
 const { ItemData } = require('../../../schemas/ItemSchema');
 const { getCollectionFilter } = require('../../../util/Utils');
+const config = require('../../../config');
 
 const getSelectionOptions = async (parts, userId) => {
 	if (!parts) return [];
@@ -25,7 +26,9 @@ const getSelectionOptions = async (parts, userId) => {
 				uniqueNames.add(part.name);
 
 				// get the count of the part
-				const count = await ItemData.countDocuments({ name: part.name, user: userId });
+				// const count = await ItemData.countDocuments({ name: part.name, user: userId });
+				const parts = await ItemData.find({ name: part.name, user: userId });
+				const count = parts.reduce((acc, part) => acc + part.count, 0);
 
 				return new StringSelectMenuOptionBuilder()
 					.setLabel(part.name)
@@ -57,7 +60,7 @@ module.exports = {
      * @param {ExtendedClient} client
      * @param {ChatInputCommandInteraction} interaction
      */
-	async run(client, interaction, user = null) {
+	async run(client, interaction, analyticsObject, user = null) {
 		if (user === null) user = interaction.user;
 		await interaction.deferReply();
 
@@ -70,19 +73,43 @@ module.exports = {
 
 		const rodParts = parts.filter((part) => part.type.includes('part_rod'));
 		const rodOptions = await getSelectionOptions(rodParts, userId);
-		if (rodOptions.length === 0) return interaction.editReply('You do not have any rod parts!');
+		if (rodOptions.length === 0) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('User does not have any rod parts!');
+			}
+			return interaction.editReply('You do not have any rod parts!');
+		}
 
 		const reelParts = parts.filter((part) => part.type.includes('part_reel'));
 		const reelOptions = await getSelectionOptions(reelParts, userId);
-		if (reelOptions.length === 0) return interaction.editReply('You do not have any reel parts!');
+		if (reelOptions.length === 0) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('User does not have any reel parts!');
+			}
+			return interaction.editReply('You do not have any reel parts!');
+		}
 
 		const hookParts = parts.filter((part) => part.type.includes('part_hook'));
 		const hookOptions = await getSelectionOptions(hookParts, userId);
-		if (hookOptions.length === 0) return interaction.editReply('You do not have any hook parts!');
+		if (hookOptions.length === 0) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('User does not have any hook parts!');
+			}
+			return interaction.editReply('You do not have any hook parts!');
+		}
 
 		const handleParts = parts.filter((part) => part.type.includes('part_handle'));
 		const handleOptions = await getSelectionOptions(handleParts, userId);
-		if (handleOptions.length === 0) return interaction.editReply('You do not have any handle parts!');
+		if (handleOptions.length === 0) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('User does not have any handle parts!');
+			}
+			return interaction.editReply('You do not have any handle parts!');
+		}
 
 		const rodSelect = new StringSelectMenuBuilder()
 			.setCustomId('craft-select-rod')
@@ -138,8 +165,15 @@ module.exports = {
 
 		const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['craft-select-rod', 'craft-select-reel', 'craft-select-hook', 'craft-select-handle', 'craft-rod-submit', 'craft-rod-cancel'], user.id), time: 90_000 });
 		collector.on('collect', async i => {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await generateCommandObject(i, analyticsObject);
+			}
 			try {
 				if (i.customId === 'craft-rod-cancel') {
+					if (process.env.ANALYTICS || config.client.analytics) {
+						await analyticsObject.setStatus('completed');
+						await analyticsObject.setStatusMessage('User has cancelled crafting');
+					}
 					await i.update({
 						embeds: [
 							new EmbedBuilder()
@@ -167,11 +201,17 @@ module.exports = {
 					await userData.removeItems([selectedParts.rod.id, selectedParts.reel.id, selectedParts.hook.id, selectedParts.handle.id]);
 					await userData.addCustomRodToInventory(await rod.getId());
 
+					if (process.env.ANALYTICS || config.client.analytics) {
+						await analyticsObject.setStatus('completed');
+						await analyticsObject.setStatusMessage('User has crafted a custom rod');
+					}
+
 					await i.update({
 						embeds: [
 							new EmbedBuilder()
 								.setTitle('Crafting')
-								.setDescription('Crafting has been completed!'),
+								.setDescription('Crafting has been completed!')
+								.addFields([{name: name, value: `**Rod**: ${selectedParts.rod.object.name}\n **Reel**: ${selectedParts.reel.object.name}\n **Hook**: ${selectedParts.hook.object.name}\n **Handle**: ${selectedParts.handle.object.name}`}]),
 						],
 						components: [],
 					});
@@ -227,30 +267,12 @@ module.exports = {
 				}
 			}
 			catch (error) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage(error);
+				}
 				console.error(error);
 			}
 		});
-
-		// client.on(Events.InteractionCreate, async (interaction) => {
-		// 	if (!interaction.isModalSubmit()) return;
-		
-		// 	// Get the data entered by the user
-		// 	const itemName = interaction.fields.getTextInputValue('nameInput');
-		// 	const rodPart = await Item.findById(interaction.fields.getStringSelectMenuValue('craft-select-rod'));
-		// 	const reelPart = await Item.findById(interaction.fields.getStringSelectMenuValue('craft-select-reel'));
-		// 	const hookPart = await Item.findById(interaction.fields.getStringSelectMenuValue('craft-select-hook'));
-		// 	const handlePart = await Item.findById(interaction.fields.getStringSelectMenuValue('craft-select-handle'));
-
-		// 	const rodObject = {
-		// 		name: itemName,
-		// 		rod: rodPart,
-		// 		reel: reelPart,
-		// 		hook: hookPart,
-		// 		handle: handlePart,
-		// 	}
-
-		// 	const rod = new FishingRod(rodObject);
-		// 	await rod.generateStats();
-		// });
 	},
 };

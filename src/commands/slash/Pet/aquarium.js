@@ -5,6 +5,7 @@ const { PetFish } = require('../../../schemas/PetSchema');
 const { Aquarium } = require('../../../class/Aquarium');
 const { Pet } = require('../../../class/Pet');
 const buttonPagination = require('../../../buttonPagination');
+const config = require('../../../config');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -29,17 +30,29 @@ module.exports = {
 	options: {
 		cooldown: 3_000,
 	},
-	run: async (client, interaction) => {
+	run: async (client, interaction, analyticsObject) => {
 		const subcommand = interaction.options.getSubcommand();
 		await interaction.deferReply();
 
 		const user = new User(await getUser(interaction.user.id));
-		if (!user) return await interaction.followUp('There was an issue retrieving your data. Please try again later.');
+		if (!user) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('Failed to retrieve user data.');
+			}
+			return await interaction.followUp('There was an issue retrieving your data. Please try again later.');
+		}
 
 		if (subcommand === 'view') {
 			// get aquariums owned by the user
 			const aquariums = await Habitat.find({ owner: interaction.user.id });
-			if (!aquariums.length) return await interaction.followUp('You do not own any aquariums. You can use the `build` command to create one.');
+			if (!aquariums.length) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('User does not own any aquariums.');
+				}
+				return await interaction.followUp('You do not own any aquariums. You can use the `build` command to create one.');
+			}
 
 			const embeds = [];
 			const fields = [];
@@ -71,22 +84,42 @@ module.exports = {
 				);
 			}
 
-			return await buttonPagination(interaction, embeds, true);
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Displayed aquariums.');
+			}
+
+			return await buttonPagination(interaction, embeds, analyticsObject, true);
 		}
 
 		else if (subcommand === 'upgrade') {
 			const aquariumName = interaction.options.getString('name');
 			const aquariumData = await Habitat.findOne({ name: aquariumName, owner: interaction.user.id });
-			if (!aquariumData) return await interaction.followUp(`You do not own an aquarium named **${aquariumName}**.`);
+			if (!aquariumData) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('User does not own the aquarium.');
+				}
+				return await interaction.followUp(`You do not own an aquarium named **${aquariumName}**.`);
+			}
 
 			const aquarium = new Aquarium(aquariumData);
 
 			const license = await user.getAquariumLicense(await aquarium.getWaterType());
 			if (license.aquarium.size <= await aquarium.getSize()) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('Aquarium is already at maximum size.');
+				}
 				return await interaction.followUp(`The aquarium named **${aquariumName}** is already at the maximum size allowed by your license.`);
 			}
 			else {
 				await aquarium.upgrade(license.aquarium.size);
+			}
+
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Aquarium upgraded.');
 			}
 
 			return await interaction.followUp(`You have upgraded the aquarium named **${aquariumName}**. It can now hold ${await aquarium.getSize()} fish.`);
@@ -95,10 +128,21 @@ module.exports = {
 		else if (subcommand === 'clean') {
 			const aquariumName = interaction.options.getString('name');
 			const aquariumData = await Habitat.findOne({ name: aquariumName, owner: interaction.user.id });
-			if (!aquariumData) return await interaction.followUp(`You do not own an aquarium named **${aquariumName}**.`);
+			if (!aquariumData) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('User does not own the aquarium.');
+				}
+				return await interaction.followUp(`You do not own an aquarium named **${aquariumName}**.`);
+			}
 
 			const aquarium = new Aquarium(aquariumData);
 			await aquarium.clean();
+
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Aquarium cleaned.');
+			}
 
 			return await interaction.followUp(`You have cleaned the aquarium named **${aquariumName}**.`);
 		}
@@ -106,7 +150,13 @@ module.exports = {
 		else if (subcommand === 'feed') {
 			const aquariumName = interaction.options.getString('name');
 			const aquariumData = await Habitat.findOne({ name: aquariumName, owner: interaction.user.id });
-			if (!aquariumData) return await interaction.followUp(`You do not own an aquarium named **${aquariumName}**.`);
+			if (!aquariumData) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('User does not own the aquarium.');
+				}
+				return await interaction.followUp(`You do not own an aquarium named **${aquariumName}**.`);
+			}
 
 			const aquarium = new Aquarium(aquariumData);
 			const fishIds = await aquarium.getFish();
@@ -116,13 +166,24 @@ module.exports = {
 				await pet.feed();
 			}
 
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Fish fed.');
+			}
+
 			return await interaction.followUp(`You have fed the fish in the aquarium named **${aquariumName}**.`);
 		}
 
 		else if (subcommand === 'adjust') {
 			const aquariumName = interaction.options.getString('name');
 			const aquariumData = await Habitat.findOne({ name: aquariumName, owner: interaction.user.id });
-			if (!aquariumData) return await interaction.followUp(`You do not own an aquarium named **${aquariumName}**.`);
+			if (!aquariumData) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('User does not own the aquarium.');
+				}
+				return await interaction.followUp(`You do not own an aquarium named **${aquariumName}**.`);
+			}
 
 			const aquarium = new Aquarium(aquariumData);
 			const temperature = interaction.options.getInteger('temperature');
@@ -130,39 +191,82 @@ module.exports = {
 
 			await aquarium.adjustTemperature(temperature);
 
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Temperature adjusted.');
+			}
+
 			return await interaction.followUp(`You have set the temperature of the aquarium named **${aquariumName}** to ${temperature}°C.`);
 		}
 
 		else if (subcommand === 'fish') {
-			await interaction.followUp('Please provide a subcommand.');
-			return;
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('No subcommand provided.');
+			}
+			return await interaction.followUp('Please provide a subcommand.');
 		}
 
 		else if (subcommand === 'move') {
 			const fish = interaction.options.getString('fish');
 			// find the pet fish owned by user
 			const petFishData = await PetFish.findOne({ name: fish, owner: interaction.user.id });
-			if (!petFishData) return await interaction.followUp(`You do not own a pet fish named **${fish}**. You can use the \`adopt\` command to adopt one.`);
+			if (!petFishData) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('User does not own a pet with that name.');
+				}
+				return await interaction.followUp(`You do not own a pet fish named **${fish}**. You can use the \`adopt\` command to adopt one.`);
+			}
 
 			const aquariumName = interaction.options.getString('aquarium');
 			// check if the aquarium exists
 			const aquariumData = await Habitat.findOne({ name: aquariumName, owner: interaction.user.id });
-			if (!aquariumData) return await interaction.followUp(`You do not own an aquarium named **${aquariumName}**.`);
+			if (!aquariumData) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('User does not own the aquarium.');
+				}
+				return await interaction.followUp(`You do not own an aquarium named **${aquariumName}**.`);
+			}
+				
 			// check if the fish is already in the aquarium
-			if (aquariumData.fish.includes(petFishData.id)) return await interaction.followUp(`The fish named **${fish}** is already in the aquarium named **${aquariumName}**.`);
+			if (aquariumData.fish.includes(petFishData.id)) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('Fish already in specified aquarium.');
+				}
+				return await interaction.followUp(`The fish named **${fish}** is already in the aquarium named **${aquariumName}**.`);
+			}
 			// check if the aquarium is full
-			if (aquariumData.fish.length >= aquariumData.size) return await interaction.followUp(`The aquarium named **${aquariumName}** is full.`);
+			if (aquariumData.fish.length >= aquariumData.size) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('Aquarium is full.');
+				}
+				return await interaction.followUp(`The aquarium named **${aquariumName}** is full.`);
+			}
 
 			const pet = new Pet(petFishData);
 			const aquarium = new Aquarium(aquariumData);
 
 			// check if biome origin is the same as the aquarium's water type
 			const petBiome = await pet.getBiome();
-			if (!await aquarium.compareBiome(petBiome)) return await interaction.followUp(`The fish named **${fish}** cannot live in a ${await aquarium.getWaterType()} aquarium.`);
+			if (!await aquarium.compareBiome(petBiome)) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('Fish cannot live in specified aquarium.');
+				}
+				return await interaction.followUp(`The fish named **${fish}** cannot live in a ${await aquarium.getWaterType()} aquarium.`);
+			}
 
 			// move pet to aquarium
 			await aquarium.moveFish(pet, aquarium);
 
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('The pet fish has been moved to the specified aquarium.');
+			}
 			return await interaction.followUp(`You have moved **${fish}** to the aquarium named **${aquariumName}**.`);
 		}
 	},

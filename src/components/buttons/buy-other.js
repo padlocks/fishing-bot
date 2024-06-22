@@ -2,10 +2,12 @@ const { ActionRowBuilder, StringSelectMenuBuilder, ComponentType, ButtonBuilder,
 const { selectionOptions, getCollectionFilter } = require('../../util/Utils');
 const { Item, ItemData } = require('../../schemas/ItemSchema');
 const { User, getUser } = require('../../class/User');
+const config = require('../../config');
+const { generateCommandObject } = require('../../class/Interaction');
 
 module.exports = {
 	customId: 'buy-other',
-	run: async (client, interaction) => {
+	run: async (client, interaction, analyticsObject) => {
 		const user = interaction.user;
 
 		try {
@@ -26,10 +28,14 @@ module.exports = {
 
 			const response = await updateInteraction(interaction, row, components);
 
-			await getSelection(response, user.id);
+			await getSelection(response, user.id, analyticsObject);
 		}
 		catch (err) {
 			// console.error(err);
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage(err);
+			}
 		}
 	},
 };
@@ -80,22 +86,29 @@ const updateInteraction = async (interaction, row, components) => {
 	});
 };
 
-const getSelection = async (response, userId) => {
+const getSelection = async (response, userId, analyticsObject) => {
 	const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['select-item'], userId), time: 90_000 });
 
 	collector.on('collect', async i => {
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await generateCommandObject(i, analyticsObject);
+		}
 		const userData = new User(await getUser(userId));
-		return await processItemSelection(i, userData);
+		return await processItemSelection(i, userData, analyticsObject);
 	});
 };
 
-const processItemSelection = async (selection, userData) => {
+const processItemSelection = async (selection, userData, analyticsObject) => {
 	const itemChoice = selection.values[0];
 	const originalItem = await getItemById(itemChoice);
 
 	const canBuy = await checkItemRequirements(originalItem, userData);
 
 	if (await userData.getMoney() < originalItem.price && canBuy) {
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await analyticsObject.setStatus('failed');
+			await analyticsObject.setStatusMessage('User does not have enough money to buy item');
+		}
 		return await selection.reply({
 			content: 'You do not have enough money to buy this item!',
 			ephemeral: true,
@@ -115,6 +128,9 @@ const processItemSelection = async (selection, userData) => {
 
 			const amountCollector = await amountResponse.createMessageComponentCollector({ filter: getCollectionFilter(['buy-one', 'buy-five', 'buy-ten', 'buy-hundred'], await userData.getUserId()), time: 90_000 });
 			amountCollector.on('collect', async i => {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await generateCommandObject(i, analyticsObject);
+				}
 				const amountChoice = i.customId;
 				amount = await getAmountFromChoice(amountChoice);
 				await buyItem(i, originalItem, userData, amount);
@@ -122,6 +138,11 @@ const processItemSelection = async (selection, userData) => {
 		}
 		else {
 			await buyItem(selection, originalItem, userData, amount);
+		}
+
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await analyticsObject.setStatus('completed');
+			await analyticsObject.setStatusMessage('User has successfully bought item');
 		}
 	}
 	else {
@@ -131,6 +152,10 @@ const processItemSelection = async (selection, userData) => {
 		}
 		if (originalItem.prerequisites) {
 			content += `- You need to have the following item(s): ${originalItem.prerequisites.join(', ')}.\n`;
+		}
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await analyticsObject.setStatus('failed');
+			await analyticsObject.setStatusMessage(content);
 		}
 		await selection.reply({
 			content: content,

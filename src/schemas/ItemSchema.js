@@ -21,6 +21,10 @@ const itemSchema = new Schema({
 		required: true,
 		default: 0,
 	},
+	count: {
+		type: Number,
+		default: 1,
+	},
 	type: {
 		type: String,
 		default: 'item',

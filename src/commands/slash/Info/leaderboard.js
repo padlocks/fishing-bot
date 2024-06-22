@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { FishData } = require('../../../schemas/FishSchema');
 const buttonPagination = require('../../../buttonPagination');
+const config = require('../../../config');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -13,7 +14,7 @@ module.exports = {
      * @param {ExtendedClient} client
      * @param {ChatInputCommandInteraction} interaction
      */
-	run: async (client, interaction) => {
+	run: async (client, interaction, analyticsObject) => {
 		try {
 			const embeds = [];
 			const fields = [];
@@ -62,9 +63,18 @@ module.exports = {
 				);
 			}
 
-			await buttonPagination(interaction, embeds);
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Displayed leaderboard.');
+			}
+
+			await buttonPagination(interaction, embeds, analyticsObject);
 		}
 		catch (err) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage(err);
+			}
 			console.error(err);
 		}
 	},

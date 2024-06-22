@@ -1,6 +1,8 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
 const { Biome } = require('../../../schemas/BiomeSchema');
 const { User, getUser } = require('../../../class/User');
+const { generateCommandObject } = require('../../../class/Interaction');
+const config = require('../../../config');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -13,7 +15,7 @@ module.exports = {
      * @param {ExtendedClient} client
      * @param {ChatInputCommandInteraction} interaction
      */
-	async run(client, interaction, user = null) {
+	async run(client, interaction, analyticsObject, user = null) {
 		if (user === null) user = interaction.user;
 
 		const biomes = await Biome.find({});
@@ -48,6 +50,10 @@ module.exports = {
 
 			}
 			catch (error) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage(error);
+				}
 				console.error(error);
 			}
 		});
@@ -71,6 +77,10 @@ module.exports = {
 		const collector = response.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 15000 });
 
 		collector.on('collect', async i => {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await generateCommandObject(i, analyticsObject);
+			}
+
 			const selection = i.values[0];
 			const userData = new User(await getUser(user.id));
 			const originalBiome = await Biome.findById(selection);
@@ -91,10 +101,19 @@ module.exports = {
 			}
 
 			if (unlocked) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('completed');
+					await analyticsObject.setStatusMessage('User has switched biomes');
+				}
+
 				await userData.setCurrentBiome(originalBiome.name);
 				await i.reply(`${i.user} has switched to the **${originalBiome.name}**!`);
 			}
 			else {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('User does not meet biome requirements');
+				}
 				await i.reply({
 					content: `You need to be level ${reqLevel} to switch to the ${originalBiome.name}!`,
 					ephemeral: true,

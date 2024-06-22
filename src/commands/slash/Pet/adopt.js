@@ -6,6 +6,7 @@ const { Habitat } = require('../../../schemas/HabitatSchema');
 const { Aquarium } = require('../../../class/Aquarium');
 const { PetFish } = require('../../../schemas/PetSchema');
 const { User, getUser } = require('../../../class/User');
+const config = require('../../../config');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -36,27 +37,51 @@ module.exports = {
      * @param {ExtendedClient} client
      * @param {ChatInputCommandInteraction} interaction
      */
-	run: async (client, interaction) => {
+	run: async (client, interaction, analyticsObject) => {
 		await interaction.deferReply();
 
 		let species = interaction.options.getString('species');
 		species = capitalizeWords(species.toLowerCase());
 		// check if species exists in database
 		const exists = await Fish.exists({ name: species });
-		if (!exists) return interaction.editReply({ content: 'That species does not exist!', ephemeral: true });
+		if (!exists) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('Invalid fish species.');
+			}
+			return interaction.editReply({ content: 'That species does not exist!', ephemeral: true });
+		}
 
 		const name = interaction.options.getString('name');
 		// check if name is already in use
 		const nameExists = await PetFish.exists({ name: name, owner: interaction.user.id });
-		if (nameExists) return interaction.editReply({ content: 'That name is already in use!', ephemeral: true });
+		if (nameExists) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('Name already in use.');
+			}
+			return interaction.editReply({ content: 'That name is already in use!', ephemeral: true });
+		}
 
 		const aquariumName = interaction.options.getString('aquarium');
 		// check if aquarium exists in database
 		const aquariumExists = await Habitat.exists({ name: aquariumName, owner: interaction.user.id });
-		if (!aquariumExists) return interaction.editReply({ content: 'That aquarium does not exist! Use the `build` command to construct one.', ephemeral: true });
+		if (!aquariumExists) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('Invalid aquarium.');
+			}
+			return interaction.editReply({ content: 'That aquarium does not exist! Use the `build` command to construct one.', ephemeral: true });
+		}
 
 		const user = new User(await getUser(interaction.user.id));
-		if (!user) return interaction.editReply({ content: 'There was an error retrieving your data!', ephemeral: true });
+		if (!user) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('User not found.');
+			}
+			return interaction.editReply({ content: 'There was an error retrieving your data!', ephemeral: true });
+		}
 
 		// find the desired aquarium
 		const aquariums = await Promise.all((await user.getInventory()).aquariums.map(async (a) => await Habitat.findById(a)));
@@ -99,10 +124,18 @@ module.exports = {
 			}
 		}
 		else {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('Fish not found in inventory.');
+			}
 			return interaction.editReply({ content: 'You do not have that fish in your inventory! Make sure it is unlocked.', ephemeral: true });
 		}
 
 		if (success) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Fish adopted.');
+			}
 			await interaction.followUp({
 				embeds: [
 					new EmbedBuilder()
@@ -114,6 +147,10 @@ module.exports = {
 			});
 		}
 		else {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('Failed to adopt fish.');
+			}
 			await interaction.followUp({
 				embeds: [
 					new EmbedBuilder()

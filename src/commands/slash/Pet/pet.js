@@ -4,6 +4,7 @@ const { Aquarium } = require('../../../class/Aquarium');
 const { PetFish } = require('../../../schemas/PetSchema');
 const { Habitat } = require('../../../schemas/HabitatSchema');
 const buttonPagination = require('../../../buttonPagination');
+const config = require('../../../config');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -28,15 +29,21 @@ module.exports = {
 	options: {
 		cooldown: 3_000,
 	},
-	run: async (client, interaction) => {
+	run: async (client, interaction, analyticsObject) => {
 		const subcommand = interaction.options.getSubcommand();
 		await interaction.deferReply();
 
 		if (subcommand === 'view') {
 			// get pets owned by the user
 			const pets = await PetFish.find({ owner: interaction.user.id });
-			if (!pets.length) return await interaction.followUp('You do not own any pets. You can use the `adopt` command to adopt one.');
-
+			if (!pets.length) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('No pets found.');
+				}
+				return await interaction.followUp('You do not own any pets. You can use the `adopt` command to adopt one.');
+			}
+				
 			const embeds = [];
 			const fields = [];
 
@@ -61,17 +68,33 @@ module.exports = {
 				);
 			}
 
-			return await buttonPagination(interaction, embeds, true);
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Displayed pets.');
+			}
+
+			return await buttonPagination(interaction, analyticsObject, embeds, true);
 		}
 
 		if (subcommand === 'rename') {
 			const name = interaction.options.getString('name');
 			const newName = interaction.options.getString('newname');
 			const petData = await PetFish.findOne({ name: name, owner: interaction.user.id });
-			if (!petData) return await interaction.followUp('You do not own a pet with that name.');
+			if (!petData) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('Pet not found.');
+				}
+				return await interaction.followUp('You do not own a pet with that name.');
+			}
 
 			const pet = new Pet(petData);
 			await pet.updateName(newName);
+
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Pet renamed.');
+			}
 
 			return await interaction.followUp(`Successfully renamed your pet to ${newName}.`);
 		}
@@ -79,10 +102,21 @@ module.exports = {
 		if (subcommand === 'feed') {
 			const name = interaction.options.getString('name');
 			const petData = await PetFish.findOne({ name: name, owner: interaction.user.id });
-			if (!petData) return await interaction.followUp('You do not own a pet with that name.');
+			if (!petData) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('Pet not found.');
+				}
+				return await interaction.followUp('You do not own a pet with that name.');
+			}
 
 			const pet = new Pet(petData);
 			await pet.feed();
+
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Pet fed.');
+			}
 
 			return await interaction.followUp(`Successfully fed ${name}.`);
 		}
@@ -90,10 +124,21 @@ module.exports = {
 		if (subcommand === 'play') {
 			const name = interaction.options.getString('name');
 			const petData = await PetFish.findOne({ name: name, owner: interaction.user.id });
-			if (!petData) return await interaction.followUp('You do not own a pet with that name.');
+			if (!petData) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('Pet not found.');
+				}
+				return await interaction.followUp('You do not own a pet with that name.');
+			}
 
 			const pet = new Pet(petData);
 			await pet.play();
+
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Pet played with.');
+			}
 
 			return await interaction.followUp(`Successfully played with ${name}.`);
 		}
@@ -101,10 +146,21 @@ module.exports = {
 		if (subcommand === 'sell') {
 			const name = interaction.options.getString('name');
 			const petData = await PetFish.findOne({ name: name, owner: interaction.user.id });
-			if (!petData) return await interaction.followUp('You do not own a pet with that name.');
+			if (!petData) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('Pet not found.');
+				}
+				return await interaction.followUp('You do not own a pet with that name.');
+			}
 
 			const pet = new Pet(petData);
-			const aquarium = new Aquarium(await pet.getHabitat());
+			const aquarium = new Aquarium(await pet.getHabitat())
+			
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Pet sold.');
+			};
 
 			return await interaction.followUp(`Successfully sold ${name} for $${(await pet.sell(aquarium)).toLocaleString()}.`);
 		}
@@ -116,20 +172,50 @@ module.exports = {
 			const aquariumName = interaction.options.getString('aquarium');
 
 			const firstPetData = await PetFish.findOne({ name: firstPetName, owner: interaction.user.id });
-			if (!firstPetData) return await interaction.followUp(`You do not own a pet with the name ${firstPetName}.`);
+			if (!firstPetData) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('First pet not found.');
+				}
+				return await interaction.followUp(`You do not own a pet with the name ${firstPetName}.`);
+			}
 			const secondPetData = await PetFish.findOne({ name: secondPetName, owner: interaction.user.id });
-			if (!secondPetData) return await interaction.followUp(`You do not own a pet with the name ${secondPetName}.`);
+			if (!secondPetData) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('Second pet not found.');
+				}
+				return await interaction.followUp(`You do not own a pet with the name ${secondPetName}.`);
+			}
 
 			let aquarium = await Habitat.findOne({ name: aquariumName, owner: interaction.user.id });
-			if (!aquarium) return await interaction.followUp('You do not own an aquarium with that name.');
+			if (!aquarium) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('Aquarium not found.');
+				}
+				return await interaction.followUp('You do not own an aquarium with that name.');
+			}
 			aquarium = new Aquarium(aquarium);
 
 			const babyExists = await PetFish.exists({ name: babyName, owner: interaction.user.id });
-			if (babyExists) return await interaction.followUp(`You already own a pet with the name ${babyName}.`);
+			if (babyExists) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('Pet with that name already exists.');
+				}
+				return await interaction.followUp(`You already own a pet with the name ${babyName}.`);
+			}
 
 			// check if the user has enough space in the aquarium
 			const aquariumPets = await aquarium.getFish();
-			if (aquariumPets.length >= aquarium.getSize()) return await interaction.followUp('Your aquarium is full. You need to upgrade it to breed more pets.');
+			if (aquariumPets.length >= aquarium.getSize()) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('Aquarium full.');
+				}
+				return await interaction.followUp('Your aquarium is full. You need to upgrade it to breed more pets.')
+			};
 
 			const firstPet = new Pet(firstPetData);
 			const secondPet = new Pet(secondPetData);
@@ -137,14 +223,30 @@ module.exports = {
 			// check if the pets are the same water type
 			const firstPetCompatibility = await aquarium.compareBiome(await firstPet.getBiome());
 			const secondPetCompatibility = await aquarium.compareBiome(await secondPet.getBiome());
-			if (!firstPetCompatibility || !secondPetCompatibility) return await interaction.followUp('The pets you are trying to breed are not compatible because they require different water types.');
+			if (!firstPetCompatibility || !secondPetCompatibility) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('Pets not compatible.');
+				}
+				return await interaction.followUp('The pets you are trying to breed are not compatible because they require different water types.');
+			}
 
 			await firstPet.updateStatus(aquarium);
 			await secondPet.updateStatus(aquarium);
 			const result = await breed(firstPet, secondPet, babyName, await aquarium.getId());
-			if (!result.success) return await interaction.followUp(`Failed to breed pets: ${result.reason}.`);
+			if (!result.success) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('Failed to breed pets.');
+				}
+				return await interaction.followUp(`Failed to breed pets: ${result.reason}.`);
+			}
 
 			const baby = new Pet(result.child);
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Pets bred.');
+			}
 			return await interaction.followUp(`Successfully bred **${await firstPet.getName()}** and **${await secondPet.getName()}** to create ${await baby.getSpecies()} **${babyName}**.`);
 		}
 	},

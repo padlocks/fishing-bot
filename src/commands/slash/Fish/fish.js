@@ -4,6 +4,8 @@ const { findQuests } = require('../../../util/Quest');
 const { Pond } = require('../../../schemas/PondSchema');
 const { Item } = require('../../../schemas/ItemSchema');
 const { User, getUser } = require('../../../class/User');
+const config = require('../../../config');
+const { generateCommandObject } = require('../../../class/Interaction');
 
 const updateUserWithFish = async (interaction, userId) => {
 	const user = new User(await getUser(userId));
@@ -16,6 +18,7 @@ const updateUserWithFish = async (interaction, userId) => {
 	const biome = await user.getCurrentBiome();
 	const fishArray = await fish(rod._id, bait, biome, user);
 	let xp = 0;
+	let levelUp = false;
 
 	for (let i = 0; i < fishArray.length; i++) {
 		xp += await user.generateBoostedXP();
@@ -71,6 +74,7 @@ const updateUserWithFish = async (interaction, userId) => {
 			stats.fishStats.set(f.name.toLowerCase(), (stats.fishStats.get(f.name.toLowerCase()) || 0) + (f.count || 1));
 			await user.setStats(stats);
 			await user.addXP(xp);
+			levelUp = await user.updateLevel();
 
 			if (pond) {
 				pond.count -= f.count || 1;
@@ -118,6 +122,7 @@ const updateUserWithFish = async (interaction, userId) => {
 				if (quest.progress >= quest.progressMax) {
 					quest.status = 'completed';
 					await user.addXP(quest.xp);
+					if (await user.updateLevel()) levelUp = true;
 					await user.addMoney(quest.cash);
 					if (quest.reward && quest.reward.length > 0) {
 						quest.reward.forEach(async reward => {
@@ -138,11 +143,11 @@ const updateUserWithFish = async (interaction, userId) => {
 		await rod.save();
 		if (bait) await bait.save();
 		// await user.save();
-		return { fish: fishArray, questsCompleted: completedQuests.filter((quest, index, self) => self.findIndex(q => q.title === quest.title) === index), xp: xp, rodState: rod.state, bait: bait, success: true, message: '' };
+		return { fish: fishArray, questsCompleted: completedQuests.filter((quest, index, self) => self.findIndex(q => q.title === quest.title) === index), xp: xp, rodState: rod.state, bait: bait, levelUp: levelUp, success: true, message: '' };
 	}
 };
 
-const followUpMessage = async (interaction, user, fishArray, completedQuests, xp, rodState, bait, success, message) => {
+const followUpMessage = async (interaction, user, fishArray, completedQuests, xp, rodState, bait, levelUp, success, message) => {
 	const fields = [];
 	let fishString = '';
 	let questString = '';
@@ -150,6 +155,7 @@ const followUpMessage = async (interaction, user, fishArray, completedQuests, xp
 	let totalQuestCash = 0;
 	const questRewards = [];
 	let fishAgainDisabled = false;
+	const userObj = new User(await getUser(user.id));
 
 	if (success) {
 		fishArray.forEach(f => {
@@ -187,6 +193,10 @@ const followUpMessage = async (interaction, user, fishArray, completedQuests, xp
 
 		if (bait?.count <= 0) {
 			fields.push({ name: 'Uh oh!', value: 'You ran out of bait!' });
+		}
+
+		if (levelUp) {
+			fields.push({ name: 'Level Up!', value: `${user.globalName} has leveled up to level **${await userObj.getLevel()}**!` });
 		}
 	}
 	else {
@@ -246,7 +256,7 @@ module.exports = {
      * @param {ExtendedClient} client
      * @param {ChatInputCommandInteraction} interaction
      */
-	async run(client, interaction, user = null) {
+	async run(client, interaction, analyticsObject, user = null) {
 		if (user === null) user = interaction.user;
 
 		await interaction.deferReply();
@@ -257,10 +267,16 @@ module.exports = {
 		const xp = object.xp;
 		const rodState = object.rodState;
 		const bait = object.bait;
+		const levelUp = object.levelUp;
 		const success = object.success;
 		const message = object.message;
 
-		const followUp = await followUpMessage(interaction, user, newFish, completedQuests, xp, rodState, bait, success, message);
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await analyticsObject.setStatus(success ? 'completed' : 'failed');
+			await analyticsObject.setStatusMessage(message || 'Fished.');
+		}
+
+		const followUp = await followUpMessage(interaction, user, newFish, completedQuests, xp, rodState, bait, levelUp, success, message);
 
 		// const filter = () => interaction.user.id === interaction.message.author.id;
 
@@ -273,13 +289,10 @@ module.exports = {
 		collector.on('collect', async collectionInteraction => {
 			if (collectionInteraction.user.id !== user.id) return;
 			if (collectionInteraction.customId === 'fish-again') {
-				await this.run(client, collectionInteraction, user);
-			}
-			if (collectionInteraction.customId === 'sell-one-fish') {
-				//
-			}
-			if (collectionInteraction.customId === 'repair-rod') {
-				//
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await generateCommandObject(collectionInteraction, analyticsObject);
+				}
+				await this.run(client, collectionInteraction, analyticsObject, user);
 			}
 		});
 	},

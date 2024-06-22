@@ -13,7 +13,7 @@ module.exports = {
      * @param {ExtendedClient} client
      * @param {ChatInputCommandInteraction} interaction
      */
-	run: async (client, interaction) => {
+	run: async (client, interaction, analyticsObject) => {
 
 		await interaction.deferReply();
 
@@ -33,13 +33,18 @@ module.exports = {
 		const mapIntCmds = client.applicationcommandsArray.map((v) => `\`${(v.type === 2 || v.type === 3) ? '' : '/'}${v.name}\`: ${v.description || '(No description)'}`);
 		const mapPreCmds = client.collection.prefixcommands.map((v) => `\`${prefix}${v.structure.name}\` (${v.structure.aliases.length > 0 ? v.structure.aliases.map((a) => `**${a}**`).join(', ') : 'None'}): ${v.structure.description || '(No description)'}`);
 
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await analyticsObject.setStatus('completed');
+			await analyticsObject.setStatusMessage('Displayed help command.');
+		}
+
 		await interaction.followUp({
 			embeds: [
 				new EmbedBuilder()
 					.setTitle('Help command')
 					.addFields(
 						{ name: 'Slash commands', value: `${mapIntCmds.join('\n')}` },
-						{ name: 'Prefix commands', value: `${mapPreCmds.join('\n')}` },
+						// { name: 'Prefix commands', value: `${mapPreCmds.join('\n')}` },
 					),
 			],
 		});

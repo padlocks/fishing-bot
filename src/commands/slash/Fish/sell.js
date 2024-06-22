@@ -3,6 +3,7 @@ const {
 	EmbedBuilder,
 } = require('discord.js');
 const { sellFishByRarity } = require('../../../util/Fish');
+const config = require('../../../config');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -18,7 +19,7 @@ module.exports = {
      * @param {ExtendedClient} client
      * @param {ChatInputCommandInteraction<true>} interaction
      */
-	run: async (client, interaction) => {
+	run: async (client, interaction, analyticsObject) => {
 		await interaction.deferReply();
 
 		let sold = 0;
@@ -26,6 +27,10 @@ module.exports = {
 
 		sold = await sellFishByRarity(interaction.user.id, rarity);
 
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await analyticsObject.setStatus('completed');
+			await analyticsObject.setStatusMessage('Sold fish.');
+		}
 		await interaction.editReply({
 			embeds: [
 				new EmbedBuilder()
