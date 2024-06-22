@@ -2,6 +2,7 @@ module.exports = {
 	client: {
 		token: 'Your Bot token (USE .env FOR SAFETY)',
 		id: 'Your Bot ID (USE .env FOR SAFETY)',
+		topgg_token: 'Your top.gg token (USE .env FOR SAFETY)',
 	},
 	handler: {
 		prefix: '?',

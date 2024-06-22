@@ -3,6 +3,8 @@ const { Fish, FishData } = require('../schemas/FishSchema');
 const { Item, ItemData } = require('../schemas/ItemSchema');
 const { User: UserSchema } = require('../schemas/UserSchema');
 const { BuffData } = require('../schemas/BuffSchema');
+const config = require('../config');
+const fetch = require('node-fetch');
 
 class User {
 	constructor(data) {
@@ -534,6 +536,51 @@ class User {
 		await this.save();
 
 		return oldLevel < level;
+	}
+
+	async getLastVoted() {
+		return this.user.stats.lastVoted || 0;
+	}
+
+	async setLastVoted() {
+		const user = this.user;
+		user.stats.lastVoted = Date.now();
+		await this.save();
+	}
+
+	async vote() {
+		// check if user has voted within the last 12 hours
+		const lastVoted = await this.getLastVoted();
+		const cooldown = 12 * 60 * 60 * 1000;
+		if (Date.now() - lastVoted < cooldown) return { voted: false, message: "You have already voted today!" };
+
+		// check api for vote
+		const url = `https://top.gg/api/bots/${process.env.CLIENT_ID || config.client.id}/check?userId=${await this.getUserId()}`;
+
+		return await fetch(url, { method: "GET", headers: { Authorization: process.env.TOPGG_TOKEN || config.client.topgg_token}})
+			.then(async (res) => res.text())
+			.then(async (json) => {
+				var isVoted = JSON.parse(json).voted;
+
+				if (isVoted === 0) {
+					return { voted: false, message: "You haven't voted yet!" };
+				}
+
+				// update user stats
+				const stats = await this.getStats();
+				stats.votes++;
+				await this.setStats(stats);
+				this.setLastVoted();
+
+				// give user reward
+				const reward = await Item.findOne({ name: 'Voter\'s Crate' });
+				await this.sendToInventory(reward);
+
+				// add money
+				await this.addMoney(10000);
+
+				return { voted: true, message: "Thank you for voting! You have received:\n- 1x Voter's Crate\n- $10000" };
+			});
 	}
 }
 

@@ -45,6 +45,13 @@ const UserSchema = new Schema ({
 			type: Number,
 			default: 0,
 		},
+		lastVoted: {
+			type: Date,
+		},
+		totalVotes: {
+			type: Number,
+			default: 0,
+		},
 		fishStats: {
 			type: Map,
 			of: Number,
