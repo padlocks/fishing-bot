@@ -384,28 +384,35 @@ class User {
 		const items = await ItemData.find({ _id: { $in: itemIds } });
 
 		items.forEach(async (item) => {
-			switch (item.type) {
-			case 'rod':
-				inventory.rods = inventory.rods.filter((r) => r.valueOf() !== item.id);
-				break;
-			case 'bait':
-				inventory.baits = inventory.baits.filter((b) => b.valueOf() !== item.id);
-				break;
-			case 'fish':
-				inventory.fish = inventory.fish.filter((f) => f.valueOf() !== item.id);
-				break;
-			case 'buff':
-				inventory.buffs = inventory.buffs.filter((b) => b.valueOf() !== item.id);
-				break;
-			case 'gacha':
-				inventory.gacha = inventory.gacha.filter((g) => g.valueOf() !== item.id);
-				break;
-			case 'quest':
-				inventory.quests = inventory.quests.filter((q) => q.valueOf() !== item.id);
-				break;
-			default:
-				inventory.items = inventory.items.filter((i) => i.valueOf() !== item.id);
-				break;
+			if (item.count <= 0) {
+				switch (item.type) {
+				case 'rod':
+					inventory.rods = inventory.rods.filter((r) => r.valueOf() !== item.id);
+					break;
+				case 'bait':
+					inventory.baits = inventory.baits.filter((b) => b.valueOf() !== item.id);
+					break;
+				case 'fish':
+					inventory.fish = inventory.fish.filter((f) => f.valueOf() !== item.id);
+					break;
+				case 'buff':
+					inventory.buffs = inventory.buffs.filter((b) => b.valueOf() !== item.id);
+					break;
+				case 'gacha':
+					inventory.gacha = inventory.gacha.filter((g) => g.valueOf() !== item.id);
+					break;
+				case 'quest':
+					inventory.quests = inventory.quests.filter((q) => q.valueOf() !== item.id);
+					break;
+				default:
+					inventory.items = inventory.items.filter((i) => i.valueOf() !== item.id);
+					break;
+				}
+			}
+			else {
+				const itemObject = await ItemData.findById(item);
+				itemObject.count--;
+				await itemObject.save();
 			}
 		});
 
@@ -497,10 +504,20 @@ class User {
 			newItemCount = clonedItem.count || 1;
 			break;
 		default:
-			clonedItem = await clone(itemObject, userId);
-			user.inventory.items.push(clonedItem);
-			finalItem = clonedItem;
-			newItemCount = clonedItem.count || 1;
+			items = await Promise.all(user.inventory.items.map(async (b) => await ItemData.findById(b)));
+			existingItem = items.find((b) => b?.name === itemObject.name);
+			if (existingItem && existingItem.count) {
+				existingItem.count += itemObject.count;
+				await existingItem.save();
+				finalItem = existingItem;
+				newItemCount = itemObject.count || 1;
+			}
+			else {
+				clonedItem = await clone(itemObject, userId);
+				user.inventory.items.push(clonedItem);
+				finalItem = clonedItem;
+				newItemCount = clonedItem.count || 1;
+			}
 			break;
 		}
 		await finalItem.save();
