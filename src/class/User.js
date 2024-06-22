@@ -3,6 +3,8 @@ const { Fish, FishData } = require('../schemas/FishSchema');
 const { Item, ItemData } = require('../schemas/ItemSchema');
 const { User: UserSchema } = require('../schemas/UserSchema');
 const { BuffData } = require('../schemas/BuffSchema');
+const config = require('../config');
+const fetch = require('node-fetch');
 
 class User {
 	constructor(data) {
@@ -313,7 +315,8 @@ class User {
 		// uppercase the first letter of each word in name
 		name = name.split(' ').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
-		const boxes = user.inventory.gacha.filter((box) => !box.opened && box.name !== name);
+		const gachaBoxes = await Promise.all(user.inventory.gacha.map(async (boxId) => await ItemData.findById(boxId)));
+		const boxes = gachaBoxes.filter((box) => !box.opened && box.name === name);
 		if (boxes.length === 0) return null;
 
 		const box = await ItemData.findById(boxes[0]);
@@ -381,28 +384,35 @@ class User {
 		const items = await ItemData.find({ _id: { $in: itemIds } });
 
 		items.forEach(async (item) => {
-			switch (item.type) {
-			case 'rod':
-				inventory.rods = inventory.rods.filter((r) => r.valueOf() !== item.id);
-				break;
-			case 'bait':
-				inventory.baits = inventory.baits.filter((b) => b.valueOf() !== item.id);
-				break;
-			case 'fish':
-				inventory.fish = inventory.fish.filter((f) => f.valueOf() !== item.id);
-				break;
-			case 'buff':
-				inventory.buffs = inventory.buffs.filter((b) => b.valueOf() !== item.id);
-				break;
-			case 'gacha':
-				inventory.gacha = inventory.gacha.filter((g) => g.valueOf() !== item.id);
-				break;
-			case 'quest':
-				inventory.quests = inventory.quests.filter((q) => q.valueOf() !== item.id);
-				break;
-			default:
-				inventory.items = inventory.items.filter((i) => i.valueOf() !== item.id);
-				break;
+			if (item.count <= 0) {
+				switch (item.type) {
+				case 'rod':
+					inventory.rods = inventory.rods.filter((r) => r.valueOf() !== item.id);
+					break;
+				case 'bait':
+					inventory.baits = inventory.baits.filter((b) => b.valueOf() !== item.id);
+					break;
+				case 'fish':
+					inventory.fish = inventory.fish.filter((f) => f.valueOf() !== item.id);
+					break;
+				case 'buff':
+					inventory.buffs = inventory.buffs.filter((b) => b.valueOf() !== item.id);
+					break;
+				case 'gacha':
+					inventory.gacha = inventory.gacha.filter((g) => g.valueOf() !== item.id);
+					break;
+				case 'quest':
+					inventory.quests = inventory.quests.filter((q) => q.valueOf() !== item.id);
+					break;
+				default:
+					inventory.items = inventory.items.filter((i) => i.valueOf() !== item.id);
+					break;
+				}
+			}
+			else {
+				const itemObject = await ItemData.findById(item);
+				itemObject.count--;
+				await itemObject.save();
 			}
 		});
 
@@ -494,10 +504,20 @@ class User {
 			newItemCount = clonedItem.count || 1;
 			break;
 		default:
-			clonedItem = await clone(itemObject, userId);
-			user.inventory.items.push(clonedItem);
-			finalItem = clonedItem;
-			newItemCount = clonedItem.count || 1;
+			items = await Promise.all(user.inventory.items.map(async (b) => await ItemData.findById(b)));
+			existingItem = items.find((b) => b?.name === itemObject.name);
+			if (existingItem && existingItem.count) {
+				existingItem.count += itemObject.count;
+				await existingItem.save();
+				finalItem = existingItem;
+				newItemCount = itemObject.count || 1;
+			}
+			else {
+				clonedItem = await clone(itemObject, userId);
+				user.inventory.items.push(clonedItem);
+				finalItem = clonedItem;
+				newItemCount = clonedItem.count || 1;
+			}
 			break;
 		}
 		await finalItem.save();
@@ -534,6 +554,51 @@ class User {
 		await this.save();
 
 		return oldLevel < level;
+	}
+
+	async getLastVoted() {
+		return this.user.stats.lastVoted || 0;
+	}
+
+	async setLastVoted() {
+		const user = this.user;
+		user.stats.lastVoted = Date.now();
+		await this.save();
+	}
+
+	async vote() {
+		// check if user has voted within the last 12 hours
+		const lastVoted = await this.getLastVoted();
+		const cooldown = 12 * 60 * 60 * 1000;
+		if (Date.now() - lastVoted < cooldown) return { voted: false, message: "You have already voted today!" };
+
+		// check api for vote
+		const url = `https://top.gg/api/bots/${process.env.CLIENT_ID || config.client.id}/check?userId=${await this.getUserId()}`;
+
+		return await fetch(url, { method: "GET", headers: { Authorization: process.env.TOPGG_TOKEN || config.client.topgg_token}})
+			.then(async (res) => res.text())
+			.then(async (json) => {
+				var isVoted = JSON.parse(json).voted;
+
+				if (isVoted === 0) {
+					return { voted: false, message: "You haven't voted yet!" };
+				}
+
+				// update user stats
+				const stats = await this.getStats();
+				stats.votes++;
+				await this.setStats(stats);
+				this.setLastVoted();
+
+				// give user reward
+				const reward = await Item.findOne({ name: 'Voter\'s Crate' });
+				await this.sendToInventory(reward);
+
+				// add money
+				await this.addMoney(10000);
+
+				return { voted: true, message: "Thank you for voting! You have received:\n- 1x Voter's Crate\n- $10000" };
+			});
 	}
 }
 

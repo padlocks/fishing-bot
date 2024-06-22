@@ -26,7 +26,9 @@ const getSelectionOptions = async (parts, userId) => {
 				uniqueNames.add(part.name);
 
 				// get the count of the part
-				const count = await ItemData.countDocuments({ name: part.name, user: userId });
+				// const count = await ItemData.countDocuments({ name: part.name, user: userId });
+				const parts = await ItemData.find({ name: part.name, user: userId });
+				const count = parts.reduce((acc, part) => acc + part.count, 0);
 
 				return new StringSelectMenuOptionBuilder()
 					.setLabel(part.name)
@@ -208,7 +210,8 @@ module.exports = {
 						embeds: [
 							new EmbedBuilder()
 								.setTitle('Crafting')
-								.setDescription('Crafting has been completed!'),
+								.setDescription('Crafting has been completed!')
+								.addFields([{name: name, value: `**Rod**: ${selectedParts.rod.object.name}\n **Reel**: ${selectedParts.reel.object.name}\n **Hook**: ${selectedParts.hook.object.name}\n **Handle**: ${selectedParts.handle.object.name}`}]),
 						],
 						components: [],
 					});
