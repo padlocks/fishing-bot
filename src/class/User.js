@@ -315,7 +315,8 @@ class User {
 		// uppercase the first letter of each word in name
 		name = name.split(' ').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
-		const boxes = user.inventory.gacha.filter((box) => !box.opened && box.name !== name);
+		const gachaBoxes = await Promise.all(user.inventory.gacha.map(async (boxId) => await ItemData.findById(boxId)));
+		const boxes = gachaBoxes.filter((box) => !box.opened && box.name === name);
 		if (boxes.length === 0) return null;
 
 		const box = await ItemData.findById(boxes[0]);
