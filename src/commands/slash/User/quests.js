@@ -2,6 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const buttonPagination = require('../../../buttonPagination');
 const { QuestData } = require('../../../schemas/QuestSchema');
 const { Item } = require('../../../schemas/ItemSchema');
+const config = require('../../../config');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -14,12 +15,16 @@ module.exports = {
      * @param {ExtendedClient} client
      * @param {ChatInputCommandInteraction} interaction
      */
-	run: async (client, interaction) => {
+	run: async (client, interaction, analyticsObject) => {
 		try {
 			const embeds = [];
 			const quests = await QuestData.find({ status: 'in_progress', user: interaction.user.id });
 
 			if (!quests.length) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('No quests found.');
+				}
 				return await interaction.reply({
 					content: 'You do not have any quests! Accept one using /start-quest or /daily.',
 					ephemeral: true,
@@ -60,7 +65,12 @@ module.exports = {
 				);
 			}
 
-			await buttonPagination(interaction, embeds);
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Displayed all quests.');
+			}
+
+			await buttonPagination(interaction, embeds, analyticsObject);
 		}
 		catch (err) {
 			console.error(err);

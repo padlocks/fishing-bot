@@ -4,6 +4,8 @@ const { findQuests } = require('../../../util/Quest');
 const { Pond } = require('../../../schemas/PondSchema');
 const { Item } = require('../../../schemas/ItemSchema');
 const { User, getUser } = require('../../../class/User');
+const config = require('../../../config');
+const { generateCommandObject } = require('../../../class/Interaction');
 
 const updateUserWithFish = async (interaction, userId) => {
 	const user = new User(await getUser(userId));
@@ -254,7 +256,7 @@ module.exports = {
      * @param {ExtendedClient} client
      * @param {ChatInputCommandInteraction} interaction
      */
-	async run(client, interaction, user = null) {
+	async run(client, interaction, analyticsObject, user = null) {
 		if (user === null) user = interaction.user;
 
 		await interaction.deferReply();
@@ -269,6 +271,11 @@ module.exports = {
 		const success = object.success;
 		const message = object.message;
 
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await analyticsObject.setStatus(success ? 'completed' : 'failed');
+			await analyticsObject.setStatusMessage(message || 'Fished.');
+		}
+
 		const followUp = await followUpMessage(interaction, user, newFish, completedQuests, xp, rodState, bait, levelUp, success, message);
 
 		// const filter = () => interaction.user.id === interaction.message.author.id;
@@ -282,13 +289,10 @@ module.exports = {
 		collector.on('collect', async collectionInteraction => {
 			if (collectionInteraction.user.id !== user.id) return;
 			if (collectionInteraction.customId === 'fish-again') {
-				await this.run(client, collectionInteraction, user);
-			}
-			if (collectionInteraction.customId === 'sell-one-fish') {
-				//
-			}
-			if (collectionInteraction.customId === 'repair-rod') {
-				//
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await generateCommandObject(collectionInteraction, analyticsObject);
+				}
+				await this.run(client, collectionInteraction, analyticsObject, user);
 			}
 		});
 	},

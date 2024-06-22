@@ -2,6 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const buttonPagination = require('../../../buttonPagination');
 const { RodData } = require('../../../schemas/RodSchema');
 const { User, getUser } = require('../../../class/User');
+const config = require('../../../config');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -19,7 +20,7 @@ module.exports = {
      * @param {ExtendedClient} client
      * @param {ChatInputCommandInteraction} interaction
      */
-	run: async (client, interaction) => {
+	run: async (client, interaction, analyticsObject) => {
 		try {
 			const embeds = [];
 			const target = interaction.options.getUser('user') || interaction.user;
@@ -58,7 +59,12 @@ module.exports = {
 				);
 			}
 
-			await buttonPagination(interaction, embeds);
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Displayed user profile.');
+			}
+
+			await buttonPagination(interaction, embeds, analyticsObject);
 		}
 		catch (err) {
 			console.error(err);

@@ -4,8 +4,9 @@ const { User, getUser } = require('../../class/User');
 const { Item } = require('../../schemas/ItemSchema');
 const { Guild } = require('../../schemas/GuildSchema');
 const { Pond } = require('../../schemas/PondSchema');
-const { Command } = require('../../schemas/CommandSchema');
 const { BuffData } = require('../../schemas/BuffSchema');
+const { Interaction } = require('../../class/Interaction');
+const { Command } = require('../../schemas/CommandSchema')
 
 
 const cooldown = new Map();
@@ -179,17 +180,31 @@ module.exports = {
 				}
 			}
 
+			const analyticsObject = new Interaction({
+				user: interaction.user.id,
+				channel: interaction.channel.id,
+				guild: interaction.guild.id,
+				interactions: [],
+				status: 'pending',
+			});
+
 			const commandObject = new Command({
 				user: interaction.user.id,
 				command: interaction.commandName,
-				time: Date.now(),
+				options: interaction.options.data || {},
 				channel: interaction.channel.id,
 				guild: interaction.guild.id,
-				type: 'command',
+				interaction: interaction.toJSON(),
+				chainedTo: await analyticsObject.getId(),
 			});
-			await commandObject.save();
 
-			command.run(client, interaction);
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.save();
+				await commandObject.save();
+				await analyticsObject.setCommand(commandObject._id);
+			}
+
+			command.run(client, interaction, analyticsObject);
 		}
 		catch (error) {
 			console.error(error);

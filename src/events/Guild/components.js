@@ -1,6 +1,7 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const config = require('../../config');
 const { log } = require('../../util/Utils');
+const { findMostRecentInteraction, generateCommandObject } = require('../../class/Interaction');
 
 module.exports = {
 	event: 'interactionCreate',
@@ -11,6 +12,7 @@ module.exports = {
      * @returns
      */
 	run: async (client, interaction) => {
+		if (interaction.isCommand()) return;
 		const componentPermission = async (component) => {
 			if (component.options?.public === false && interaction.user.id !== interaction.message.interaction.user.id) {
 				await interaction.reply({
@@ -28,6 +30,13 @@ module.exports = {
 			return true;
 		};
 
+		// get most recent command ran by that user
+		let analyticsObject;
+
+		if (process.env.ANALYTICS || config.client.analytics) {
+			analyticsObject = await findMostRecentInteraction(interaction.user.id);
+		}
+
 		if (interaction.isButton()) {
 			const component = client.collection.components.buttons.get(interaction.customId);
 
@@ -36,7 +45,10 @@ module.exports = {
 			if (!(await componentPermission(component))) return;
 
 			try {
-				component.run(client, interaction);
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await generateCommandObject(interaction, analyticsObject);
+				}
+				component.run(client, interaction, analyticsObject);
 			}
 			catch (error) {
 				log(error, 'error');
@@ -53,7 +65,10 @@ module.exports = {
 			if (!(await componentPermission(component))) return;
 
 			try {
-				component.run(client, interaction);
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await generateCommandObject(interaction, analyticsObject);
+				}
+				component.run(client, interaction, analyticsObject);
 			}
 			catch (error) {
 				log(error, 'error');
@@ -68,7 +83,10 @@ module.exports = {
 			if (!component) return;
 
 			try {
-				component.run(client, interaction);
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await generateCommandObject(interaction, analyticsObject);
+				}
+				component.run(client, interaction, analyticsObject);
 			}
 			catch (error) {
 				log(error, 'error');

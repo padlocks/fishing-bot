@@ -2,10 +2,12 @@ const { ActionRowBuilder, StringSelectMenuBuilder, ComponentType } = require('di
 const { selectionOptions, getCollectionFilter } = require('../../util/Utils');
 const { Item } = require('../../schemas/ItemSchema');
 const { User, getUser } = require('../../class/User');
+const config = require('../../config');
+const { generateCommandObject } = require('../../class/Interaction');
 
 module.exports = {
 	customId: 'buy-rod',
-	run: async (client, interaction) => {
+	run: async (client, interaction, analyticsObject) => {
 		const user = interaction.user;
 
 		try {
@@ -26,7 +28,7 @@ module.exports = {
 
 			const response = await updateInteraction(interaction, row, components);
 
-			await getSelection(response, user.id);
+			await getSelection(response, user.id, analyticsObject);
 		}
 		catch (err) {
 			// console.error(err);
@@ -75,22 +77,29 @@ const updateInteraction = async (interaction, row, components) => {
 	});
 };
 
-const getSelection = async (response, userId) => {
+const getSelection = async (response, userId, analyticsObject) => {
 	const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['select-rod'], userId), time: 90_000 });
 
 	collector.on('collect', async i => {
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await generateCommandObject(i, analyticsObject);
+		}
 		const userData = new User(await getUser(userId));
-		return await processRodSelection(i, userData);
+		return await processRodSelection(i, userData, analyticsObject);
 	});
 };
 
-const processRodSelection = async (selection, userData) => {
+const processRodSelection = async (selection, userData, analyticsObject) => {
 	const rodChoice = selection.values[0];
 	const originalItem = await getItemById(rodChoice);
 
 	const canBuy = await checkItemRequirements(originalItem, userData);
 
 	if (await userData.getMoney() < originalItem.price && canBuy) {
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await analyticsObject.setStatus('failed');
+			await analyticsObject.setStatusMessage('User does not have enough money to buy this item!');
+		}
 		return await selection.reply({
 			content: 'You do not have enough money to buy this item!',
 			ephemeral: true,
@@ -99,6 +108,10 @@ const processRodSelection = async (selection, userData) => {
 	}
 	else if (canBuy) {
 		await buyItem(originalItem, userData);
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await analyticsObject.setStatus('completed');
+			await analyticsObject.setStatusMessage('User has successfully bought a fishing rod!');
+		}
 		await selection.reply({
 			components: [],
 			content: `You have successfully bought a ${originalItem.name}!`,
@@ -106,6 +119,10 @@ const processRodSelection = async (selection, userData) => {
 		});
 	}
 	else {
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await analyticsObject.setStatus('failed');
+			await analyticsObject.setStatusMessage('User does not meet level requirements');
+		}
 		await selection.reply({
 			content: `You need to be level ${originalItem.requirements.level} to buy this item!`,
 			ephemeral: true,

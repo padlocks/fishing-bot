@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { Code } = require('../../../schemas/CodeSchema');
 const { User, getUser } = require('../../../class/User');
+const config = require('../../../config');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -19,26 +20,46 @@ module.exports = {
      * @param {ExtendedClient} client
      * @param {ChatInputCommandInteraction} interaction
      */
-	run: async (client, interaction) => {
+	run: async (client, interaction, analyticsObject) => {
 		const user = new User(await getUser(interaction.user.id));
 		await interaction.deferReply();
 
 		const code = interaction.options.getString('code');
 		const redemption = await Code.findOne({ code });
-		if (!redemption) return await interaction.followUp('That code is invalid.');
+		if (!redemption) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('Invalid code.');
+			}
+
+			return await interaction.followUp('That code is invalid.');
+		}
 
 		// check if the user has already redeemed the code
 		if ((await user.getCodes()).includes(redemption._id)) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('Already redeemed.');
+			}
+
 			return await interaction.followUp('You have already redeemed this code.');
 		}
 
 		// check if the code has reached the maximum number of redemptions
 		if (redemption.usesLeft <= 0) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('Max redemptions.');
+			}
 			return await interaction.followUp('This code has reached the maximum number of redemptions.');
 		}
 
 		// check if the code has expired
 		if (redemption.expiresAt < Date.now()) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('Expired.');
+			}
 			return await interaction.followUp('This code has expired.');
 		}
 
@@ -64,6 +85,11 @@ module.exports = {
 		}
 		for (const item of addedItems) {
 			value += `${item.count}x **${item.item.name}**\n`;
+		}
+
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await analyticsObject.setStatus('completed');
+			await analyticsObject.setStatusMessage('Redeemed a code.');
 		}
 
 		await interaction.followUp({

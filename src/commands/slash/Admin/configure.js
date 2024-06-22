@@ -1,6 +1,8 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const { Pond } = require('../../../schemas/PondSchema');
 const { Guild } = require('../../../schemas/GuildSchema');
+const config = require('../../../config');
+const { generateCommandObject } = require('../../../class/Interaction');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -17,19 +19,30 @@ module.exports = {
 	options: {
 		cooldown: 10_000,
 	},
-	run: async (client, interaction) => {
+	run: async (client, interaction, analyticsObject) => {
 		const subcommand = interaction.options.getSubcommand();
 		await interaction.deferReply();
 
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await generateCommandObject(interaction, analyticsObject);
+		}
+
 		if (subcommand === 'pond') {
-			await interaction.followUp('Please provide a subcommand.');
-			return;
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('No subcommand provided.');
+			}
+			return await interaction.followUp('Please provide a subcommand.');
 		}
 
 		if (subcommand === 'add') {
 			const channel = interaction.options.getChannel('channel') || interaction.channel;
 			const pondExists = await Pond.findOne({ id: channel.id });
 			if (pondExists) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('This channel is already a pond.');
+				}
 				await interaction.followUp('This channel is already a pond.');
 				return;
 			}
@@ -41,6 +54,12 @@ module.exports = {
 			const guild = await Guild.findOne({ id: interaction.guild.id });
 			guild.ponds.push(channel.id);
 			await guild.save();
+
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Added a pond.');
+			}
+
 			await interaction.followUp(`Added ${channel} as a pond.`);
 			return;
 		}
@@ -50,6 +69,12 @@ module.exports = {
 			const guild = await Guild.findOne({ id: interaction.guild.id });
 			guild.ponds = guild.ponds.filter((id) => id !== channel.id);
 			await guild.save();
+
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Removed a pond.');
+			}
+
 			await interaction.followUp(`Removed ${channel} as a pond.`);
 			return;
 		}

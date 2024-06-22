@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { User, getUser } = require('../../../class/User');
+const config = require('../../../config');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -12,7 +13,7 @@ module.exports = {
      * @param {ExtendedClient} client
      * @param {ChatInputCommandInteraction} interaction
      */
-	run: async (client, interaction) => {
+	run: async (client, interaction, analyticsObject) => {
 
 		await interaction.deferReply();
 
@@ -20,6 +21,11 @@ module.exports = {
 		const user = new User(await getUser(interaction.user.id));
 		if (user) {
 			money = await user.getMoney();
+		}
+
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await analyticsObject.setStatus('completed');
+			await analyticsObject.setStatusMessage('Checked balance.');
 		}
 
 		await interaction.followUp({

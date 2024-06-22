@@ -4,6 +4,7 @@ const {
 } = require('discord.js');
 const { User, getUser } = require('../../../class/User');
 const { log } = require('../../../util/Utils');
+const config = require('../../../config');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -26,6 +27,10 @@ module.exports = {
 		const user = new User(await getUser(interaction.user.id));
 
 		if (!user) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('User not found.');
+			}
 			log('User not found', 'err');
 			await interaction.editReply({
 				embeds: [
@@ -37,17 +42,19 @@ module.exports = {
 			});
 			return;
 		}
-
-		// Find all fish objects with the specified name and update their 'locked' property
-		const fishList = await user.getFish();
-		fishList.forEach(async fish => {
-			if (fish.name.toLowerCase() === name.toLowerCase()) {
-				fish.locked = false;
-				await fish.save();
-			}
-		});
-
 		try {
+			// Find all fish objects with the specified name and update their 'locked' property
+			const fishList = await user.getFish();
+			fishList.forEach(async fish => {
+				if (fish.name.toLowerCase() === name.toLowerCase()) {
+					fish.locked = false;
+					await fish.save();
+				}
+			});
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Unlocked fish.');
+			}
 			await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()
@@ -58,6 +65,10 @@ module.exports = {
 			});
 		}
 		catch (err) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage(err);
+			}
 			log('Error updating fish:' + err, 'err');
 			await interaction.editReply({
 				embeds: [

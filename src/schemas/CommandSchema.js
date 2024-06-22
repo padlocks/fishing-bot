@@ -9,14 +9,25 @@ const commandSchema = new Schema({
 		type: String,
 		required: true,
 	},
+	options: {
+		type: Object,
+	},
 	time: {
-		type: Number,
+		type: Date,
+		default: Date.now,
 	},
 	channel: {
 		type: String,
 	},
 	guild: {
 		type: String,
+	},
+	interaction: {
+		type: Object,
+	},
+	chainedTo: {
+		type: Schema.Types.ObjectId,
+		ref: 'Interaction'
 	},
 	type: {
 		type: String,
