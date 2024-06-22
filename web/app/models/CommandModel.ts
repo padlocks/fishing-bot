@@ -1,12 +1,15 @@
-import { Schema, model, Document } from 'mongoose';
 import mongoose from 'mongoose';
+import { Schema, model, Document, Types } from 'mongoose';
 
 interface ICommand extends Document {
 	user: string;
 	command: string;
-	time?: number;
+	options?: object;
+	time: Date;
 	channel?: string;
 	guild?: string;
+	interaction?: object;
+	chainedTo?: Types.ObjectId;
 	type: string;
 }
 
@@ -19,8 +22,11 @@ const commandSchema = new Schema<ICommand>({
 		type: String,
 		required: true,
 	},
+	options: {
+		type: Object,
+	},
 	time: {
-		type: Number,
+		type: Date,
 		default: Date.now,
 	},
 	channel: {
@@ -28,6 +34,13 @@ const commandSchema = new Schema<ICommand>({
 	},
 	guild: {
 		type: String,
+	},
+	interaction: {
+		type: Object,
+	},
+	chainedTo: {
+		type: Schema.Types.ObjectId,
+		ref: 'Interaction',
 	},
 	type: {
 		type: String,
@@ -37,4 +50,3 @@ const commandSchema = new Schema<ICommand>({
 
 const Command = mongoose.models.Command || model<ICommand>('Command', commandSchema);
 export { Command };	export type { ICommand };
-

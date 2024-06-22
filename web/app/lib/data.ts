@@ -3,6 +3,7 @@ import { ICommand, Command } from '@/app/models/CommandModel';
 import { User } from '@/app/models/UserModel';
 import { FishData } from '@/app/models/FishModel';
 import { unstable_noStore as noStore } from 'next/cache';
+import { Interaction } from '../models/InteractionModel';
 
 async function sortCommandsByRecency(commands: ICommand[]): Promise<ICommand[]> {
 	noStore();
