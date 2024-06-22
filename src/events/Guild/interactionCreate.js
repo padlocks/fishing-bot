@@ -4,8 +4,9 @@ const { User, getUser } = require('../../class/User');
 const { Item } = require('../../schemas/ItemSchema');
 const { Guild } = require('../../schemas/GuildSchema');
 const { Pond } = require('../../schemas/PondSchema');
-const { Command } = require('../../schemas/CommandSchema');
 const { BuffData } = require('../../schemas/BuffSchema');
+const { Interaction } = require('../../class/Interaction');
+const { Command } = require('../../schemas/CommandSchema')
 
 
 const cooldown = new Map();
@@ -179,17 +180,29 @@ module.exports = {
 				}
 			}
 
+			const interactionObject = new Interaction({
+				user: interaction.user.id,
+				channel: interaction.channel.id,
+				guild: interaction.guild.id,
+				interactions: [],
+				status: 'pending',
+			});
+			await interactionObject.save();
+
 			const commandObject = new Command({
 				user: interaction.user.id,
 				command: interaction.commandName,
-				time: Date.now(),
 				channel: interaction.channel.id,
 				guild: interaction.guild.id,
-				type: 'command',
+				interaction: interaction.toJSON(),
+				chainedTo: await interactionObject.getId(),
 			});
 			await commandObject.save();
 
-			command.run(client, interaction);
+			// connect the interaction to the command
+			await interactionObject.setCommand(commandObject._id);
+
+			command.run(client, interaction, interactionObject);
 		}
 		catch (error) {
 			console.error(error);

@@ -5,7 +5,7 @@ const { User, getUser } = require('../../class/User');
 
 module.exports = {
 	customId: 'buy-bait',
-	run: async (client, interaction) => {
+	run: async (client, interaction, interactionObject) => {
 		const user = interaction.user;
 
 		try {
@@ -29,11 +29,13 @@ module.exports = {
 				components: [...components, row],
 			});
 
-			await getBaitSelection(response, user.id);
+			await getBaitSelection(response, user.id, interactionObject);
 
 		}
 		catch (err) {
 			// console.error(err);
+			await interactionObject.setStatus('failed');
+			await interactionObject.setStatusMessage(err);
 		}
 	},
 };
@@ -72,20 +74,22 @@ const removeAdditionalActionRows = (num, components) => {
 	return components;
 };
 
-const getBaitSelection = async (response, user) => {
+const getBaitSelection = async (response, user, interactionObject) => {
 	const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['select-bait'], user), time: 90_000 });
 
 	collector.on('collect', async i => {
 		const userData = new User(await getUser(user));
-		return await processBaitSelection(i, userData, user);
+		return await processBaitSelection(i, userData, user, interactionObject);
 	});
 };
 
-const processBaitSelection = async (selection, userData, user) => {
+const processBaitSelection = async (selection, userData, user, interactionObject) => {
 	const baitChoice = selection.values[0];
 	const originalItem = await getItemById(baitChoice);
 
 	if (!meetsItemRequirements(userData, originalItem)) {
+		await interactionObject.setStatus('completed');
+		await interactionObject.setStatusMessage('User does not meet item requirements');
 		return await selection.reply({
 			content: `You need to be level ${originalItem.toJSON().requirements.level} to buy this item!`,
 			ephemeral: true,
@@ -107,6 +111,9 @@ const processBaitSelection = async (selection, userData, user) => {
 		const amount = await getAmountFromChoice(amountChoice);
 
 		if (!await hasEnoughMoney(userData, originalItem, amount)) {
+			// update interaction
+			await interactionObject.setStatus('completed');
+			await interactionObject.setStatusMessage('User does not have enough money to buy item');
 			return await i.reply({
 				content: 'You do not have enough money to buy this item!',
 				ephemeral: true,
@@ -115,6 +122,9 @@ const processBaitSelection = async (selection, userData, user) => {
 		}
 		else {
 			await buyItem(userData, originalItem, amount);
+			// update interaction
+			await interactionObject.setStatus('completed');
+			await interactionObject.setStatusMessage('Successfully bought item');
 			await i.reply({
 				components: [],
 				content: `You have successfully bought ${amount} ${originalItem.name}!`,

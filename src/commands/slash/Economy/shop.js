@@ -13,7 +13,7 @@ module.exports = {
      * @param {ExtendedClient} client
      * @param {ChatInputCommandInteraction} interaction
      */
-	run: async (client, interaction) => {
+	run: async (client, interaction, interactionObject) => {
 		try {
 			const embeds = [];
 			const shopItems = await Item.find({ shopItem: true });
