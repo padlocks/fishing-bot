@@ -180,29 +180,31 @@ module.exports = {
 				}
 			}
 
-			const interactionObject = new Interaction({
+			const analyticsObject = new Interaction({
 				user: interaction.user.id,
 				channel: interaction.channel.id,
 				guild: interaction.guild.id,
 				interactions: [],
 				status: 'pending',
 			});
-			await interactionObject.save();
 
 			const commandObject = new Command({
 				user: interaction.user.id,
 				command: interaction.commandName,
+				options: interaction.options.data || {},
 				channel: interaction.channel.id,
 				guild: interaction.guild.id,
 				interaction: interaction.toJSON(),
-				chainedTo: await interactionObject.getId(),
+				chainedTo: await analyticsObject.getId(),
 			});
-			await commandObject.save();
 
-			// connect the interaction to the command
-			await interactionObject.setCommand(commandObject._id);
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.save();
+				await commandObject.save();
+				await analyticsObject.setCommand(commandObject._id);
+			}
 
-			command.run(client, interaction, interactionObject);
+			command.run(client, interaction, analyticsObject);
 		}
 		catch (error) {
 			console.error(error);

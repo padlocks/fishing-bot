@@ -14,7 +14,7 @@ module.exports = {
      * @param {ExtendedClient} client
      * @param {ChatInputCommandInteraction} interaction
      */
-	run: async (client, interaction) => {
+	run: async (client, interaction, analyticsObject) => {
 		try {
 			const embeds = [];
 			const fields = [];
@@ -66,7 +66,12 @@ module.exports = {
 				);
 			}
 
-			await buttonPagination(interaction, embeds);
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Displayed boosters.');
+			}
+
+			await buttonPagination(interaction, embeds, analyticsObject);
 		}
 		catch (err) {
 			console.error(err);

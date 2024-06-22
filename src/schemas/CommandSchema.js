@@ -9,6 +9,9 @@ const commandSchema = new Schema({
 		type: String,
 		required: true,
 	},
+	options: {
+		type: Object,
+	},
 	time: {
 		type: Date,
 		default: Date.now,

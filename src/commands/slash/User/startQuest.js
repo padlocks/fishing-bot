@@ -2,6 +2,8 @@ const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSe
 const { Quest } = require('../../../schemas/QuestSchema');
 const { User, getUser } = require('../../../class/User');
 const { startQuest, getQuests } = require('../../../util/Quest');
+const config = require('../../../config');
+const { generateCommandObject } = require('../../../class/Interaction');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -14,7 +16,7 @@ module.exports = {
      * @param {ExtendedClient} client
      * @param {ChatInputCommandInteraction} interaction
      */
-	async run(client, interaction, user = null) {
+	async run(client, interaction, analyticsObject, user = null) {
 		if (user === null) user = interaction.user;
 
 		const questOptions = await Quest.find({ daily: false });
@@ -60,6 +62,10 @@ module.exports = {
 		const collector = response.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 15000 });
 
 		collector.on('collect', async i => {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await generateCommandObject(i, analyticsObject);
+			}
+
 			let canAccept = true;
 			const selection = i.values[0];
 			const userData = new User(await getUser(user.id));
@@ -69,6 +75,10 @@ module.exports = {
 			const reqLevel = originalQuest.requirements.level;
 			const level = await userData.getLevel();
 			if (level < reqLevel) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('User does not meet level requirements');
+				}
 				canAccept = false;
 				await i.reply({
 					content: `You need to be level ${reqLevel} to start this quest!`,
@@ -82,6 +92,10 @@ module.exports = {
 				const hasPrevious = existingQuests.some(quest => originalQuest.requirements.previous.includes(quest.title) && quest.status === 'completed');
 
 				if (!hasPrevious) {
+					if (process.env.ANALYTICS || config.client.analytics) {
+						await analyticsObject.setStatus('failed');
+						await analyticsObject.setStatusMessage('User does not meet previous quest requirements');
+					}
 					canAccept = false;
 					await i.reply({
 						content: `You need to complete the previous quest(s) to start this quest!\n\n**Required Quests:**\n${originalQuest.requirements.previous.join('\n')}`,
@@ -95,6 +109,10 @@ module.exports = {
 			const hasExistingQuest = existingQuest.some(quest => quest.title === originalQuest.title && quest.status === 'in_progress');
 
 			if (hasExistingQuest) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('User already has quest');
+				}
 				await i.reply({
 					content: `You already have a quest with the title **${originalQuest.title}**!`,
 					ephemeral: true,
@@ -102,6 +120,10 @@ module.exports = {
 				return;
 			}
 			else if (canAccept) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('completed');
+					await analyticsObject.setStatusMessage('Quest started.');
+				}
 				await startQuest(await userData.getUserId(), originalQuest._id);
 				await i.reply(`${i.user} has started quest **${originalQuest.title}**!`);
 			}

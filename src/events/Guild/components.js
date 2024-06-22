@@ -1,9 +1,7 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const config = require('../../config');
 const { log } = require('../../util/Utils');
-const { Interaction } = require('../../class/Interaction');
-const { Interaction: InteractionSchema } = require('../../schemas/InteractionSchema');
-const { Command } = require('../../schemas/CommandSchema');
+const { findMostRecentInteraction, generateCommandObject } = require('../../class/Interaction');
 
 module.exports = {
 	event: 'interactionCreate',
@@ -33,12 +31,11 @@ module.exports = {
 		};
 
 		// get most recent command ran by that user
-		const command = await Command.findOne({ user: interaction.user.id, type: 'command' })
-			.sort('-time')
-			.exec();
-		
-		const interactionId = command.chainedTo;
-		const interactionObject = new Interaction(await InteractionSchema.findById(interactionId));
+		let analyticsObject;
+
+		if (process.env.ANALYTICS || config.client.analytics) {
+			analyticsObject = await findMostRecentInteraction(interaction.user.id);
+		}
 
 		if (interaction.isButton()) {
 			const component = client.collection.components.buttons.get(interaction.customId);
@@ -48,18 +45,10 @@ module.exports = {
 			if (!(await componentPermission(component))) return;
 
 			try {
-				const commandObject = new Command({
-					user: interaction.user.id,
-					command: interaction.customId,
-					channel: interaction.channel.id,
-					guild: interaction.guild.id,
-					interaction: interaction.toJSON(),
-					chainedTo: interactionId,
-					type: 'component',
-				});
-				await commandObject.save();
-				interactionObject.pushInteraction(commandObject);
-				component.run(client, interaction, interactionObject);
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await generateCommandObject(interaction, analyticsObject);
+				}
+				component.run(client, interaction, analyticsObject);
 			}
 			catch (error) {
 				log(error, 'error');
@@ -76,18 +65,10 @@ module.exports = {
 			if (!(await componentPermission(component))) return;
 
 			try {
-				const commandObject = new Command({
-					user: interaction.user.id,
-					command: interaction.customId,
-					channel: interaction.channel.id,
-					guild: interaction.guild.id,
-					interaction: interaction.toJSON(),
-					chainedTo: interactionId,
-					type: 'component',
-				});
-				await commandObject.save();
-				interactionObject.pushInteraction(commandObject);
-				component.run(client, interaction, interactionObject);
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await generateCommandObject(interaction, analyticsObject);
+				}
+				component.run(client, interaction, analyticsObject);
 			}
 			catch (error) {
 				log(error, 'error');
@@ -102,18 +83,10 @@ module.exports = {
 			if (!component) return;
 
 			try {
-				const commandObject = new Command({
-					user: interaction.user.id,
-					command: interaction.customId,
-					channel: interaction.channel.id,
-					guild: interaction.guild.id,
-					interaction: interaction.toJSON(),
-					chainedTo: interactionId,
-					type: 'component',
-				});
-				await commandObject.save();
-				interactionObject.pushInteraction(commandObject);
-				component.run(client, interaction, interactionObject);
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await generateCommandObject(interaction, analyticsObject);
+				}
+				component.run(client, interaction, analyticsObject);
 			}
 			catch (error) {
 				log(error, 'error');

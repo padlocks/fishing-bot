@@ -1,5 +1,6 @@
 const { default: mongoose } = require('mongoose');
 const { Interaction: InteractionSchema } = require('../schemas/InteractionSchema');
+const { Command } = require('../schemas/CommandSchema');
 
 class Interaction {
 	constructor(data) {
@@ -79,4 +80,33 @@ class Interaction {
 	}
 }
 
-module.exports = { Interaction };
+const findMostRecentInteraction = async (userId) => {
+	const command = await Command.findOne({ user: userId, type: 'command' })
+		.sort('-time')
+		.exec();
+		
+	const interactionId = command.chainedTo;
+	const analyticsObject = new Interaction(await InteractionSchema.findById(interactionId));
+
+	return analyticsObject;
+};
+
+const generateCommandObject = async (interaction, analyticsObject) => {
+	let title;
+	if (interaction.isCommand()) title = interaction.commandName;
+	else title = interaction.customId;
+
+	const commandObject = new Command({
+		user: interaction.user.id,
+		command: title,
+		channel: interaction.channel.id,
+		guild: interaction.guild.id,
+		interaction: interaction.toJSON(),
+		chainedTo: await analyticsObject.getId(),
+		type: interaction.isCommand() ? 'command' : 'component',
+	});
+	await commandObject.save();
+	analyticsObject.pushInteraction(commandObject);
+};
+
+module.exports = { Interaction, findMostRecentInteraction, generateCommandObject };

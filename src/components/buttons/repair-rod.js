@@ -1,6 +1,8 @@
 const { ButtonStyle, ActionRowBuilder, ButtonBuilder, EmbedBuilder } = require('discord.js');
 const { RodData } = require('../../schemas/RodSchema');
 const { User, getUser } = require('../../class/User');
+const config = require('../../config');
+const { generateCommandObject } = require('../../class/Interaction');
 
 module.exports = {
 	customId: 'repair-rod',
@@ -9,10 +11,14 @@ module.exports = {
 	 * @param {ExtendedClient} client
 	 * @param {ButtonInteraction} interaction
 	 */
-	run: async (client, interaction) => {
+	run: async (client, interaction, analyticsObject) => {
 		const user = new User(await getUser(interaction.user.id));
 		const rod = await user.getEquippedRod();
 		if (!rod) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('User does not have a rod equipped!');
+			}
 			await interaction.reply({
 				content: 'You do not have a rod equipped!',
 				ephemeral: true,
@@ -21,6 +27,10 @@ module.exports = {
 		}
 
 		if (rod.state !== 'broken') {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('Rod is not broken!');
+			}
 			await interaction.reply({
 				content: 'Your rod can\'t be repaired!',
 				ephemeral: true,
@@ -60,9 +70,17 @@ module.exports = {
 
 		try {
 			const confirmation = await response.awaitMessageComponent({ filter: collectorFilter, time: 90_000 });
+			
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await generateCommandObject(confirmation, analyticsObject);
+			}
 
 			if (confirmation.customId === 'confirm') {
 				if (await user.getMoney() < rod.repairCost) {
+					if (process.env.ANALYTICS || config.client.analytics) {
+						await analyticsObject.setStatus('failed');
+						await analyticsObject.setStatusMessage('User does not have enough money to repair rod!');
+					}
 					await confirmation.update({
 						// content: 'You do not have enough money to repair your rod!',
 						embeds: [
@@ -86,6 +104,10 @@ module.exports = {
 					});
 				}
 				catch (error) {
+					if (process.env.ANALYTICS || config.client.analytics) {
+						await analyticsObject.setStatus('failed');
+						await analyticsObject.setStatusMessage(error);
+					}
 					console.error(error);
 					await confirmation.update({
 						embeds: [
@@ -100,6 +122,11 @@ module.exports = {
 
 				await user.addMoney(-rod.repairCost);
 
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('completed');
+					await analyticsObject.setStatusMessage('Rod has been repaired!');
+				}
+
 				await confirmation.update({
 					components: [],
 					embeds: [
@@ -110,6 +137,10 @@ module.exports = {
 				});
 			}
 			else if (confirmation.customId === 'cancel') {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('completed');
+					await analyticsObject.setStatusMessage('Repair has been cancelled.');
+				}
 				await confirmation.update({
 					embeds: [
 						new EmbedBuilder()
@@ -121,6 +152,10 @@ module.exports = {
 			}
 		}
 		catch (e) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage(e);
+			}
 			await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()

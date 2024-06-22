@@ -13,12 +13,16 @@ module.exports = {
      * @param {ExtendedClient} client
      * @param {ChatInputCommandInteraction} interaction
      */
-	run: async (client, interaction) => {
+	run: async (client, interaction, analyticsObject) => {
 		// check if user already has an incomplete daily quest
 		const userQuests = await getQuests(interaction.user.id);
 		const dailyQuests = userQuests.filter((quest) => quest.daily);
 		const incompleteDailyQuests = dailyQuests.filter((quest) => quest.status === 'in_progress');
 		if (incompleteDailyQuests.length > 0) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('Daily quest already in progress.');
+			}
 			return await interaction.reply({
 				content: 'You already have a daily quest in progress. Come back tomorrow!',
 				ephemeral: true,
@@ -28,6 +32,10 @@ module.exports = {
 		const quest = await generateDailyQuest(interaction.user.id);
 
 		if (!quest) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('Already completed daily quest.');
+			}
 			return await interaction.reply({
 				content: 'You have already accepted or completed your daily quest. Come back tomorrow!',
 				ephemeral: true,
@@ -49,6 +57,11 @@ module.exports = {
 			}
 			else {
 				value = `$${quest.cash}, ${quest.xp} XP`;
+			}
+
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Daily quest accepted.');
 			}
 
 			await interaction.reply({

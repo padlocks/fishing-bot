@@ -9,11 +9,15 @@ module.exports = {
 	 * @param {ExtendedClient} client
 	 * @param {ButtonInteraction} interaction
 	 */
-	run: async (client, interaction) => {
+	run: async (client, interaction, analyticsObject) => {
 		const userData = new User(await getUser(interaction.user.id));
 		if (!userData) return;
 
 		if ((await userData.getStats()).soldLatestFish) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('User already sold these fish!');
+			}
 			await interaction.reply({
 				content: 'You already sold these fish!',
 				ephemeral: true,
@@ -35,6 +39,11 @@ module.exports = {
 			// newFish.push(...userData.inventory.fish.filter(x => x._id.valueOf() !== fishData._id.valueOf()));
 			await userData.removeFish(fishData._id);
 			await userData.addMoney(value);
+		}
+
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await analyticsObject.setStatus('completed');
+			await analyticsObject.setStatusMessage('User sold their recent catch!');
 		}
 
 		return await interaction.reply({
