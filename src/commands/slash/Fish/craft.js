@@ -173,7 +173,8 @@ module.exports = {
 						embeds: [
 							new EmbedBuilder()
 								.setTitle('Crafting')
-								.setDescription('Crafting has been completed!'),
+								.setDescription('Crafting has been completed!')
+								.addFields([{name: name, value: `**Rod**: ${selectedParts.rod.object.name}\n **Reel**: ${selectedParts.reel.object.name}\n **Hook**: ${selectedParts.hook.object.name}\n **Handle**: ${selectedParts.handle.object.name}`}]),
 						],
 						components: [],
 					});
@@ -232,27 +233,5 @@ module.exports = {
 				console.error(error);
 			}
 		});
-
-		// client.on(Events.InteractionCreate, async (interaction) => {
-		// 	if (!interaction.isModalSubmit()) return;
-		
-		// 	// Get the data entered by the user
-		// 	const itemName = interaction.fields.getTextInputValue('nameInput');
-		// 	const rodPart = await Item.findById(interaction.fields.getStringSelectMenuValue('craft-select-rod'));
-		// 	const reelPart = await Item.findById(interaction.fields.getStringSelectMenuValue('craft-select-reel'));
-		// 	const hookPart = await Item.findById(interaction.fields.getStringSelectMenuValue('craft-select-hook'));
-		// 	const handlePart = await Item.findById(interaction.fields.getStringSelectMenuValue('craft-select-handle'));
-
-		// 	const rodObject = {
-		// 		name: itemName,
-		// 		rod: rodPart,
-		// 		reel: reelPart,
-		// 		hook: hookPart,
-		// 		handle: handlePart,
-		// 	}
-
-		// 	const rod = new FishingRod(rodObject);
-		// 	await rod.generateStats();
-		// });
 	},
 };
