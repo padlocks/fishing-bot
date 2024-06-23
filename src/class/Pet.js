@@ -2,7 +2,7 @@ const { FishData } = require('../schemas/FishSchema');
 const { Habitat } = require('../schemas/HabitatSchema');
 const { PetFish } = require('../schemas/PetSchema');
 const { User } = require('../schemas/UserSchema');
-const { getWeightedCUtilshoice } = require('../class/Utils');
+const { Utils } = require('../class/Utils');
 
 class Pet {
 	constructor(data) {

@@ -3,7 +3,7 @@ const {
 	EmbedBuilder,
 } = require('discord.js');
 const { User } = require('../../../class/User');
-const { log } = require('../../../class/Utils');
+const { Utils } = require('../../../class/Utils');
 const config = require('../../../config');
 
 module.exports = {

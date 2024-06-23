@@ -71,7 +71,7 @@ class Fish {
 		const currentBiome = await user.getCurrentBiome();
 		const biome = currentBiome.charAt(0).toUpperCase() + currentBiome.slice(1);
 	
-		let f = await Fish.find({ rarity: draw, biome: biome });
+		let f = await FishSchema.find({ rarity: draw, biome: biome });
 		if (draw === 'Lucky') {
 			const itemFind = await Utils.getWeightedChoice(['fish', 'item'], [80, 20]);
 			if (itemFind === 'item') {
@@ -165,7 +165,7 @@ class Fish {
 	
 	static async getByName(fishName) {
 		const capitalized = fishName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-		return await Fish.findOne({ name: capitalized });
+		return await FishSchema.findOne({ name: capitalized });
 	};
 }
 

@@ -1,4 +1,4 @@
-const { log } = require('../../class/Utils');
+const { Utils } = require('../../class/Utils');
 // const fs = require('fs');
 
 module.exports = {

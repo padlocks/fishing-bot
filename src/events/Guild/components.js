@@ -1,6 +1,6 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const config = require('../../config');
-const { log } = require('../../class/Utils');
+const { Utils } = require('../../class/Utils');
 const { Interaction } = require('../../class/Interaction');
 
 module.exports = {

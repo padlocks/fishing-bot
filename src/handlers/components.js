@@ -1,5 +1,5 @@
 const { readdirSync } = require('fs');
-const { log } = require('../class/Utils');
+const { Utils } = require('../class/Utils');
 
 /**
  *
