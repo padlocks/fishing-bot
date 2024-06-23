@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { capitalizeWords } = require('../../../util/Utils');
+const { Utils } = require('../../../class/Utils');
 const { Pet } = require('../../../class/Pet');
 const { Fish } = require('../../../schemas/FishSchema');
 const { Habitat } = require('../../../schemas/HabitatSchema');
@@ -41,7 +41,7 @@ module.exports = {
 		await interaction.deferReply();
 
 		let species = interaction.options.getString('species');
-		species = capitalizeWords(species.toLowerCase());
+		species = Utils.capitalizeWords(species.toLowerCase());
 		// check if species exists in database
 		const exists = await Fish.exists({ name: species });
 		if (!exists) {

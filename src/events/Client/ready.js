@@ -1,4 +1,4 @@
-const { log } = require('../../util/Utils');
+const { log } = require('../../class/Utils');
 // const fs = require('fs');
 
 module.exports = {
@@ -12,7 +12,7 @@ module.exports = {
      */
 	run: (_, client) => {
 
-		log('Logged in as: ' + client.user.tag, 'done');
+		Utils.log('Logged in as: ' + client.user.tag, 'done');
 
 		// const serverIds = ['1244064107834118244', '1244065421636931675'];
 

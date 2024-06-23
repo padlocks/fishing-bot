@@ -3,7 +3,7 @@ const { User } = require('../../../class/User');
 const { FishingRod } = require('../../../class/FishingRod');
 const { CustomRodData } = require('../../../schemas/CustomRodSchema');
 const { ItemData } = require('../../../schemas/ItemSchema');
-const { getCollectionFilter } = require('../../../util/Utils');
+const { Utils } = require('../../../class/Utils');
 const config = require('../../../config');
 const { Interaction } = require('../../../class/Interaction');
 
@@ -164,7 +164,7 @@ module.exports = {
 			handle: {id: null, object: null},
 		}
 
-		const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['craft-select-rod', 'craft-select-reel', 'craft-select-hook', 'craft-select-handle', 'craft-rod-submit', 'craft-rod-cancel'], user.id), time: 90_000 });
+		const collector = response.createMessageComponentCollector({ filter: Utils.getCollectionFilter(['craft-select-rod', 'craft-select-reel', 'craft-select-hook', 'craft-select-handle', 'craft-rod-submit', 'craft-rod-cancel'], user.id), time: 90_000 });
 		collector.on('collect', async i => {
 			if (process.env.ANALYTICS || config.client.analytics) {
 				await Interaction.generateCommandObject(i, analyticsObject);

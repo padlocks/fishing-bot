@@ -1,4 +1,4 @@
-const { clone } = require('./Utils');
+const { Utils } = require('../class/Utils');
 const { User } = require('../class/User');
 const { Quest, QuestData } = require('../schemas/QuestSchema');
 const { Gacha } = require('../schemas/GachaSchema');
@@ -42,7 +42,7 @@ const generateDailyQuest = async (userId) => {
 			}
 		}
 
-		const quest = await clone(originalQuest);
+		const quest = await Utils.clone(originalQuest);
 		quest.status = 'in_progress';
 		quest.user = userId;
 		quest.startDate = Date.now();
@@ -61,7 +61,7 @@ const startQuest = async (userId, questId) => {
 	const user = new User(await User.get(userId));
 	const inventory = await user.getInventory();
 	const originalQuest = await Quest.findById(questId);
-	const quest = await clone(originalQuest);
+	const quest = await Utils.clone(originalQuest);
 	if (!user) {
 		throw new Error('User not found');
 	}

@@ -2,7 +2,7 @@ const { FishData } = require('../schemas/FishSchema');
 const { Habitat } = require('../schemas/HabitatSchema');
 const { PetFish } = require('../schemas/PetSchema');
 const { User } = require('../schemas/UserSchema');
-const { getWeightedChoice } = require('../util/Utils');
+const { getWeightedCUtilshoice } = require('../class/Utils');
 
 class Pet {
 	constructor(data) {
@@ -603,14 +603,14 @@ class Pet {
 		const geneticDriftTraits = ['Stable', 'Unstable', 'Adaptive'];
 		const geneticDriftWeights = [1000, 300, 300];
 
-		const moodTrait = await getWeightedChoice(moodTraits, moodWeights);
-		const hungerTrait = await getWeightedChoice(hungerTraits, hungerWeights);
-		const sizeTrait = await getWeightedChoice(sizeTraits, sizeWeights);
-		const healthTrait = await getWeightedChoice(healthTraits, healthWeights);
-		const finSizeTrait = await getWeightedChoice(finSizeTraits, finSizeWeights);
-		const finShapeTrait = await getWeightedChoice(finShapeTraits, finShapeWeights);
-		const colorTrait = await getWeightedChoice(colorTraits, colorWeights);
-		const geneticDriftTrait = await getWeightedChoice(geneticDriftTraits, geneticDriftWeights);
+		const moodTrait = await Utils.getWeightedChoice(moodTraits, moodWeights);
+		const hungerTrait = await Utils.getWeightedChoice(hungerTraits, hungerWeights);
+		const sizeTrait = await Utils.getWeightedChoice(sizeTraits, sizeWeights);
+		const healthTrait = await Utils.getWeightedChoice(healthTraits, healthWeights);
+		const finSizeTrait = await Utils.getWeightedChoice(finSizeTraits, finSizeWeights);
+		const finShapeTrait = await Utils.getWeightedChoice(finShapeTraits, finShapeWeights);
+		const colorTrait = await Utils.getWeightedChoice(colorTraits, colorWeights);
+		const geneticDriftTrait = await Utils.getWeightedChoice(geneticDriftTraits, geneticDriftWeights);
 
 		const generatedTraits = {
 			mood: { trait: moodTrait, unlocked: false },
@@ -674,14 +674,14 @@ class Pet {
 		};
 	
 		const newTraits = {
-			mood: { trait: await getWeightedChoice(traitOptions.mood, traitWeights), unlocked: false },
-			hunger: { trait: await getWeightedChoice(traitOptions.hunger, traitWeights), unlocked: false },
-			size: { trait: await getWeightedChoice(traitOptions.size, traitWeights), unlocked: false },
-			health: { trait: await getWeightedChoice(traitOptions.health, traitWeights), unlocked: false },
-			finSize: { trait: await getWeightedChoice(traitOptions.finSize, traitWeights), unlocked: false },
-			finShape: { trait: await getWeightedChoice(traitOptions.finShape, traitWeights), unlocked: false },
-			color: { trait: await getWeightedChoice(traitOptions.color, traitWeights), unlocked: false },
-			geneticDrift: { trait: await getWeightedChoice(traitOptions.geneticDrift, traitWeights), unlocked: false },
+			mood: { trait: await Utils.getWeightedChoice(traitOptions.mood, traitWeights), unlocked: false },
+			hunger: { trait: await Utils.getWeightedChoice(traitOptions.hunger, traitWeights), unlocked: false },
+			size: { trait: await Utils.getWeightedChoice(traitOptions.size, traitWeights), unlocked: false },
+			health: { trait: await Utils.getWeightedChoice(traitOptions.health, traitWeights), unlocked: false },
+			finSize: { trait: await Utils.getWeightedChoice(traitOptions.finSize, traitWeights), unlocked: false },
+			finShape: { trait: await Utils.getWeightedChoice(traitOptions.finShape, traitWeights), unlocked: false },
+			color: { trait: await Utils.getWeightedChoice(traitOptions.color, traitWeights), unlocked: false },
+			geneticDrift: { trait: await Utils.getWeightedChoice(traitOptions.geneticDrift, traitWeights), unlocked: false },
 		};
 	
 		const newPet = new PetFish({

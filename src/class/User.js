@@ -1,4 +1,4 @@
-const { clone, generateXP, generateCash, getWeightedChoice } = require('../util/Utils');
+const { Utils } = require('../class/Utils');
 const { Fish, FishData } = require('../schemas/FishSchema');
 const { Item, ItemData } = require('../schemas/ItemSchema');
 const { User: UserSchema } = require('../schemas/UserSchema');
@@ -148,7 +148,7 @@ class User {
 		const xpBuff = activeBuffs.find((buff) => buff.capabilities.includes('xp'));
 		const xpMultiplier = xpBuff ? parseFloat(xpBuff.capabilities[1]) : 1;
 
-		return generateXP(10 * xpMultiplier, 25 * xpMultiplier);
+		return Utils.generateXP(10 * xpMultiplier, 25 * xpMultiplier);
 	}
 
 	async generateBoostedCash() {
@@ -157,7 +157,7 @@ class User {
 		const cashBuff = activeBuffs.find((buff) => buff.capabilities.includes('cash'));
 		const cashMultiplier = cashBuff ? parseFloat(cashBuff.capabilities[1]) : 1;
 
-		return generateCash(10 * cashMultiplier, 100 * cashMultiplier);
+		return Utils.generateCash(10 * cashMultiplier, 100 * cashMultiplier);
 	}
 
 	async getEquippedRod() {
@@ -360,7 +360,7 @@ class User {
 			// generate random items from box
 			let filteredItems = [];
 			while (filteredItems.length === 0) {
-				let draw = await getWeightedChoice(Object.keys(box.weights), weightValues);
+				let draw = await Utils.getWeightedChoice(Object.keys(box.weights), weightValues);
 				draw = draw.charAt(0).toUpperCase() + draw.slice(1);
 				filteredItems = items.filter((item) => item.rarity.toLowerCase() === draw.toLowerCase());
 			}
@@ -440,7 +440,7 @@ class User {
 		let newItemCount;
 		switch (itemObject.type) {
 		case 'rod':
-			clonedItem = await clone(itemObject, userId);
+			clonedItem = await Utils.clone(itemObject, userId);
 			user.inventory.rods.push(clonedItem);
 			finalItem = clonedItem;
 			newItemCount = clonedItem.count || 1;
@@ -455,14 +455,14 @@ class User {
 				newItemCount = itemObject.count || 1;
 			}
 			else {
-				clonedItem = await clone(itemObject, userId);
+				clonedItem = await Utils.clone(itemObject, userId);
 				user.inventory.baits.push(clonedItem);
 				finalItem = clonedItem;
 				newItemCount = clonedItem.count || 1;
 			}
 			break;
 		case 'fish':
-			clonedItem = await clone(itemObject, userId);
+			clonedItem = await Utils.clone(itemObject, userId);
 			user.inventory.fish.push(clonedItem);
 			finalItem = clonedItem;
 			newItemCount = clonedItem.count || 1;
@@ -477,7 +477,7 @@ class User {
 				newItemCount = itemObject.count || 1;
 			}
 			else {
-				clonedItem = await clone(itemObject, userId);
+				clonedItem = await Utils.clone(itemObject, userId);
 				user.inventory.buffs.push(clonedItem);
 				finalItem = clonedItem;
 				newItemCount = clonedItem.count || 1;
@@ -493,14 +493,14 @@ class User {
 				newItemCount = itemObject.count || 1;
 			}
 			else {
-				clonedItem = await clone(itemObject, userId);
+				clonedItem = await Utils.clone(itemObject, userId);
 				user.inventory.gacha.push(clonedItem);
 				finalItem = clonedItem;
 				newItemCount = clonedItem.count || 1;
 			}
 			break;
 		case 'quest':
-			clonedItem = await clone(itemObject, userId);
+			clonedItem = await Utils.clone(itemObject, userId);
 			user.inventory.quests.push(clonedItem);
 			finalItem = clonedItem;
 			newItemCount = clonedItem.count || 1;
@@ -515,7 +515,7 @@ class User {
 				newItemCount = itemObject.count || 1;
 			}
 			else {
-				clonedItem = await clone(itemObject, userId);
+				clonedItem = await Utils.clone(itemObject, userId);
 				user.inventory.items.push(clonedItem);
 				finalItem = clonedItem;
 				newItemCount = clonedItem.count || 1;

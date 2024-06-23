@@ -1,5 +1,5 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, ComponentType } = require('discord.js');
-const { selectionOptions, getCollectionFilter } = require('../../util/Utils');
+const { Utils } = require('../../class/Utils');
 const { Item } = require('../../schemas/ItemSchema');
 const { User } = require('../../class/User');
 const config = require('../../config');
@@ -37,7 +37,7 @@ module.exports = {
 };
 
 const getRodOptions = async () => {
-	let options = await Promise.all(await selectionOptions('rod'));
+	let options = await Promise.all(await Utils.selectionOptions('rod'));
 	options = options.filter((option) => option !== undefined);
 	return options;
 };
@@ -78,7 +78,7 @@ const updateInteraction = async (interaction, row, components) => {
 };
 
 const getSelection = async (response, userId, analyticsObject) => {
-	const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['select-rod'], userId), time: 90_000 });
+	const collector = response.createMessageComponentCollector({ filter: Utils.getCollectionFilter(['select-rod'], userId), time: 90_000 });
 
 	collector.on('collect', async i => {
 		if (process.env.ANALYTICS || config.client.analytics) {

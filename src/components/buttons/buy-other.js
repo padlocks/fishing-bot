@@ -1,5 +1,5 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, ComponentType, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { selectionOptions, getCollectionFilter } = require('../../util/Utils');
+const { Utils } = require('../../class/Utils');
 const { Item, ItemData } = require('../../schemas/ItemSchema');
 const { User } = require('../../class/User');
 const config = require('../../config');
@@ -42,10 +42,10 @@ module.exports = {
 
 const getSelectionOptions = async () => {
 	let options = await Promise.all([
-		...(await selectionOptions('item')),
-		...(await selectionOptions('gacha')),
-		...(await selectionOptions('buff')),
-		...(await selectionOptions('license')),
+		...(await Utils.selectionOptions('item')),
+		...(await Utils.selectionOptions('gacha')),
+		...(await Utils.selectionOptions('buff')),
+		...(await Utils.selectionOptions('license')),
 	]);
 	options = options.filter((option) => option !== undefined);
 	return options;
@@ -87,7 +87,7 @@ const updateInteraction = async (interaction, row, components) => {
 };
 
 const getSelection = async (response, userId, analyticsObject) => {
-	const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['select-item'], userId), time: 90_000 });
+	const collector = response.createMessageComponentCollector({ filter: Utils.getCollectionFilter(['select-item'], userId), time: 90_000 });
 
 	collector.on('collect', async i => {
 		if (process.env.ANALYTICS || config.client.analytics) {
@@ -126,7 +126,7 @@ const processItemSelection = async (selection, userData, analyticsObject) => {
 				components: [...components, amountRow],
 			});
 
-			const amountCollector = await amountResponse.createMessageComponentCollector({ filter: getCollectionFilter(['buy-one', 'buy-five', 'buy-ten', 'buy-hundred'], await userData.getUserId()), time: 90_000 });
+			const amountCollector = await amountResponse.createMessageComponentCollector({ filter: Utils.getCollectionFilter(['buy-one', 'buy-five', 'buy-ten', 'buy-hundred'], await userData.getUserId()), time: 90_000 });
 			amountCollector.on('collect', async i => {
 				if (process.env.ANALYTICS || config.client.analytics) {
 					await Interaction.generateCommandObject(i, analyticsObject);

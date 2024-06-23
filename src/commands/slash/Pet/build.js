@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { capitalizeWords } = require('../../../util/Utils');
+const { Utils } = require('../../../class/Utils');
 const { Aquarium } = require('../../../class/Aquarium');
 const { Habitat } = require('../../../schemas/HabitatSchema');
 const { User } = require('../../../class/User');
@@ -52,7 +52,7 @@ module.exports = {
 		}
 
 		let waterType = interaction.options.getString('watertype');
-		waterType = capitalizeWords(waterType.toLowerCase());
+		waterType = Utils.capitalizeWords(waterType.toLowerCase());
 		// make sure waterType is equal to either freshwater or saltwater
 		if (waterType.toLowerCase() !== 'freshwater' && waterType.toLowerCase() !== 'saltwater') {
 			if (process.env.ANALYTICS || config.client.analytics) {

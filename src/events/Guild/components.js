@@ -1,6 +1,6 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const config = require('../../config');
-const { log } = require('../../util/Utils');
+const { log } = require('../../class/Utils');
 const { Interaction } = require('../../class/Interaction');
 
 module.exports = {
@@ -51,7 +51,7 @@ module.exports = {
 				component.run(client, interaction, analyticsObject);
 			}
 			catch (error) {
-				log(error, 'error');
+				Utils.log(error, 'error');
 			}
 
 			return;
@@ -71,7 +71,7 @@ module.exports = {
 				component.run(client, interaction, analyticsObject);
 			}
 			catch (error) {
-				log(error, 'error');
+				Utils.log(error, 'error');
 			}
 
 			return;
@@ -89,7 +89,7 @@ module.exports = {
 				component.run(client, interaction, analyticsObject);
 			}
 			catch (error) {
-				log(error, 'error');
+				Utils.log(error, 'error');
 			}
 
 			return;
@@ -104,7 +104,7 @@ module.exports = {
 				component.run(client, interaction);
 			}
 			catch (error) {
-				log(error, 'error');
+				Utils.log(error, 'error');
 			}
 
 			return;

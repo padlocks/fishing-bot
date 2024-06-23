@@ -1,5 +1,5 @@
 const { readdirSync } = require('fs');
-const { log } = require('../util/Utils');
+const { log } = require('../class/Utils');
 
 /**
  *
@@ -14,7 +14,7 @@ module.exports = (client) => {
 
 			if (dir === 'buttons') {
 				if (!module.customId || !module.run) {
-					log('Unable to load the component ' + file + ' due to missing \'structure#customId\' or/and \'run\' properties.', 'warn');
+					Utils.log('Unable to load the component ' + file + ' due to missing \'structure#customId\' or/and \'run\' properties.', 'warn');
 
 					continue;
 				}
@@ -23,7 +23,7 @@ module.exports = (client) => {
 			}
 			else if (dir === 'selects') {
 				if (!module.customId || !module.run) {
-					log('Unable to load the select menu ' + file + ' due to missing \'structure#customId\' or/and \'run\' properties.', 'warn');
+					Utils.log('Unable to load the select menu ' + file + ' due to missing \'structure#customId\' or/and \'run\' properties.', 'warn');
 
 					continue;
 				}
@@ -32,7 +32,7 @@ module.exports = (client) => {
 			}
 			else if (dir === 'modals') {
 				if (!module.customId || !module.run) {
-					log('Unable to load the modal ' + file + ' due to missing \'structure#customId\' or/and \'run\' properties.', 'warn');
+					Utils.log('Unable to load the modal ' + file + ' due to missing \'structure#customId\' or/and \'run\' properties.', 'warn');
 
 					continue;
 				}
@@ -41,16 +41,16 @@ module.exports = (client) => {
 			}
 			else if (dir === 'autocomplete') {
 				if (!module.commandName || !module.run) {
-					log(`Unable to load the autocomplete component ${file} due to missing 'commandName' or 'run' properties.`, 'warn');
+					Utils.log(`Unable to load the autocomplete component ${file} due to missing 'commandName' or 'run' properties.`, 'warn');
 					continue;
 				}
 
 				client.collection.components.autocomplete.set(module.commandName, module);
 
-				log(`Loaded new autocomplete component: ${file}`, 'info');
+				Utils.log(`Loaded new autocomplete component: ${file}`, 'info');
 			}
 			else {
-				log(`Invalid component type: ${file}`, 'warn');
+				Utils.log(`Invalid component type: ${file}`, 'warn');
 			}
 		}
 	}

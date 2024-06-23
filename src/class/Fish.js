@@ -1,7 +1,7 @@
 const { Fish: FishSchema, FishData } = require('../schemas/FishSchema');
 const { Item, ItemData } = require('../schemas/ItemSchema');
 const { BuffData } = require('../schemas/BuffSchema');
-const { getWeightedChoice, sumArrays, sumCountsInArrays } = require('./Utils');
+const { Utils } = require('./Utils');
 const { User } = require('../class/User');
 
 class Fish {
@@ -21,8 +21,8 @@ class Fish {
 		biome = biome.toLowerCase();
 	
 		if (bait && (bait.biomes.includes(biome))) {
-			capabilities = await sumCountsInArrays(rodObject.capabilities, bait.capabilities);
-			weights = await sumArrays(Object.values(rodObject.weights), Object.values(bait.weights));
+			capabilities = await Utils.sumCountsInArrays(rodObject.capabilities, bait.capabilities);
+			weights = await Utils.sumArrays(Object.values(rodObject.weights), Object.values(bait.weights));
 		}
 	
 		return await this.sendToUser(capabilities, rarities, weights, user);
@@ -66,14 +66,14 @@ class Fish {
 	
 	static async generateFish(capabilities, choices, weights, user) {
 		// const userData = await User.findOne({ userId: user });
-		let draw = await getWeightedChoice(choices, weights);
+		let draw = await Utils.getWeightedChoice(choices, weights);
 		draw = draw.charAt(0).toUpperCase() + draw.slice(1);
 		const currentBiome = await user.getCurrentBiome();
 		const biome = currentBiome.charAt(0).toUpperCase() + currentBiome.slice(1);
 	
 		let f = await Fish.find({ rarity: draw, biome: biome });
 		if (draw === 'Lucky') {
-			const itemFind = await getWeightedChoice(['fish', 'item'], [80, 20]);
+			const itemFind = await Utils.getWeightedChoice(['fish', 'item'], [80, 20]);
 			if (itemFind === 'item') {
 				const options = await Item.find({ rarity: draw });
 				const random = Math.floor(Math.random() * options.length);
@@ -103,7 +103,7 @@ class Fish {
 		const random = Math.floor(Math.random() * validChoices.length);
 		const choice = validChoices[random];
 	
-		// const clonedChoice = await clone(choice, user);
+		// const clonedChoice = await Utils.clone(choice, user);
 		const clonedChoice = await user.sendToInventory(choice, 1);
 	
 		// Check for locked status and update the cloned fish as necessary.

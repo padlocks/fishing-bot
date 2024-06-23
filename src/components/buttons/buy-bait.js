@@ -1,5 +1,5 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, ButtonStyle, ButtonBuilder, ComponentType } = require('discord.js');
-const { selectionOptions, getCollectionFilter } = require('../../util/Utils');
+const { Utils } = require('../../class/Utils');
 const { Item, ItemData } = require('../../schemas/ItemSchema');
 const { User } = require('../../class/User');
 const config = require('../../config');
@@ -41,7 +41,7 @@ module.exports = {
 };
 
 const getBaitOptions = async () => {
-	let options = await Promise.all(await selectionOptions('bait'));
+	let options = await Promise.all(await Utils.selectionOptions('bait'));
 	options = options.filter((option) => option !== undefined);
 	return options;
 };
@@ -75,7 +75,7 @@ const removeAdditionalActionRows = (num, components) => {
 };
 
 const getBaitSelection = async (response, user, analyticsObject) => {
-	const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['select-bait'], user), time: 90_000 });
+	const collector = response.createMessageComponentCollector({ filter: Utils.getCollectionFilter(['select-bait'], user), time: 90_000 });
 
 	collector.on('collect', async i => {
 		if (process.env.ANALYTICS || config.client.analytics) {
@@ -110,7 +110,7 @@ const processBaitSelection = async (selection, userData, user, analyticsObject) 
 		components: [...components, amountRow],
 	});
 
-	const amountCollector = await amountResponse.createMessageComponentCollector({ filter: getCollectionFilter(['buy-one', 'buy-five', 'buy-ten', 'buy-hundred'], user), time: 90_000 });
+	const amountCollector = await amountResponse.createMessageComponentCollector({ filter: Utils.getCollectionFilter(['buy-one', 'buy-five', 'buy-ten', 'buy-hundred'], user), time: 90_000 });
 	amountCollector.on('collect', async i => {
 		const amountChoice = i.customId;
 		const amount = await getAmountFromChoice(amountChoice);

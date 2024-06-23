@@ -3,7 +3,7 @@ const {
 	EmbedBuilder,
 } = require('discord.js');
 const { User } = require('../../../class/User');
-const { log } = require('../../../util/Utils');
+const { log } = require('../../../class/Utils');
 const config = require('../../../config');
 
 module.exports = {
@@ -31,7 +31,7 @@ module.exports = {
 				await analyticsObject.setStatus('failed');
 				await analyticsObject.setStatusMessage('User not found.');
 			}
-			log('User not found.', 'err');
+			Utils.log('User not found.', 'err');
 			await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()
@@ -73,7 +73,7 @@ module.exports = {
 				await analyticsObject.setStatus('failed');
 				await analyticsObject.setStatusMessage(err);
 			}
-			log('Error updating fish: ' + err, 'err');
+			Utils.log('Error updating fish: ' + err, 'err');
 			await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()
