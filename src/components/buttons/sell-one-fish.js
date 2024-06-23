@@ -1,6 +1,7 @@
 const { User, getUser } = require('../../class/User');
 const { FishData } = require('../../schemas/FishSchema');
 const { BuffData } = require('../../schemas/BuffSchema');
+const { ButtonComponent, ButtonBuilder } = require('discord.js');
 
 module.exports = {
 	customId: 'sell-one-fish',
@@ -13,7 +14,9 @@ module.exports = {
 		const userData = new User(await getUser(interaction.user.id));
 		if (!userData) return;
 
-		if ((await userData.getStats()).soldLatestFish) {
+		const stats = await userData.getStats();
+
+		if (stats.soldLatestFish) {
 			if (process.env.ANALYTICS || config.client.analytics) {
 				await analyticsObject.setStatus('failed');
 				await analyticsObject.setStatusMessage('User already sold these fish!');
@@ -33,22 +36,35 @@ module.exports = {
 		const cashBuff = activeBuffs.find((buff) => buff.capabilities.includes('cash'));
 		const cashMultiplier = cashBuff ? parseFloat(cashBuff?.capabilities[1]) : 1;
 
+		let total = 0;
 		for (const fish of fishArray) {
 			const fishData = await FishData.findById(fish.valueOf());
 			const value = fishData.value * cashMultiplier * fishData.count;
+			total += value;
 			// newFish.push(...userData.inventory.fish.filter(x => x._id.valueOf() !== fishData._id.valueOf()));
-			await userData.removeFish(fishData._id);
+			await userData.removeFish(fishData._id, fishData.count);
 			await userData.addMoney(value);
 		}
+
+		stats.soldLatestFish = true;
+		await userData.setStats(stats);
 
 		if (process.env.ANALYTICS || config.client.analytics) {
 			await analyticsObject.setStatus('completed');
 			await analyticsObject.setStatusMessage('User sold their recent catch!');
 		}
+		
+		// disable the sell button
+		const embeds = interaction.message.embeds
+		const components = interaction.message.components
 
-		return await interaction.reply({
-			content: 'Successfully sold your recent catch!',
-			ephemeral: true,
+		embeds[0].fields.push({ name: 'Sold Fish', value: `You sold your fish for a total of $${total.toLocaleString()}!` });
+		components[0].components[1] = ButtonBuilder.from(components[0].components[1])
+		components[0].components[1].setDisabled(true);
+
+		return await interaction.update({
+			embeds: embeds,
+			components: components,
 		});
 	},
 };

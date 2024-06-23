@@ -10,7 +10,7 @@ class Pet {
 	}
 
 	save() {
-		return this.pet.save();
+		return PetFish.findOneAndUpdate({ _id: this.pet._id }, this.pet, { upsert: true });
 	}
 
 	async getId() {

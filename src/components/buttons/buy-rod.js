@@ -124,7 +124,7 @@ const processRodSelection = async (selection, userData, analyticsObject) => {
 			await analyticsObject.setStatusMessage('User does not meet level requirements');
 		}
 		await selection.reply({
-			content: `You need to be level ${originalItem.requirements.level} to buy this item!`,
+			content: `You need to be level ${(originalItem.toJSON()).requirements.level} to buy this item!`,
 			ephemeral: true,
 			components: [],
 		});

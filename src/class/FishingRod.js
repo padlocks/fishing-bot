@@ -7,7 +7,7 @@ class FishingRod {
 	}
 
 	save() {
-		return this.rod.save();
+		return CustomRodData.findOneAndUpdate({ _id: this.rod._id }, this.rod, { upsert: true });
 	}
 
 	async getId() {

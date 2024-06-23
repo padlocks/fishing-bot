@@ -29,6 +29,7 @@ const interactionSchema = new Schema({
 	},
 	statusMessage: {
 		type: String,
+		default: '',
 	},
 	type: {
 		type: String,

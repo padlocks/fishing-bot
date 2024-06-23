@@ -7,7 +7,7 @@ class Aquarium {
 	}
 
 	save() {
-		return this.aquarium.save();
+		return Habitat.findOneAndUpdate({ _id: this.aquarium._id }, this.aquarium, { upsert: true });
 	}
 
 	async getId() {
