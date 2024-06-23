@@ -60,7 +60,6 @@ module.exports = {
 		});
 
 		const collector = response.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 15000 });
-
 		collector.on('collect', async i => {
 			if (process.env.ANALYTICS || config.client.analytics) {
 				await Interaction.generateCommandObject(i, analyticsObject);
@@ -127,6 +126,11 @@ module.exports = {
 				await startQuest(await userData.getUserId(), originalQuest._id);
 				await i.reply(`${i.user} has started quest **${originalQuest.title}**!`);
 			}
+		});
+		collector.on('end', async () => {
+			await response.edit({
+				components: [],
+			});
 		});
 	},
 };

@@ -79,14 +79,14 @@ module.exports = async (interaction, pages, analyticsObject = null, deferred = f
 
 			mc.resetTimer();
 
-			mc.on('end', async () => {
-				await msg.edit({
-					embeds: [pages[index]],
-					components: [],
-				});
-			});
-
 			return msg;
+		});
+
+		mc.on('end', async () => {
+			await msg.edit({
+				embeds: [pages[index]],
+				components: [],
+			});
 		});
 	}
 	catch (err) {

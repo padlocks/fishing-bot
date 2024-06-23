@@ -120,5 +120,11 @@ module.exports = {
 				});
 			}
 		});
+
+		collector.on('end', async () => {
+			await response.edit({
+				components: [],
+			});
+		});
 	},
 };

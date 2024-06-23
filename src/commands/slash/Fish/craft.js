@@ -275,5 +275,10 @@ module.exports = {
 				console.error(error);
 			}
 		});
+		collector.on('end', async () => {
+			await response.edit({
+				components: [],
+			});
+		});
 	},
 };

@@ -295,5 +295,11 @@ module.exports = {
 				await this.run(client, collectionInteraction, analyticsObject, user);
 			}
 		});
+
+		collector.on('end', async () => {
+			await followUp.edit({
+				components: [],
+			});
+		});
 	},
 };
