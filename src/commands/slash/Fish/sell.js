@@ -2,7 +2,7 @@ const {
 	SlashCommandBuilder,
 	EmbedBuilder,
 } = require('discord.js');
-const { sellFishByRarity } = require('../../../util/Fish');
+const { Fish } = require('../../../class/Fish');
 const config = require('../../../config');
 
 module.exports = {
@@ -25,7 +25,7 @@ module.exports = {
 		let sold = 0;
 		const rarity = interaction.options.getString('rarity');
 
-		sold = await sellFishByRarity(interaction.user.id, rarity);
+		sold = await Fish.sellByRarity(interaction.user.id, rarity);
 
 		if (process.env.ANALYTICS || config.client.analytics) {
 			await analyticsObject.setStatus('completed');
