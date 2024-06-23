@@ -1,4 +1,4 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, ComponentType } = require('discord.js');
+const { ActionRowBuilder, StringSelectMenuBuilder, ComponentType, EmbedBuilder } = require('discord.js');
 const { Utils } = require('../../class/Utils');
 const { Item } = require('../../schemas/ItemSchema');
 const { User } = require('../../class/User');
@@ -100,8 +100,20 @@ const processRodSelection = async (selection, userData, analyticsObject) => {
 			await analyticsObject.setStatus('failed');
 			await analyticsObject.setStatusMessage('User does not have enough money to buy this item!');
 		}
+
+		let embeds = [];
+		embeds.push(new EmbedBuilder()
+			.setTitle('Shop')
+			.setColor('Red')
+			.addFields(
+				{ name: 'Uh-oh!', value: 'You do not have enough money to buy that item', inline: false },
+				{ name: 'Price', value: `$${(originalItem.price).toLocaleString()}`, inline: true },
+				{ name: 'Balance', value: `$${(await userData.getMoney()).toLocaleString()}`, inline: true },
+			),
+		);
+
 		return await selection.reply({
-			content: 'You do not have enough money to buy this item!',
+			embeds: embeds,
 			ephemeral: true,
 			components: [],
 		});
@@ -112,9 +124,18 @@ const processRodSelection = async (selection, userData, analyticsObject) => {
 			await analyticsObject.setStatus('completed');
 			await analyticsObject.setStatusMessage('User has successfully bought a fishing rod!');
 		}
-		await selection.reply({
+		let embeds = [];
+		embeds.push(new EmbedBuilder()
+			.setTitle('Shop')
+			.setColor('Green')
+			.addFields(
+				{ name: 'Congrats!', value: `You have successfully bought ${originalItem.name}`, inline: false },
+				{ name: 'New Balance', value: `$${(await userData.getMoney()).toLocaleString()}`, inline: true },
+			),
+		);
+		return await selection.reply({
 			components: [],
-			content: `You have successfully bought a ${originalItem.name}!`,
+			embeds: embeds,
 			ephemeral: true,
 		});
 	}
@@ -123,8 +144,18 @@ const processRodSelection = async (selection, userData, analyticsObject) => {
 			await analyticsObject.setStatus('failed');
 			await analyticsObject.setStatusMessage('User does not meet level requirements');
 		}
+
+		let embeds = [];
+		embeds.push(new EmbedBuilder()
+			.setTitle('Shop')
+			.setColor('Red')
+			.addFields(
+				{ name: 'Uh-oh!', value: `You need to be level ${(originalItem.toJSON()).requirements.level} to buy this item!`, inline: false },
+			),
+		);
+
 		await selection.reply({
-			content: `You need to be level ${(originalItem.toJSON()).requirements.level} to buy this item!`,
+			embeds: embeds,
 			ephemeral: true,
 			components: [],
 		});
