@@ -635,81 +635,81 @@ class Pet {
 		this.pet.traits = finalTraits;
 		return this.save();
 	}
+
+	static async breed(firstPet, secondPet, babyName, aquariumId) {
+		if (await firstPet.getAge() < 20) return { success: false, child: null, reason: `${await firstPet.getName()} is underaged. The minimum requirement is 20 days.` };
+		if (await secondPet.getAge() < 20) return { success: false, child: null, reason: `${await firstPet.getName()} is underaged. The minimum requirement is 20 days.` };
+		if (await firstPet.getHealth() < 50) return { success: false, child: null, reason: `${await firstPet.getName()} is unhealthy. Health must be greater than 50%.` };
+		if (await secondPet.getHealth() < 50) return { success: false, child: null, reason: `${await secondPet.getName()} is unhealthy. Health must be greater than 50%.` };
+	
+		let success = false;
+	
+		// Determine success of breeding
+		const stress = (await firstPet.getStress() + await secondPet.getStress()) / 2;
+		const health = (await firstPet.getHealth() + await secondPet.getHealth()) / 2;
+	
+		// Add a random factor to the success rate
+		const successRate = Math.max(Math.min(0.65, (50 - stress) / 50), Math.max(Math.min(0.6, health / 100 - 0.5), 0.1));
+		const randomFactor = Math.random() * 100;
+		if (randomFactor < successRate) success = true;
+		if (!success) return { success, reason: 'Unlucky. You can try improving the health of your pets and reducing their stress.' };
+	
+		// Generate a new pet with the same species as the parents
+		const speciesOptions = [await firstPet.getFishData(), await secondPet.getFishData()];
+		const species = speciesOptions[Math.floor(Math.random() * speciesOptions.length)];
+	
+		// Randomize traits
+		const firstPetTraits = await firstPet.getTraits();
+		const secondPetTraits = await secondPet.getTraits();
+		const traitWeights = [1000, 1000, 300];
+		const traitOptions = {
+			mood: [firstPetTraits.mood.trait, secondPetTraits.mood.trait, 'Random'],
+			hunger: [firstPetTraits.hunger.trait, secondPetTraits.hunger.trait, 'Random'],
+			size: [firstPetTraits.size.trait, secondPetTraits.size.trait, 'Random'],
+			health: [firstPetTraits.health.trait, secondPetTraits.health.trait, 'Random'],
+			finSize: [firstPetTraits.finSize.trait, secondPetTraits.finSize.trait, 'Random'],
+			finShape: [firstPetTraits.finShape.trait, secondPetTraits.finShape.trait, 'Random'],
+			color: [firstPetTraits.color.trait, secondPetTraits.color.trait, 'Random'],
+			geneticDrift: [firstPetTraits.geneticDrift.trait, secondPetTraits.geneticDrift.trait, 'Random'],
+		};
+	
+		const newTraits = {
+			mood: { trait: await getWeightedChoice(traitOptions.mood, traitWeights), unlocked: false },
+			hunger: { trait: await getWeightedChoice(traitOptions.hunger, traitWeights), unlocked: false },
+			size: { trait: await getWeightedChoice(traitOptions.size, traitWeights), unlocked: false },
+			health: { trait: await getWeightedChoice(traitOptions.health, traitWeights), unlocked: false },
+			finSize: { trait: await getWeightedChoice(traitOptions.finSize, traitWeights), unlocked: false },
+			finShape: { trait: await getWeightedChoice(traitOptions.finShape, traitWeights), unlocked: false },
+			color: { trait: await getWeightedChoice(traitOptions.color, traitWeights), unlocked: false },
+			geneticDrift: { trait: await getWeightedChoice(traitOptions.geneticDrift, traitWeights), unlocked: false },
+		};
+	
+		const newPet = new PetFish({
+			name: babyName,
+			fish: species.id,
+			age: 1,
+			owner: await firstPet.getOwner(),
+			traits: newTraits,
+			health: 100,
+			mood: 100,
+			hunger: 0,
+			stress: 0,
+			xp: 0,
+			lastFed: Date.now(),
+			lastPlayed: Date.now(),
+			lastBred: Date.now(),
+			lastUpdated: Date.now(),
+			multiplier: 1.0,
+			attraction: 0,
+			aquarium: aquariumId,
+			species: species.name,
+		});
+	
+		await firstPet.updateBreeding();
+		await secondPet.updateBreeding();
+		await newPet.save();
+		return { success: success, child: newPet, reason: '' };
+	};
 }
 
-const breed = async (firstPet, secondPet, babyName, aquariumId) => {
-	if (await firstPet.getAge() < 20) return { success: false, child: null, reason: `${await firstPet.getName()} is underaged. The minimum requirement is 20 days.` };
-	if (await secondPet.getAge() < 20) return { success: false, child: null, reason: `${await firstPet.getName()} is underaged. The minimum requirement is 20 days.` };
-	if (await firstPet.getHealth() < 50) return { success: false, child: null, reason: `${await firstPet.getName()} is unhealthy. Health must be greater than 50%.` };
-	if (await secondPet.getHealth() < 50) return { success: false, child: null, reason: `${await secondPet.getName()} is unhealthy. Health must be greater than 50%.` };
-
-	let success = false;
-
-	// Determine success of breeding
-	const stress = (await firstPet.getStress() + await secondPet.getStress()) / 2;
-	const health = (await firstPet.getHealth() + await secondPet.getHealth()) / 2;
-
-	// Add a random factor to the success rate
-	const successRate = Math.max(Math.min(0.65, (50 - stress) / 50), Math.max(Math.min(0.6, health / 100 - 0.5), 0.1));
-	const randomFactor = Math.random() * 100;
-	if (randomFactor < successRate) success = true;
-	if (!success) return { success, reason: 'Unlucky. You can try improving the health of your pets and reducing their stress.' };
-
-	// Generate a new pet with the same species as the parents
-	const speciesOptions = [await firstPet.getFishData(), await secondPet.getFishData()];
-	const species = speciesOptions[Math.floor(Math.random() * speciesOptions.length)];
-
-	// Randomize traits
-	const firstPetTraits = await firstPet.getTraits();
-	const secondPetTraits = await secondPet.getTraits();
-	const traitWeights = [1000, 1000, 300];
-	const traitOptions = {
-		mood: [firstPetTraits.mood.trait, secondPetTraits.mood.trait, 'Random'],
-		hunger: [firstPetTraits.hunger.trait, secondPetTraits.hunger.trait, 'Random'],
-		size: [firstPetTraits.size.trait, secondPetTraits.size.trait, 'Random'],
-		health: [firstPetTraits.health.trait, secondPetTraits.health.trait, 'Random'],
-		finSize: [firstPetTraits.finSize.trait, secondPetTraits.finSize.trait, 'Random'],
-		finShape: [firstPetTraits.finShape.trait, secondPetTraits.finShape.trait, 'Random'],
-		color: [firstPetTraits.color.trait, secondPetTraits.color.trait, 'Random'],
-		geneticDrift: [firstPetTraits.geneticDrift.trait, secondPetTraits.geneticDrift.trait, 'Random'],
-	};
-
-	const newTraits = {
-		mood: { trait: await getWeightedChoice(traitOptions.mood, traitWeights), unlocked: false },
-		hunger: { trait: await getWeightedChoice(traitOptions.hunger, traitWeights), unlocked: false },
-		size: { trait: await getWeightedChoice(traitOptions.size, traitWeights), unlocked: false },
-		health: { trait: await getWeightedChoice(traitOptions.health, traitWeights), unlocked: false },
-		finSize: { trait: await getWeightedChoice(traitOptions.finSize, traitWeights), unlocked: false },
-		finShape: { trait: await getWeightedChoice(traitOptions.finShape, traitWeights), unlocked: false },
-		color: { trait: await getWeightedChoice(traitOptions.color, traitWeights), unlocked: false },
-		geneticDrift: { trait: await getWeightedChoice(traitOptions.geneticDrift, traitWeights), unlocked: false },
-	};
-
-	const newPet = new PetFish({
-		name: babyName,
-		fish: species.id,
-		age: 1,
-		owner: await firstPet.getOwner(),
-		traits: newTraits,
-		health: 100,
-		mood: 100,
-		hunger: 0,
-		stress: 0,
-		xp: 0,
-		lastFed: Date.now(),
-		lastPlayed: Date.now(),
-		lastBred: Date.now(),
-		lastUpdated: Date.now(),
-		multiplier: 1.0,
-		attraction: 0,
-		aquarium: aquariumId,
-		species: species.name,
-	});
-
-	await firstPet.updateBreeding();
-	await secondPet.updateBreeding();
-	await newPet.save();
-	return { success: success, child: newPet, reason: '' };
-};
-
-module.exports = { Pet, breed };
+module.exports = { Pet };

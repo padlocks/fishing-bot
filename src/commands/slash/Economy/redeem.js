@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { Code } = require('../../../schemas/CodeSchema');
-const { User, getUser } = require('../../../class/User');
+const { User } = require('../../../class/User');
 const config = require('../../../config');
 
 module.exports = {
@@ -21,7 +21,7 @@ module.exports = {
      * @param {ChatInputCommandInteraction} interaction
      */
 	run: async (client, interaction, analyticsObject) => {
-		const user = new User(await getUser(interaction.user.id));
+		const user = new User(await User.get(interaction.user.id));
 		await interaction.deferReply();
 
 		const code = interaction.options.getString('code');

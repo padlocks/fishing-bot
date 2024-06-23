@@ -1,10 +1,10 @@
 const { clone } = require('./Utils');
-const { User, getUser } = require('../class/User');
+const { User } = require('../class/User');
 const { Quest, QuestData } = require('../schemas/QuestSchema');
 const { Gacha } = require('../schemas/GachaSchema');
 
 const generateDailyQuest = async (userId) => {
-	const user = new User(await getUser(userId));
+	const user = new User(await User.get(userId));
 	const inventory = await user.getInventory();
 	const stats = await user.getStats();
 
@@ -58,7 +58,7 @@ const generateDailyQuest = async (userId) => {
 };
 
 const startQuest = async (userId, questId) => {
-	const user = new User(await getUser(userId));
+	const user = new User(await User.get(userId));
 	const inventory = await user.getInventory();
 	const originalQuest = await Quest.findById(questId);
 	const quest = await clone(originalQuest);
@@ -81,7 +81,7 @@ const startQuest = async (userId, questId) => {
 };
 
 const getQuests = async (userId) => {
-	const user = new User(await getUser(userId));
+	const user = new User(await User.get(userId));
 	const inventory = await user.getInventory();
 	const questIds = inventory.quests;
 	const quests = await QuestData.find({ _id: { $in: questIds } });

@@ -1,9 +1,9 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, ButtonStyle, ButtonBuilder, ComponentType } = require('discord.js');
 const { selectionOptions, getCollectionFilter } = require('../../util/Utils');
 const { Item, ItemData } = require('../../schemas/ItemSchema');
-const { User, getUser } = require('../../class/User');
+const { User } = require('../../class/User');
 const config = require('../../config');
-const { generateCommandObject } = require('../../class/Interaction');
+const { Interaction } = require('../../class/Interaction');
 
 module.exports = {
 	customId: 'buy-bait',
@@ -79,9 +79,9 @@ const getBaitSelection = async (response, user, analyticsObject) => {
 
 	collector.on('collect', async i => {
 		if (process.env.ANALYTICS || config.client.analytics) {
-			await generateCommandObject(i, analyticsObject);
+			await Interaction.generateCommandObject(i, analyticsObject);
 		}
-		const userData = new User(await getUser(user));
+		const userData = new User(await User.get(user));
 		return await processBaitSelection(i, userData, user, analyticsObject);
 	});
 };
@@ -116,7 +116,7 @@ const processBaitSelection = async (selection, userData, user, analyticsObject) 
 		const amount = await getAmountFromChoice(amountChoice);
 
 		if (process.env.ANALYTICS || config.client.analytics) {
-			await generateCommandObject(i, analyticsObject);
+			await Interaction.generateCommandObject(i, analyticsObject);
 		}
 
 		if (!await hasEnoughMoney(userData, originalItem, amount)) {

@@ -1,9 +1,9 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, ComponentType } = require('discord.js');
 const { selectionOptions, getCollectionFilter } = require('../../util/Utils');
 const { Item } = require('../../schemas/ItemSchema');
-const { User, getUser } = require('../../class/User');
+const { User } = require('../../class/User');
 const config = require('../../config');
-const { generateCommandObject } = require('../../class/Interaction');
+const { Interaction } = require('../../class/Interaction');
 
 module.exports = {
 	customId: 'buy-rod',
@@ -82,9 +82,9 @@ const getSelection = async (response, userId, analyticsObject) => {
 
 	collector.on('collect', async i => {
 		if (process.env.ANALYTICS || config.client.analytics) {
-			await generateCommandObject(i, analyticsObject);
+			await Interaction.generateCommandObject(i, analyticsObject);
 		}
-		const userData = new User(await getUser(userId));
+		const userData = new User(await User.get(userId));
 		return await processRodSelection(i, userData, analyticsObject);
 	});
 };

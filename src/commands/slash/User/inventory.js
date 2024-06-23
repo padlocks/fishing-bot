@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { FishData } = require('../../../schemas/FishSchema');
 const buttonPagination = require('../../../buttonPagination');
-const { User, getUser } = require('../../../class/User');
+const { User } = require('../../../class/User');
 const { getFishCount } = require('../../../util/Fish');
 const { Biome } = require('../../../schemas/BiomeSchema');
 const { ItemData } = require('../../../schemas/ItemSchema');
@@ -32,7 +32,7 @@ module.exports = {
 				lucky: [],
 			};
 
-			const user = new User(await getUser(interaction.user.id));
+			const user = new User(await User.get(interaction.user.id));
 			const inventory = await user.getInventory();
 			if (inventory.fish && Array.isArray(inventory.fish)) {
 				const fishNames = new Set();

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { Pet, breed } = require('../../../class/Pet');
+const { Pet } = require('../../../class/Pet');
 const { Aquarium } = require('../../../class/Aquarium');
 const { PetFish } = require('../../../schemas/PetSchema');
 const { Habitat } = require('../../../schemas/HabitatSchema');
@@ -233,7 +233,7 @@ module.exports = {
 
 			await firstPet.updateStatus(aquarium);
 			await secondPet.updateStatus(aquarium);
-			const result = await breed(firstPet, secondPet, babyName, await aquarium.getId());
+			const result = await Pet.breed(firstPet, secondPet, babyName, await aquarium.getId());
 			if (!result.success) {
 				if (process.env.ANALYTICS || config.client.analytics) {
 					await analyticsObject.setStatus('failed');

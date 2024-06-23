@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { User, getUser } = require('../../../class/User');
+const { User } = require('../../../class/User');
 const buttonPagination = require('../../../buttonPagination');
 const { getFishByName } = require('../../../util/Fish');
 
@@ -17,8 +17,8 @@ module.exports = {
 	run: async (client, interaction, analyticsObject) => {
 		try {
 			const embeds = [];
-			const target = interaction.options.getUser('user') || interaction.user;
-			const user = new User(await getUser(target.id));
+			const target = interaction.options.User.get('user') || interaction.user;
+			const user = new User(await User.get(target.id));
 
 			const fields = [];
 			const stats = await user.getStats();

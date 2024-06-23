@@ -2,7 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { capitalizeWords } = require('../../../util/Utils');
 const { Aquarium } = require('../../../class/Aquarium');
 const { Habitat } = require('../../../schemas/HabitatSchema');
-const { User, getUser } = require('../../../class/User');
+const { User } = require('../../../class/User');
 const config = require('../../../config');
 
 module.exports = {
@@ -31,7 +31,7 @@ module.exports = {
 	run: async (client, interaction, analyticsObject) => {
 		await interaction.deferReply();
 
-		const user = new User(await getUser(interaction.user.id));
+		const user = new User(await User.get(interaction.user.id));
 		if (!user) {
 			if (process.env.ANALYTICS || config.client.analytics) {
 				await analyticsObject.setStatus('failed');

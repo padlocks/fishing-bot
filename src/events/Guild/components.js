@@ -1,7 +1,7 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const config = require('../../config');
 const { log } = require('../../util/Utils');
-const { findMostRecentInteraction, generateCommandObject } = require('../../class/Interaction');
+const { Interaction } = require('../../class/Interaction');
 
 module.exports = {
 	event: 'interactionCreate',
@@ -34,7 +34,7 @@ module.exports = {
 		let analyticsObject;
 
 		if (process.env.ANALYTICS || config.client.analytics) {
-			analyticsObject = await findMostRecentInteraction(interaction.user.id);
+			analyticsObject = await Interaction.findMostRecentInteraction(interaction.user.id);
 		}
 
 		if (interaction.isButton()) {
@@ -46,7 +46,7 @@ module.exports = {
 
 			try {
 				if (process.env.ANALYTICS || config.client.analytics) {
-					await generateCommandObject(interaction, analyticsObject);
+					await Interaction.generateCommandObject(interaction, analyticsObject);
 				}
 				component.run(client, interaction, analyticsObject);
 			}
@@ -66,7 +66,7 @@ module.exports = {
 
 			try {
 				if (process.env.ANALYTICS || config.client.analytics) {
-					await generateCommandObject(interaction, analyticsObject);
+					await Interaction.generateCommandObject(interaction, analyticsObject);
 				}
 				component.run(client, interaction, analyticsObject);
 			}
@@ -84,7 +84,7 @@ module.exports = {
 
 			try {
 				if (process.env.ANALYTICS || config.client.analytics) {
-					await generateCommandObject(interaction, analyticsObject);
+					await Interaction.generateCommandObject(interaction, analyticsObject);
 				}
 				component.run(client, interaction, analyticsObject);
 			}

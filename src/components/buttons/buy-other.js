@@ -1,9 +1,9 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, ComponentType, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { selectionOptions, getCollectionFilter } = require('../../util/Utils');
 const { Item, ItemData } = require('../../schemas/ItemSchema');
-const { User, getUser } = require('../../class/User');
+const { User } = require('../../class/User');
 const config = require('../../config');
-const { generateCommandObject } = require('../../class/Interaction');
+const { Interaction } = require('../../class/Interaction');
 
 module.exports = {
 	customId: 'buy-other',
@@ -91,9 +91,9 @@ const getSelection = async (response, userId, analyticsObject) => {
 
 	collector.on('collect', async i => {
 		if (process.env.ANALYTICS || config.client.analytics) {
-			await generateCommandObject(i, analyticsObject);
+			await Interaction.generateCommandObject(i, analyticsObject);
 		}
-		const userData = new User(await getUser(userId));
+		const userData = new User(await User.get(userId));
 		return await processItemSelection(i, userData, analyticsObject);
 	});
 };
@@ -129,7 +129,7 @@ const processItemSelection = async (selection, userData, analyticsObject) => {
 			const amountCollector = await amountResponse.createMessageComponentCollector({ filter: getCollectionFilter(['buy-one', 'buy-five', 'buy-ten', 'buy-hundred'], await userData.getUserId()), time: 90_000 });
 			amountCollector.on('collect', async i => {
 				if (process.env.ANALYTICS || config.client.analytics) {
-					await generateCommandObject(i, analyticsObject);
+					await Interaction.generateCommandObject(i, analyticsObject);
 				}
 				const amountChoice = i.customId;
 				amount = await getAmountFromChoice(amountChoice);

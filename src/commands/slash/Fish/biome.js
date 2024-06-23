@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
 const { Biome } = require('../../../schemas/BiomeSchema');
-const { User, getUser } = require('../../../class/User');
-const { generateCommandObject } = require('../../../class/Interaction');
+const { User } = require('../../../class/User');
+const { Interaction } = require('../../../class/Interaction');
 const config = require('../../../config');
 
 module.exports = {
@@ -78,11 +78,11 @@ module.exports = {
 
 		collector.on('collect', async i => {
 			if (process.env.ANALYTICS || config.client.analytics) {
-				await generateCommandObject(i, analyticsObject);
+				await Interaction.generateCommandObject(i, analyticsObject);
 			}
 
 			const selection = i.values[0];
-			const userData = new User(await getUser(user.id));
+			const userData = new User(await User.get(user.id));
 			const originalBiome = await Biome.findById(selection);
 
 			// check if user meets biome requirements

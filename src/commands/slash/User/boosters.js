@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { BuffData } = require('../../../schemas/BuffSchema');
-const { User, getUser } = require('../../../class/User');
+const { User } = require('../../../class/User');
 const buttonPagination = require('../../../buttonPagination');
 
 module.exports = {
@@ -21,7 +21,7 @@ module.exports = {
 
 			const buffInventory = [];
 
-			const user = new User(await getUser(interaction.user.id));
+			const user = new User(await User.get(interaction.user.id));
 			const inventory = await user.getInventory();
 			if (inventory.buffs && Array.isArray(inventory.buffs)) {
 				const buffNames = new Set();

@@ -2,7 +2,7 @@ const { Fish, FishData } = require('../schemas/FishSchema');
 const { Item, ItemData } = require('../schemas/ItemSchema');
 const { BuffData } = require('../schemas/BuffSchema');
 const { getWeightedChoice, sumArrays, sumCountsInArrays } = require('./Utils');
-const { User, getUser } = require('../class/User');
+const { User } = require('../class/User');
 
 const fish = async (rod, bait, biome, user) => {
 	const rodObject = await ItemData.findById(rod);
@@ -120,7 +120,7 @@ const sendFishToUser = async (capabilities, choices, weights, user) => {
 const sellFishByRarity = async (userId, targetRarity) => {
 	let totalValue = 0;
 	const fishToRemove = [];
-	const user = new User(await getUser(userId));
+	const user = new User(await User.get(userId));
 
 	// check for buffs
 	const activeBuffs = await BuffData.find({ user: userId, active: true });
@@ -142,7 +142,7 @@ const sellFishByRarity = async (userId, targetRarity) => {
 };
 
 const getFishCount = async (userId, fishName) => {
-	const user = new User(await getUser(userId));
+	const user = new User(await User.get(userId));
 	const fishIds = (await user.getInventory()).fish;
 	const fishList = await FishData.find({ _id: { $in: fishIds }, name: fishName });
 

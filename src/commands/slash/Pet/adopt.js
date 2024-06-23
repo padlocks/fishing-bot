@@ -5,7 +5,7 @@ const { Fish } = require('../../../schemas/FishSchema');
 const { Habitat } = require('../../../schemas/HabitatSchema');
 const { Aquarium } = require('../../../class/Aquarium');
 const { PetFish } = require('../../../schemas/PetSchema');
-const { User, getUser } = require('../../../class/User');
+const { User } = require('../../../class/User');
 const config = require('../../../config');
 
 module.exports = {
@@ -74,7 +74,7 @@ module.exports = {
 			return interaction.editReply({ content: 'That aquarium does not exist! Use the `build` command to construct one.', ephemeral: true });
 		}
 
-		const user = new User(await getUser(interaction.user.id));
+		const user = new User(await User.get(interaction.user.id));
 		if (!user) {
 			if (process.env.ANALYTICS || config.client.analytics) {
 				await analyticsObject.setStatus('failed');

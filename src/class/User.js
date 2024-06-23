@@ -602,41 +602,41 @@ class User {
 				return { voted: true, message: "Thank you for voting! You have received:\n- 1x Voter's Crate\n- $10000" };
 			});
 	}
+
+	static async create(userId) {
+		const rod = await Item.findOne({ name: 'Old Rod' });
+		const data = new UserSchema({
+			userId: userId,
+			commands: 0,
+			xp: 0,
+			inventory: {
+				equippedRod: null,
+				equippedBait: null,
+				items: [],
+				baits: [],
+				rods: [],
+				fish: [],
+				quests: [],
+			},
+			type: 'user',
+		});
+		await data.save();
+		const user = new User(data);
+		await user.sendToInventory(rod._id);
+		await user.setEquippedRod((await user.getInventory()).rods[0]);
+	
+		return await UserSchema.findOne({ userId: userId });
+	};
+	
+	static async get(userId) {
+		if (!userId) return null;
+		let user = await UserSchema.findOne({ userId: userId });
+		if (!user) {
+			user = await this.create(userId);
+		}
+	
+		return user;
+	};
 }
 
-const createUser = async (userId) => {
-	const rod = await Item.findOne({ name: 'Old Rod' });
-	const data = new UserSchema({
-		userId: userId,
-		commands: 0,
-		xp: 0,
-		inventory: {
-			equippedRod: null,
-			equippedBait: null,
-			items: [],
-			baits: [],
-			rods: [],
-			fish: [],
-			quests: [],
-		},
-		type: 'user',
-	});
-	await data.save();
-	const user = new User(data);
-	await user.sendToInventory(rod._id);
-	await user.setEquippedRod((await user.getInventory()).rods[0]);
-
-	return await UserSchema.findOne({ userId: userId });
-};
-
-const getUser = async (userId) => {
-	if (!userId) return null;
-	let user = await UserSchema.findOne({ userId: userId });
-	if (!user) {
-		user = await createUser(userId);
-	}
-
-	return user;
-};
-
-module.exports = { User, getUser, createUser };
+module.exports = { User };
