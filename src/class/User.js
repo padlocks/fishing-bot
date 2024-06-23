@@ -12,7 +12,7 @@ class User {
 	}
 
 	save() {
-		return UserSchema.findOneAndUpdate({ _id: this.user._id }, this.user, { runValidators: true, new: true }).exec();
+		return UserSchema.findOneAndUpdate({ _id: this.user._id }, this.user, { upsert: true });
 	}
 
 	async getId() {
@@ -33,7 +33,7 @@ class User {
 
 	async setCurrentBiome(biome) {
 		this.user.currentBiome = biome;
-		return await this.save();
+		await this.save();
 	}
 
 	async getStats() {
@@ -42,7 +42,7 @@ class User {
 
 	async setStats(stats) {
 		this.user.stats = stats;
-		return await this.save();
+		await this.save();
 	}
 
 	async getMoney() {
@@ -51,7 +51,7 @@ class User {
 
 	async addMoney(amount) {
 		this.user.inventory.money += parseInt(amount);
-		return await this.save();
+		await this.save();
 	}
 
 	async getInventory() {
@@ -66,7 +66,7 @@ class User {
 
 	async removeBait(baitId) {
 		this.user.inventory.baits = this.user.inventory.baits.filter((b) => b.valueOf() !== baitId);
-		return await this.save();
+		await this.save();
 	}
 
 	async getItems() {
@@ -89,7 +89,7 @@ class User {
 
 	async addQuest(questId) {
 		this.user.inventory.quests.push(questId);
-		return await this.save();
+		await this.save();
 	}
 
 	async getGacha() {
@@ -129,7 +129,7 @@ class User {
 	async removeListOfFish(fishIds) {
 		fishIds = fishIds.map((f) => f.valueOf());
 		this.user.inventory.fish = this.user.inventory.fish.filter((f) => !fishIds.includes(f.valueOf()));
-		return await this.save();
+		await this.save();
 	}
 
 	async getCodes() {
@@ -139,7 +139,7 @@ class User {
 	async addCode(codeId) {
 		const codes = await this.getCodes();
 		codes.push(codeId);
-		return await this.save();
+		return this.save();
 	}
 
 	async generateBoostedXP() {
@@ -211,7 +211,7 @@ class User {
 
 	async addXP(amount) {
 		this.user.xp += amount;
-		return await this.save();
+		await this.save();
 	}
 
 	async getLevel() {
@@ -418,12 +418,12 @@ class User {
 			}
 		});
 
-		return await this.save();
+		await this.save();
 	}
 
 	async addCustomRodToInventory(rodId) {
 		(await this.getInventory()).rods.push(rodId);
-		return await this.save();
+		await this.save();
 	}
 
 	async sendToInventory(item, count = 1) {
@@ -545,7 +545,7 @@ class User {
 		await buff.save();
 
 		user.inventory.buffs = user.inventory.buffs.filter((b) => b.id !== buff.id);
-		return await this.save();
+		await this.save();
 	}
 
 	async updateLevel() {
@@ -565,7 +565,7 @@ class User {
 	async setLastVoted() {
 		const user = this.user;
 		user.stats.lastVoted = Date.now();
-		return await this.save();
+		await this.save();
 	}
 
 	async vote() {

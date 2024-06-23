@@ -32,10 +32,10 @@ module.exports = {
 		}
 		catch (err) {
 			// console.error(err);
-			if (process.env.ANALYTICS || config.client.analytics) {
-				await analyticsObject.setStatus('failed');
-				await analyticsObject.setStatusMessage(err);
-			}
+			// if (process.env.ANALYTICS || config.client.analytics) {
+			// 	await analyticsObject.setStatus('failed');
+			// 	await analyticsObject.setStatusMessage(err);
+			// }
 		}
 	},
 };

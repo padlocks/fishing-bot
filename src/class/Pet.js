@@ -10,7 +10,7 @@ class Pet {
 	}
 
 	save() {
-		return PetFish.findOneAndUpdate({ _id: this.pet._id }, this.pet, { runValidators: true, new: true }).exec();
+		return PetFish.findOneAndUpdate({ _id: this.pet._id }, this.pet, { upsert: true });
 	}
 
 	async getId() {
@@ -108,7 +108,7 @@ class Pet {
 
 	async updateName(name) {
 		this.pet.name = name;
-		return await this.save();
+		return this.save();
 	}
 
 	async updateStatus(aquarium) {
@@ -149,7 +149,7 @@ class Pet {
 		this.pet.health = newHealth;
 		this.pet.attraction = attraction;
 		this.pet.lastUpdated = now;
-		return await this.save();
+		return this.save();
 	}
 
 	async calculateHunger(elapsedTimeSinceFed, cleanliness, temperature) {
@@ -396,7 +396,7 @@ class Pet {
 
 	async updateHabitat(habitatId) {
 		this.pet.habitat = habitatId;
-		return await this.save();
+		return this.save();
 	}
 
 	async updateHealth(cleanliness, temperature) {
@@ -461,7 +461,7 @@ class Pet {
 		const xpIncrease = 50 * (this.pet.multiplier || 1);
 		this.pet.xp += xpIncrease;
 
-		return await this.save();
+		return this.save();
 	}
 
 
@@ -473,17 +473,17 @@ class Pet {
 
 		const xpIncrease = 50 * (this.pet.multiplier || 1);
 		this.pet.xp += xpIncrease;
-		return await this.save();
+		return this.save();
 	}
 
 	async disown() {
 		this.pet.owner = '';
-		return await this.save();
+		return this.save();
 	}
 
 	async removeFromHabitat() {
 		this.pet.aquarium = null;
-		return await this.save();
+		return this.save();
 	}
 
 	async sell(aquarium) {
@@ -504,7 +504,7 @@ class Pet {
 		const currentTime = Date.now();
 		this.pet.lastBred = currentTime;
 		this.pet.xp += (xp * (this.pet.multiplier || 1));
-		return await this.save();
+		return this.save();
 	}
 
 	async tryUnlockTraits() {
@@ -528,7 +528,7 @@ class Pet {
 			traits.geneticDrift.unlocked = true;
 		}
 
-		return await this.save();
+		return this.save();
 	}
 
 	async regenerateTrait() {
@@ -633,7 +633,7 @@ class Pet {
 		}
 
 		this.pet.traits = finalTraits;
-		return await this.save();
+		return this.save();
 	}
 }
 

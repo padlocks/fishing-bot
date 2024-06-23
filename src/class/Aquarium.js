@@ -7,7 +7,7 @@ class Aquarium {
 	}
 
 	save() {
-		return Habitat.findOneAndUpdate({ _id: this.aquarium._id }, this.aquarium, { runValidators: true, new: true }).exec();
+		return Habitat.findOneAndUpdate({ _id: this.aquarium._id }, this.aquarium, { upsert: true });
 	}
 
 	async getId() {
@@ -68,12 +68,12 @@ class Aquarium {
 		this.aquarium.cleanliness -= cleanlinessDecay;
 		this.aquarium.temperature += temperatureDecay;
 
-		return await this.save();
+		return this.save();
 	}
 
 	async addFish(fishId) {
 		this.aquarium.fish.push(fishId);
-		return await this.save();
+		return this.save();
 	}
 
 	async removeFish(fishId) {
@@ -81,7 +81,7 @@ class Aquarium {
 			// console.log(fish._id.valueOf(), fishId.valueOf(), fish._id.valueOf() !== fishId.valueOf());
 			return fish._id.valueOf() !== fishId.valueOf();
 		});
-		return await this.save();
+		return this.save();
 	}
 
 	async moveFish(pet, newAquarium) {
@@ -113,19 +113,19 @@ class Aquarium {
 
 	async upgrade(size) {
 		this.aquarium.size = size;
-		return await this.save();
+		return this.save();
 	}
 
 	async clean() {
 		this.aquarium.cleanliness = 100;
 		this.aquarium.lastCleaned = new Date();
-		return await this.save();
+		return this.save();
 	}
 
 	async adjustTemperature(newTemperature) {
 		this.aquarium.temperature = newTemperature;
 		this.aquarium.lastAdjusted = new Date();
-		return await this.save();
+		return this.save();
 	}
 
 	async compareBiome(biome) {

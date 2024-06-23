@@ -1,5 +1,5 @@
-const { CustomRod, CustomRodData } = require('../schemas/CustomRodSchema');
-const { ItemData } = require('../schemas/ItemSchema');
+const { CustomRodData } = require('../schemas/CustomRodSchema');
+const { Item, ItemData } = require('../schemas/ItemSchema');
 
 class FishingRod {
 	constructor(data) {
@@ -7,7 +7,7 @@ class FishingRod {
 	}
 
 	save() {
-		return CustomRod.findOneAndUpdate({ _id: this.rod._id }, this.rod, { runValidators: true, new: true }).exec();
+		return CustomRodData.findOneAndUpdate({ _id: this.rod._id }, this.rod, { upsert: true });
 	}
 
 	async getId() {
@@ -97,7 +97,7 @@ class FishingRod {
 		this.rod.repairs = repairs;
 		this.rod.maxRepairs = maxRepairs;
 		this.rod.repairCost = repairCost;
-		return await this.save();
+		await this.save();
 	}
 }
 

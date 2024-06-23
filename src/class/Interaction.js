@@ -7,8 +7,8 @@ class Interaction {
 	}
 
 	save() {
-		return InteractionSchema.findOneAndUpdate({ _id: this.interaction._id }, this.interaction, { runValidators: true, new: true }).exec();
-	  }
+		return InteractionSchema.findOneAndUpdate({ _id: this.interaction._id }, this.interaction, { upsert: true });
+	}
 
 	async getId() {
 		return this.interaction._id;
@@ -48,7 +48,7 @@ class Interaction {
 
 	async setCommand(command) {
 		this.interaction.command = command;
-		return await this.save();
+		return this.save();
 	}
 
 	async getInteractions() {
@@ -57,7 +57,7 @@ class Interaction {
 
 	async pushInteraction(interaction) {
 		this.interaction.interactions.push(interaction);
-		return await this.save();
+		return this.save();
 	}
 
 	async getStatus() {
@@ -66,7 +66,7 @@ class Interaction {
 
 	async setStatus(status) {
 		this.interaction.status = status;
-		return await this.save();
+		return this.save();
 	}
 
 	async getStatusMessage() {
@@ -74,8 +74,8 @@ class Interaction {
 	}
 
 	async setStatusMessage(message) {
-		this.interaction.statusMessage = message;
-		return await this.save();
+		this.interaction.statusMessage += message + '\n';
+		return this.save();
 	}
 }
 

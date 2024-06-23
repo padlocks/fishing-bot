@@ -36,10 +36,6 @@ module.exports = {
 		}
 		catch (err) {
 			// console.error(err);
-			if (process.env.ANALYTICS || config.client.analytics) {
-				await analyticsObject.setStatus('failed');
-				await analyticsObject.setStatusMessage(err);
-			}
 		}
 	},
 };
@@ -126,7 +122,7 @@ const processBaitSelection = async (selection, userData, user, analyticsObject) 
 		if (!await hasEnoughMoney(userData, originalItem, amount)) {
 			// update interaction
 			if (process.env.ANALYTICS || config.client.analytics) {
-				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatus('failed');
 				await analyticsObject.setStatusMessage('User does not have enough money to buy item');
 			}
 			return await i.reply({
