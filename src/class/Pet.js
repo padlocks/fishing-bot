@@ -3,17 +3,14 @@ const { Habitat } = require('../schemas/HabitatSchema');
 const { PetFish } = require('../schemas/PetSchema');
 const { User } = require('../schemas/UserSchema');
 const { getWeightedChoice } = require('../util/Utils');
-const { Queue } = require('./Queue');
 
 class Pet {
 	constructor(data) {
 		this.pet = new PetFish(data);
 	}
 
-	async save() {
-		const queue = new Queue(1);
-	
-		return await queue.add(() => this.pet.save);
+	save() {
+		return PetFish.findOneAndUpdate({ _id: this.pet._id }, this.pet, { runValidators: true, new: true }).exec();
 	}
 
 	async getId() {

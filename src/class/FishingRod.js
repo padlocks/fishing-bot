@@ -1,16 +1,13 @@
-const { CustomRodData } = require('../schemas/CustomRodSchema');
-const { Item, ItemData } = require('../schemas/ItemSchema');
-const { Queue } = require('./Queue');
+const { CustomRod, CustomRodData } = require('../schemas/CustomRodSchema');
+const { ItemData } = require('../schemas/ItemSchema');
 
 class FishingRod {
 	constructor(data) {
 		this.rod = new CustomRodData(data);
 	}
 
-	async save() {
-		const queue = new Queue(1);
-	
-		return await queue.add(() => this.rod.save);
+	save() {
+		return CustomRod.findOneAndUpdate({ _id: this.rod._id }, this.rod, { runValidators: true, new: true }).exec();
 	}
 
 	async getId() {

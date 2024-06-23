@@ -5,17 +5,14 @@ const { User: UserSchema } = require('../schemas/UserSchema');
 const { BuffData } = require('../schemas/BuffSchema');
 const config = require('../config');
 const fetch = require('node-fetch');
-const { Queue } = require('./Queue');
 
 class User {
 	constructor(data) {
 		this.user = new UserSchema(data);
 	}
 
-	async save() {
-		const queue = new Queue(1);
-	
-		return await queue.add(() => this.user.save);
+	save() {
+		return UserSchema.findOneAndUpdate({ _id: this.user._id }, this.user, { runValidators: true, new: true }).exec();
 	}
 
 	async getId() {
@@ -113,18 +110,20 @@ class User {
 		return fish;
 	}
 
-	async removeFish(fishId) {
+	async removeFish(fishId, count = 1) {
 		// if fish count is greater than 1, decrement count
 		const fish = await FishData.findById(fishId);
 		if (fish.count > 1) {
-			fish.count--;
+			fish.count -= count;
 			await fish.save();
-			return;
 		}
-		else {
+
+		if (fish.count <= 0) {
 			this.user.inventory.fish = this.user.inventory.fish.filter((f) => f.valueOf() !== fishId);
 			return await this.save();
 		}
+
+		return;
 	}
 
 	async removeListOfFish(fishIds) {

@@ -13,7 +13,9 @@ module.exports = {
 		const userData = new User(await getUser(interaction.user.id));
 		if (!userData) return;
 
-		if ((await userData.getStats()).soldLatestFish) {
+		const stats = await userData.getStats();
+
+		if (stats.soldLatestFish) {
 			if (process.env.ANALYTICS || config.client.analytics) {
 				await analyticsObject.setStatus('failed');
 				await analyticsObject.setStatusMessage('User already sold these fish!');
@@ -37,9 +39,12 @@ module.exports = {
 			const fishData = await FishData.findById(fish.valueOf());
 			const value = fishData.value * cashMultiplier * fishData.count;
 			// newFish.push(...userData.inventory.fish.filter(x => x._id.valueOf() !== fishData._id.valueOf()));
-			await userData.removeFish(fishData._id);
+			await userData.removeFish(fishData._id, fishData.count);
 			await userData.addMoney(value);
 		}
+
+		stats.soldLatestFish = true;
+		await userData.setStats(stats);
 
 		if (process.env.ANALYTICS || config.client.analytics) {
 			await analyticsObject.setStatus('completed');

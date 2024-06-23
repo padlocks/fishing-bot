@@ -1,16 +1,13 @@
 const { default: mongoose } = require('mongoose');
 const { Habitat } = require('../schemas/HabitatSchema');
-const { Queue } = require('./Queue');
 
 class Aquarium {
 	constructor(data) {
 		this.aquarium = new Habitat(data);
 	}
 
-	async save() {
-		const queue = new Queue(1);
-	
-		return await queue.add(() => this.aquarium.save);
+	save() {
+		return Habitat.findOneAndUpdate({ _id: this.aquarium._id }, this.aquarium, { runValidators: true, new: true }).exec();
 	}
 
 	async getId() {

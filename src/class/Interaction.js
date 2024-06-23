@@ -1,18 +1,14 @@
-const { default: mongoose } = require('mongoose');
 const { Interaction: InteractionSchema } = require('../schemas/InteractionSchema');
 const { Command } = require('../schemas/CommandSchema');
-const { Queue } = require('./Queue');
 
 class Interaction {
 	constructor(data) {
 		this.interaction = new InteractionSchema(data);
 	}
 
-	async save() {
-		const queue = new Queue(1);
-	
-		return await queue.add(() => this.interaction.save);
-	}
+	save() {
+		return InteractionSchema.findOneAndUpdate({ _id: this.interaction._id }, this.interaction, { runValidators: true, new: true }).exec();
+	  }
 
 	async getId() {
 		return this.interaction._id;
