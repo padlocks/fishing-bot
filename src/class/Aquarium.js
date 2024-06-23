@@ -1,13 +1,16 @@
 const { default: mongoose } = require('mongoose');
 const { Habitat } = require('../schemas/HabitatSchema');
+const { Queue } = require('./Queue');
 
 class Aquarium {
 	constructor(data) {
 		this.aquarium = new Habitat(data);
 	}
 
-	save() {
-		return this.aquarium.save();
+	async save() {
+		const queue = new Queue(1);
+	
+		return await queue.add(() => this.aquarium.save);
 	}
 
 	async getId() {
@@ -68,12 +71,12 @@ class Aquarium {
 		this.aquarium.cleanliness -= cleanlinessDecay;
 		this.aquarium.temperature += temperatureDecay;
 
-		return this.save();
+		return await this.save();
 	}
 
 	async addFish(fishId) {
 		this.aquarium.fish.push(fishId);
-		return this.save();
+		return await this.save();
 	}
 
 	async removeFish(fishId) {
@@ -81,7 +84,7 @@ class Aquarium {
 			// console.log(fish._id.valueOf(), fishId.valueOf(), fish._id.valueOf() !== fishId.valueOf());
 			return fish._id.valueOf() !== fishId.valueOf();
 		});
-		return this.save();
+		return await this.save();
 	}
 
 	async moveFish(pet, newAquarium) {
@@ -113,19 +116,19 @@ class Aquarium {
 
 	async upgrade(size) {
 		this.aquarium.size = size;
-		return this.save();
+		return await this.save();
 	}
 
 	async clean() {
 		this.aquarium.cleanliness = 100;
 		this.aquarium.lastCleaned = new Date();
-		return this.save();
+		return await this.save();
 	}
 
 	async adjustTemperature(newTemperature) {
 		this.aquarium.temperature = newTemperature;
 		this.aquarium.lastAdjusted = new Date();
-		return this.save();
+		return await this.save();
 	}
 
 	async compareBiome(biome) {

@@ -1,14 +1,17 @@
 const { default: mongoose } = require('mongoose');
 const { Interaction: InteractionSchema } = require('../schemas/InteractionSchema');
 const { Command } = require('../schemas/CommandSchema');
+const { Queue } = require('./Queue');
 
 class Interaction {
 	constructor(data) {
 		this.interaction = new InteractionSchema(data);
 	}
 
-	save() {
-		return this.interaction.save();
+	async save() {
+		const queue = new Queue(1);
+	
+		return await queue.add(() => this.interaction.save);
 	}
 
 	async getId() {
@@ -49,7 +52,7 @@ class Interaction {
 
 	async setCommand(command) {
 		this.interaction.command = command;
-		return this.interaction.save();
+		return await this.save();
 	}
 
 	async getInteractions() {
@@ -58,7 +61,7 @@ class Interaction {
 
 	async pushInteraction(interaction) {
 		this.interaction.interactions.push(interaction);
-		return this.interaction.save();
+		return await this.save();
 	}
 
 	async getStatus() {
@@ -67,7 +70,7 @@ class Interaction {
 
 	async setStatus(status) {
 		this.interaction.status = status;
-		return this.interaction.save();
+		return await this.save();
 	}
 
 	async getStatusMessage() {
@@ -76,7 +79,7 @@ class Interaction {
 
 	async setStatusMessage(message) {
 		this.interaction.statusMessage = message;
-		return this.interaction.save();
+		return await this.save();
 	}
 }
 

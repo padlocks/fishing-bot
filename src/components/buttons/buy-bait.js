@@ -125,8 +125,10 @@ const processBaitSelection = async (selection, userData, user, analyticsObject) 
 
 		if (!await hasEnoughMoney(userData, originalItem, amount)) {
 			// update interaction
-			await analyticsObject.setStatus('completed');
-			await analyticsObject.setStatusMessage('User does not have enough money to buy item');
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('User does not have enough money to buy item');
+			}
 			return await i.reply({
 				content: 'You do not have enough money to buy this item!',
 				ephemeral: true,
@@ -136,8 +138,10 @@ const processBaitSelection = async (selection, userData, user, analyticsObject) 
 		else {
 			await buyItem(userData, originalItem, amount);
 			// update interaction
-			await analyticsObject.setStatus('completed');
-			await analyticsObject.setStatusMessage('Successfully bought item');
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Successfully bought item');
+			}
 			await i.reply({
 				components: [],
 				content: `You have successfully bought ${amount} ${originalItem.name}!`,

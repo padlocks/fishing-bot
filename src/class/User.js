@@ -5,14 +5,17 @@ const { User: UserSchema } = require('../schemas/UserSchema');
 const { BuffData } = require('../schemas/BuffSchema');
 const config = require('../config');
 const fetch = require('node-fetch');
+const { Queue } = require('./Queue');
 
 class User {
 	constructor(data) {
 		this.user = new UserSchema(data);
 	}
 
-	save() {
-		return this.user.save();
+	async save() {
+		const queue = new Queue(1);
+	
+		return await queue.add(() => this.user.save);
 	}
 
 	async getId() {
@@ -33,7 +36,7 @@ class User {
 
 	async setCurrentBiome(biome) {
 		this.user.currentBiome = biome;
-		await this.save();
+		return await this.save();
 	}
 
 	async getStats() {
@@ -42,7 +45,7 @@ class User {
 
 	async setStats(stats) {
 		this.user.stats = stats;
-		await this.save();
+		return await this.save();
 	}
 
 	async getMoney() {
@@ -51,7 +54,7 @@ class User {
 
 	async addMoney(amount) {
 		this.user.inventory.money += parseInt(amount);
-		await this.save();
+		return await this.save();
 	}
 
 	async getInventory() {
@@ -66,7 +69,7 @@ class User {
 
 	async removeBait(baitId) {
 		this.user.inventory.baits = this.user.inventory.baits.filter((b) => b.valueOf() !== baitId);
-		await this.save();
+		return await this.save();
 	}
 
 	async getItems() {
@@ -89,7 +92,7 @@ class User {
 
 	async addQuest(questId) {
 		this.user.inventory.quests.push(questId);
-		await this.save();
+		return await this.save();
 	}
 
 	async getGacha() {
@@ -120,14 +123,14 @@ class User {
 		}
 		else {
 			this.user.inventory.fish = this.user.inventory.fish.filter((f) => f.valueOf() !== fishId);
-			await this.save();
+			return await this.save();
 		}
 	}
 
 	async removeListOfFish(fishIds) {
 		fishIds = fishIds.map((f) => f.valueOf());
 		this.user.inventory.fish = this.user.inventory.fish.filter((f) => !fishIds.includes(f.valueOf()));
-		await this.save();
+		return await this.save();
 	}
 
 	async getCodes() {
@@ -137,7 +140,7 @@ class User {
 	async addCode(codeId) {
 		const codes = await this.getCodes();
 		codes.push(codeId);
-		return this.save();
+		return await this.save();
 	}
 
 	async generateBoostedXP() {
@@ -209,7 +212,7 @@ class User {
 
 	async addXP(amount) {
 		this.user.xp += amount;
-		await this.save();
+		return await this.save();
 	}
 
 	async getLevel() {
@@ -416,12 +419,12 @@ class User {
 			}
 		});
 
-		await this.save();
+		return await this.save();
 	}
 
 	async addCustomRodToInventory(rodId) {
 		(await this.getInventory()).rods.push(rodId);
-		await this.save();
+		return await this.save();
 	}
 
 	async sendToInventory(item, count = 1) {
@@ -543,7 +546,7 @@ class User {
 		await buff.save();
 
 		user.inventory.buffs = user.inventory.buffs.filter((b) => b.id !== buff.id);
-		await this.save();
+		return await this.save();
 	}
 
 	async updateLevel() {
@@ -563,7 +566,7 @@ class User {
 	async setLastVoted() {
 		const user = this.user;
 		user.stats.lastVoted = Date.now();
-		await this.save();
+		return await this.save();
 	}
 
 	async vote() {

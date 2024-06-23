@@ -1,13 +1,16 @@
 const { CustomRodData } = require('../schemas/CustomRodSchema');
 const { Item, ItemData } = require('../schemas/ItemSchema');
+const { Queue } = require('./Queue');
 
 class FishingRod {
 	constructor(data) {
 		this.rod = new CustomRodData(data);
 	}
 
-	save() {
-		return this.rod.save();
+	async save() {
+		const queue = new Queue(1);
+	
+		return await queue.add(() => this.rod.save);
 	}
 
 	async getId() {
@@ -97,7 +100,7 @@ class FishingRod {
 		this.rod.repairs = repairs;
 		this.rod.maxRepairs = maxRepairs;
 		this.rod.repairCost = repairCost;
-		await this.save();
+		return await this.save();
 	}
 }
 
