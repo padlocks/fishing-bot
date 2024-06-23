@@ -1,5 +1,5 @@
 const { readdirSync } = require('fs');
-const { log } = require('../util/Utils');
+const { Utils } = require('../class/Utils');
 
 /**
  *
@@ -15,7 +15,7 @@ module.exports = (client) => {
 
 				if (type === 'prefix') {
 					if (!module.structure?.name || !module.run) {
-						log('Unable to load the command ' + file + ' due to missing \'structure#name\' or/and \'run\' properties.', 'warn');
+						Utils.log('Unable to load the command ' + file + ' due to missing \'structure#name\' or/and \'run\' properties.', 'warn');
 
 						continue;
 					}
@@ -30,7 +30,7 @@ module.exports = (client) => {
 				}
 				else {
 					if (!module.structure?.name || !module.run) {
-						log('Unable to load the command ' + file + ' due to missing \'structure#name\' or/and \'run\' properties.', 'warn');
+						Utils.log('Unable to load the command ' + file + ' due to missing \'structure#name\' or/and \'run\' properties.', 'warn');
 
 						continue;
 					}
@@ -39,7 +39,7 @@ module.exports = (client) => {
 					client.applicationcommandsArray.push(module.structure);
 				}
 
-				log('Loaded new command: ' + file, 'info');
+				Utils.log('Loaded new command: ' + file, 'info');
 			}
 		}
 	}

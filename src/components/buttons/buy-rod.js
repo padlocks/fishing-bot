@@ -1,9 +1,9 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, ComponentType } = require('discord.js');
-const { selectionOptions, getCollectionFilter } = require('../../util/Utils');
+const { ActionRowBuilder, StringSelectMenuBuilder, ComponentType, EmbedBuilder } = require('discord.js');
+const { Utils } = require('../../class/Utils');
 const { Item } = require('../../schemas/ItemSchema');
-const { User, getUser } = require('../../class/User');
+const { User } = require('../../class/User');
 const config = require('../../config');
-const { generateCommandObject } = require('../../class/Interaction');
+const { Interaction } = require('../../class/Interaction');
 
 module.exports = {
 	customId: 'buy-rod',
@@ -37,7 +37,7 @@ module.exports = {
 };
 
 const getRodOptions = async () => {
-	let options = await Promise.all(await selectionOptions('rod'));
+	let options = await Promise.all(await Utils.selectionOptions('rod'));
 	options = options.filter((option) => option !== undefined);
 	return options;
 };
@@ -78,13 +78,13 @@ const updateInteraction = async (interaction, row, components) => {
 };
 
 const getSelection = async (response, userId, analyticsObject) => {
-	const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['select-rod'], userId), time: 90_000 });
+	const collector = response.createMessageComponentCollector({ filter: Utils.getCollectionFilter(['select-rod'], userId), time: 90_000 });
 
 	collector.on('collect', async i => {
 		if (process.env.ANALYTICS || config.client.analytics) {
-			await generateCommandObject(i, analyticsObject);
+			await Interaction.generateCommandObject(i, analyticsObject);
 		}
-		const userData = new User(await getUser(userId));
+		const userData = new User(await User.get(userId));
 		return await processRodSelection(i, userData, analyticsObject);
 	});
 };
@@ -100,8 +100,20 @@ const processRodSelection = async (selection, userData, analyticsObject) => {
 			await analyticsObject.setStatus('failed');
 			await analyticsObject.setStatusMessage('User does not have enough money to buy this item!');
 		}
+
+		let embeds = [];
+		embeds.push(new EmbedBuilder()
+			.setTitle('Shop')
+			.setColor('Red')
+			.addFields(
+				{ name: 'Uh-oh!', value: 'You do not have enough money to buy that item', inline: false },
+				{ name: 'Price', value: `$${(originalItem.price).toLocaleString()}`, inline: true },
+				{ name: 'Balance', value: `$${(await userData.getMoney()).toLocaleString()}`, inline: true },
+			),
+		);
+
 		return await selection.reply({
-			content: 'You do not have enough money to buy this item!',
+			embeds: embeds,
 			ephemeral: true,
 			components: [],
 		});
@@ -112,9 +124,18 @@ const processRodSelection = async (selection, userData, analyticsObject) => {
 			await analyticsObject.setStatus('completed');
 			await analyticsObject.setStatusMessage('User has successfully bought a fishing rod!');
 		}
-		await selection.reply({
+		let embeds = [];
+		embeds.push(new EmbedBuilder()
+			.setTitle('Shop')
+			.setColor('Green')
+			.addFields(
+				{ name: 'Congrats!', value: `You have successfully bought ${originalItem.name}`, inline: false },
+				{ name: 'New Balance', value: `$${(await userData.getMoney()).toLocaleString()}`, inline: true },
+			),
+		);
+		return await selection.reply({
 			components: [],
-			content: `You have successfully bought a ${originalItem.name}!`,
+			embeds: embeds,
 			ephemeral: true,
 		});
 	}
@@ -123,8 +144,18 @@ const processRodSelection = async (selection, userData, analyticsObject) => {
 			await analyticsObject.setStatus('failed');
 			await analyticsObject.setStatusMessage('User does not meet level requirements');
 		}
+
+		let embeds = [];
+		embeds.push(new EmbedBuilder()
+			.setTitle('Shop')
+			.setColor('Red')
+			.addFields(
+				{ name: 'Uh-oh!', value: `You need to be level ${(originalItem.toJSON()).requirements.level} to buy this item!`, inline: false },
+			),
+		);
+
 		await selection.reply({
-			content: `You need to be level ${(originalItem.toJSON()).requirements.level} to buy this item!`,
+			embeds: embeds,
 			ephemeral: true,
 			components: [],
 		});

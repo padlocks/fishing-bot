@@ -1,9 +1,9 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, ButtonStyle, ButtonBuilder, ComponentType } = require('discord.js');
-const { selectionOptions, getCollectionFilter } = require('../../util/Utils');
+const { ActionRowBuilder, StringSelectMenuBuilder, ButtonStyle, ButtonBuilder, ComponentType, EmbedBuilder } = require('discord.js');
+const { Utils } = require('../../class/Utils');
 const { Item, ItemData } = require('../../schemas/ItemSchema');
-const { User, getUser } = require('../../class/User');
+const { User } = require('../../class/User');
 const config = require('../../config');
-const { generateCommandObject } = require('../../class/Interaction');
+const { Interaction } = require('../../class/Interaction');
 
 module.exports = {
 	customId: 'buy-bait',
@@ -41,7 +41,7 @@ module.exports = {
 };
 
 const getBaitOptions = async () => {
-	let options = await Promise.all(await selectionOptions('bait'));
+	let options = await Promise.all(await Utils.selectionOptions('bait'));
 	options = options.filter((option) => option !== undefined);
 	return options;
 };
@@ -75,13 +75,13 @@ const removeAdditionalActionRows = (num, components) => {
 };
 
 const getBaitSelection = async (response, user, analyticsObject) => {
-	const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['select-bait'], user), time: 90_000 });
+	const collector = response.createMessageComponentCollector({ filter: Utils.getCollectionFilter(['select-bait'], user), time: 90_000 });
 
 	collector.on('collect', async i => {
 		if (process.env.ANALYTICS || config.client.analytics) {
-			await generateCommandObject(i, analyticsObject);
+			await Interaction.generateCommandObject(i, analyticsObject);
 		}
-		const userData = new User(await getUser(user));
+		const userData = new User(await User.get(user));
 		return await processBaitSelection(i, userData, user, analyticsObject);
 	});
 };
@@ -95,8 +95,18 @@ const processBaitSelection = async (selection, userData, user, analyticsObject) 
 			await analyticsObject.setStatus('failed');
 			await analyticsObject.setStatusMessage('User does not meet level requirements');
 		}
+
+		let embeds = [];
+		embeds.push(new EmbedBuilder()
+			.setTitle('Shop')
+			.setColor('Red')
+			.addFields(
+				{ name: 'Uh-oh!', value: `You need to be level ${originalItem.toJSON().requirements.level} to buy this item!`, inline: false },
+			),
+		);
+		
 		return await selection.reply({
-			content: `You need to be level ${originalItem.toJSON().requirements.level} to buy this item!`,
+			embeds: embeds,
 			ephemeral: true,
 			components: [],
 		});
@@ -110,23 +120,38 @@ const processBaitSelection = async (selection, userData, user, analyticsObject) 
 		components: [...components, amountRow],
 	});
 
-	const amountCollector = await amountResponse.createMessageComponentCollector({ filter: getCollectionFilter(['buy-one', 'buy-five', 'buy-ten', 'buy-hundred'], user), time: 90_000 });
+	const amountCollector = await amountResponse.createMessageComponentCollector({ filter: Utils.getCollectionFilter(['buy-one', 'buy-five', 'buy-ten', 'buy-hundred', 'select-bait', 'buy-other'], user), time: 90_000 });
 	amountCollector.on('collect', async i => {
+		if (i.customId === 'select-bait') return amountCollector.stop();
+		if (i.customId === 'buy-other') return amountCollector.stop();
+		
 		const amountChoice = i.customId;
 		const amount = await getAmountFromChoice(amountChoice);
 
 		if (process.env.ANALYTICS || config.client.analytics) {
-			await generateCommandObject(i, analyticsObject);
+			await Interaction.generateCommandObject(i, analyticsObject);
 		}
 
 		if (!await hasEnoughMoney(userData, originalItem, amount)) {
 			// update interaction
 			if (process.env.ANALYTICS || config.client.analytics) {
 				await analyticsObject.setStatus('failed');
-				await analyticsObject.setStatusMessage('User does not have enough money to buy item');
+				await analyticsObject.setStatusMessage('User does not have enough money to buy items');
 			}
+
+			let embeds = [];
+			embeds.push(new EmbedBuilder()
+				.setTitle('Shop')
+				.setColor('Red')
+				.addFields(
+					{ name: 'Uh-oh!', value: 'You do not have enough money to buy that amount', inline: false },
+					{ name: 'Price', value: `$${(originalItem.price * amount).toLocaleString()}`, inline: true },
+					{ name: 'Balance', value: `$${(await userData.getMoney()).toLocaleString()}`, inline: true },
+				),
+			);
+			
 			return await i.reply({
-				content: 'You do not have enough money to buy this item!',
+				embeds: embeds,
 				ephemeral: true,
 				components: [],
 			});
@@ -138,10 +163,20 @@ const processBaitSelection = async (selection, userData, user, analyticsObject) 
 				await analyticsObject.setStatus('completed');
 				await analyticsObject.setStatusMessage('Successfully bought item');
 			}
-			await i.reply({
-				components: [],
-				content: `You have successfully bought ${amount} ${originalItem.name}!`,
+			let embeds = [];
+			embeds.push(new EmbedBuilder()
+				.setTitle('Shop')
+				.setColor('Green')
+				.addFields(
+					{ name: 'Congrats!', value: `You have successfully bought ${amount} ${originalItem.name}!`, inline: false },
+					{ name: 'New Balance', value: `$${(await userData.getMoney()).toLocaleString()}`, inline: true },
+				),
+			);
+			
+			return await i.reply({
+				embeds: embeds,
 				ephemeral: true,
+				components: [],
 			});
 		}
 	});

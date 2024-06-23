@@ -1,14 +1,14 @@
 const { SlashCommandBuilder, EmbedBuilder, ButtonStyle, ActionRowBuilder, ButtonBuilder, ComponentType } = require('discord.js');
-const { fish } = require('../../../util/Fish');
+const { Fish } = require('../../../class/Fish');
 const { findQuests } = require('../../../util/Quest');
 const { Pond } = require('../../../schemas/PondSchema');
 const { Item } = require('../../../schemas/ItemSchema');
-const { User, getUser } = require('../../../class/User');
+const { User } = require('../../../class/User');
 const config = require('../../../config');
-const { generateCommandObject } = require('../../../class/Interaction');
+const { Interaction } = require('../../../class/Interaction');
 
 const updateUserWithFish = async (interaction, userId) => {
-	const user = new User(await getUser(userId));
+	const user = new User(await User.get(userId));
 	const pond = await Pond.findOne({ id: interaction.channel.id });
 	if (pond && pond.count <= 0) {
 		return { fish: [], questsCompleted: [], xp: 0, rodState: '', success: false, message: 'The pond is empty!' };
@@ -16,7 +16,7 @@ const updateUserWithFish = async (interaction, userId) => {
 	let rod = await user.getEquippedRod();
 	const bait = await user.getEquippedBait();
 	const biome = await user.getCurrentBiome();
-	const fishArray = await fish(rod._id, bait, biome, user);
+	const fishArray = await Fish.reel(rod._id, bait, biome, user);
 	let xp = 0;
 	let levelUp = false;
 
@@ -29,7 +29,7 @@ const updateUserWithFish = async (interaction, userId) => {
 	}
 
 	const completedQuests = [];
-	// const user = await getUser(userId);
+	// const user = await User.get(userId);
 	if (user) {
 		const stats = await user.getStats();
 		stats.latestFish = [];
@@ -155,7 +155,7 @@ const followUpMessage = async (interaction, user, fishArray, completedQuests, xp
 	let totalQuestCash = 0;
 	const questRewards = [];
 	let fishAgainDisabled = false;
-	const userObj = new User(await getUser(user.id));
+	const userObj = new User(await User.get(user.id));
 
 	if (success) {
 		fishArray.forEach(f => {
@@ -290,10 +290,16 @@ module.exports = {
 			if (collectionInteraction.user.id !== user.id) return;
 			if (collectionInteraction.customId === 'fish-again') {
 				if (process.env.ANALYTICS || config.client.analytics) {
-					await generateCommandObject(collectionInteraction, analyticsObject);
+					await Interaction.generateCommandObject(collectionInteraction, analyticsObject);
 				}
 				await this.run(client, collectionInteraction, analyticsObject, user);
 			}
+		});
+
+		collector.on('end', async () => {
+			await followUp.edit({
+				components: [],
+			});
 		});
 	},
 };

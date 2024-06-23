@@ -1,5 +1,5 @@
 const { readdirSync } = require('fs');
-const { log } = require('../util/Utils');
+const { Utils } = require('../class/Utils');
 
 /**
  *
@@ -13,12 +13,12 @@ module.exports = (client) => {
 			if (!module) continue;
 
 			if (!module.event || !module.run) {
-				log('Unable to load the event ' + file + ' due to missing \'name\' or/and \'run\' properties.', 'warn');
+				Utils.log('Unable to load the event ' + file + ' due to missing \'name\' or/and \'run\' properties.', 'warn');
 
 				continue;
 			}
 
-			log('Loaded new event: ' + file, 'info');
+			Utils.log('Loaded new event: ' + file, 'info');
 
 			if (module.once) {
 				client.once(module.event, (...args) => module.run(client, ...args));

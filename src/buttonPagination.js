@@ -1,6 +1,6 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 const config = require('./config');
-const { generateCommandObject } = require('./class/Interaction');
+const { Interaction } = require('./class/Interaction');
 
 module.exports = async (interaction, pages, analyticsObject = null, deferred = false, components = [], time = 90_000) => {
 	try {
@@ -43,7 +43,7 @@ module.exports = async (interaction, pages, analyticsObject = null, deferred = f
 			await i.deferUpdate({});
 
 			if (process.env.ANALYTICS || config.client.analytics) {
-				await generateCommandObject(i, analyticsObject);
+				await Interaction.generateCommandObject(i, analyticsObject);
 			}
 
 			if (i.customId === 'prev') {
@@ -79,14 +79,14 @@ module.exports = async (interaction, pages, analyticsObject = null, deferred = f
 
 			mc.resetTimer();
 
-			mc.on('end', async () => {
-				await msg.edit({
-					embeds: [pages[index]],
-					components: [],
-				});
-			});
-
 			return msg;
+		});
+
+		mc.on('end', async () => {
+			await msg.edit({
+				embeds: [pages[index]],
+				components: [],
+			});
 		});
 	}
 	catch (err) {

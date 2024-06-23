@@ -2,7 +2,7 @@ const {
 	SlashCommandBuilder,
 	EmbedBuilder,
 } = require('discord.js');
-const { User, getUser } = require('../../../class/User');
+const { User } = require('../../../class/User');
 const config = require('../../../config');
 
 module.exports = {
@@ -25,7 +25,7 @@ module.exports = {
 		const name = interaction.options.getString('name');
 
 		// Open the box
-		const user = new User(await getUser(interaction.user.id));
+		const user = new User(await User.get(interaction.user.id));
 		const opened = await user.openBox(name.toLowerCase());
 		let description = 'Rewards: \n';
 

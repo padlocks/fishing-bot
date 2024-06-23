@@ -1,10 +1,11 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, Events, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
-const { User, getUser } = require('../../../class/User');
+const { User } = require('../../../class/User');
 const { FishingRod } = require('../../../class/FishingRod');
-const { CustomRod, CustomRodData } = require('../../../schemas/CustomRodSchema');
+const { CustomRodData } = require('../../../schemas/CustomRodSchema');
 const { ItemData } = require('../../../schemas/ItemSchema');
-const { getCollectionFilter } = require('../../../util/Utils');
+const { Utils } = require('../../../class/Utils');
 const config = require('../../../config');
+const { Interaction } = require('../../../class/Interaction');
 
 const getSelectionOptions = async (parts, userId) => {
 	if (!parts) return [];
@@ -66,7 +67,7 @@ module.exports = {
 
 		const name = interaction.options.getString('name');
 
-		const userData = new User(await getUser(user.id));
+		const userData = new User(await User.get(user.id));
 		const userId = await userData.getUserId();
 		const items = await userData.getItems();
 		const parts = items.filter((item) => item.type.includes('part_'));
@@ -163,10 +164,10 @@ module.exports = {
 			handle: {id: null, object: null},
 		}
 
-		const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['craft-select-rod', 'craft-select-reel', 'craft-select-hook', 'craft-select-handle', 'craft-rod-submit', 'craft-rod-cancel'], user.id), time: 90_000 });
+		const collector = response.createMessageComponentCollector({ filter: Utils.getCollectionFilter(['craft-select-rod', 'craft-select-reel', 'craft-select-hook', 'craft-select-handle', 'craft-rod-submit', 'craft-rod-cancel'], user.id), time: 90_000 });
 		collector.on('collect', async i => {
 			if (process.env.ANALYTICS || config.client.analytics) {
-				await generateCommandObject(i, analyticsObject);
+				await Interaction.generateCommandObject(i, analyticsObject);
 			}
 			try {
 				if (i.customId === 'craft-rod-cancel') {
@@ -185,7 +186,7 @@ module.exports = {
 					return collector.stop();
 				}
 				else if (i.customId === 'craft-rod-submit') {
-					const userData = new User(await getUser(user.id));
+					const userData = new User(await User.get(user.id));
 					const rodObject = new CustomRodData({
 						name: name,
 						description: `Made by ${user.username}`,
@@ -273,6 +274,11 @@ module.exports = {
 				}
 				console.error(error);
 			}
+		});
+		collector.on('end', async () => {
+			await response.edit({
+				components: [],
+			});
 		});
 	},
 };

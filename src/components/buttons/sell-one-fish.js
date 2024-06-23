@@ -1,4 +1,4 @@
-const { User, getUser } = require('../../class/User');
+const { User } = require('../../class/User');
 const { FishData } = require('../../schemas/FishSchema');
 const { BuffData } = require('../../schemas/BuffSchema');
 const { ButtonComponent, ButtonBuilder } = require('discord.js');
@@ -11,7 +11,7 @@ module.exports = {
 	 * @param {ButtonInteraction} interaction
 	 */
 	run: async (client, interaction, analyticsObject) => {
-		const userData = new User(await getUser(interaction.user.id));
+		const userData = new User(await User.get(interaction.user.id));
 		if (!userData) return;
 
 		const stats = await userData.getStats();

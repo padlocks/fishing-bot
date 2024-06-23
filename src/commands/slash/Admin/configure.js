@@ -2,7 +2,7 @@ const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('disc
 const { Pond } = require('../../../schemas/PondSchema');
 const { Guild } = require('../../../schemas/GuildSchema');
 const config = require('../../../config');
-const { generateCommandObject } = require('../../../class/Interaction');
+const { Interaction } = require('../../../class/Interaction');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -24,7 +24,7 @@ module.exports = {
 		await interaction.deferReply();
 
 		if (process.env.ANALYTICS || config.client.analytics) {
-			await generateCommandObject(interaction, analyticsObject);
+			await Interaction.generateCommandObject(interaction, analyticsObject);
 		}
 
 		if (subcommand === 'pond') {

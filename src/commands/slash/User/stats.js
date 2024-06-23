@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const buttonPagination = require('../../../buttonPagination');
-const { User, getUser } = require('../../../class/User');
+const { User } = require('../../../class/User');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -16,7 +16,7 @@ module.exports = {
 	run: async (client, interaction, analyticsObject) => {
 		try {
 			const embeds = [];
-			const user = new User(await getUser(interaction.user.id));
+			const user = new User(await User.get(interaction.user.id));
 			const rods = await user.getRods();
 			const stats = await user.getStats();
 

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { User, getUser } = require('../../../class/User');
+const { User } = require('../../../class/User');
 const { Habitat } = require('../../../schemas/HabitatSchema');
 const { PetFish } = require('../../../schemas/PetSchema');
 const { Aquarium } = require('../../../class/Aquarium');
@@ -34,7 +34,7 @@ module.exports = {
 		const subcommand = interaction.options.getSubcommand();
 		await interaction.deferReply();
 
-		const user = new User(await getUser(interaction.user.id));
+		const user = new User(await User.get(interaction.user.id));
 		if (!user) {
 			if (process.env.ANALYTICS || config.client.analytics) {
 				await analyticsObject.setStatus('failed');

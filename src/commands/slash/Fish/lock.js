@@ -2,8 +2,8 @@ const {
 	SlashCommandBuilder,
 	EmbedBuilder,
 } = require('discord.js');
-const { User, getUser } = require('../../../class/User');
-const { log } = require('../../../util/Utils');
+const { User } = require('../../../class/User');
+const { Utils } = require('../../../class/Utils');
 const config = require('../../../config');
 
 module.exports = {
@@ -24,14 +24,14 @@ module.exports = {
 		await interaction.deferReply();
 
 		const name = interaction.options.getString('name');
-		const user = new User(await getUser(interaction.user.id));
+		const user = new User(await User.get(interaction.user.id));
 
 		if (!user) {
 			if (process.env.ANALYTICS || config.client.analytics) {
 				await analyticsObject.setStatus('failed');
 				await analyticsObject.setStatusMessage('User not found.');
 			}
-			log('User not found.', 'err');
+			Utils.log('User not found.', 'err');
 			await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()
@@ -73,7 +73,7 @@ module.exports = {
 				await analyticsObject.setStatus('failed');
 				await analyticsObject.setStatusMessage(err);
 			}
-			log('Error updating fish: ' + err, 'err');
+			Utils.log('Error updating fish: ' + err, 'err');
 			await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()

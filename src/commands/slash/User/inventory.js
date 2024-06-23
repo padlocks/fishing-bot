@@ -1,8 +1,8 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { FishData } = require('../../../schemas/FishSchema');
 const buttonPagination = require('../../../buttonPagination');
-const { User, getUser } = require('../../../class/User');
-const { getFishCount } = require('../../../util/Fish');
+const { User } = require('../../../class/User');
+const { Fish } = require('../../../class/Fish');
 const { Biome } = require('../../../schemas/BiomeSchema');
 const { ItemData } = require('../../../schemas/ItemSchema');
 const config = require('../../../config');
@@ -32,7 +32,7 @@ module.exports = {
 				lucky: [],
 			};
 
-			const user = new User(await getUser(interaction.user.id));
+			const user = new User(await User.get(interaction.user.id));
 			const inventory = await user.getInventory();
 			if (inventory.fish && Array.isArray(inventory.fish)) {
 				const fishNames = new Set();
@@ -41,7 +41,7 @@ module.exports = {
 						const fish = await FishData.findById(fishObject.valueOf());
 						if (!fishNames.has(fish.name)) {
 							fishNames.add(fish.name);
-							const fishCount = await getFishCount(await user.getUserId(), fish.name);
+							const fishCount = await Fish.getCount(await user.getUserId(), fish.name);
 							fishInventory[fish.rarity.toLowerCase()].push(`**${fishCount}** <${fish.icon?.animated ? 'a' : ''}:${fish.icon?.data}> ${fish.name} ${fish.locked ? '🔒' : ''}\n`);
 						}
 					}),

@@ -1,9 +1,9 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
 const { Quest } = require('../../../schemas/QuestSchema');
-const { User, getUser } = require('../../../class/User');
+const { User } = require('../../../class/User');
 const { startQuest, getQuests } = require('../../../util/Quest');
 const config = require('../../../config');
-const { generateCommandObject } = require('../../../class/Interaction');
+const { Interaction } = require('../../../class/Interaction');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -60,15 +60,14 @@ module.exports = {
 		});
 
 		const collector = response.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 15000 });
-
 		collector.on('collect', async i => {
 			if (process.env.ANALYTICS || config.client.analytics) {
-				await generateCommandObject(i, analyticsObject);
+				await Interaction.generateCommandObject(i, analyticsObject);
 			}
 
 			let canAccept = true;
 			const selection = i.values[0];
-			const userData = new User(await getUser(user.id));
+			const userData = new User(await User.get(user.id));
 			const originalQuest = await Quest.findById(selection);
 
 			// Check if user meets quest requirements
@@ -127,6 +126,11 @@ module.exports = {
 				await startQuest(await userData.getUserId(), originalQuest._id);
 				await i.reply(`${i.user} has started quest **${originalQuest.title}**!`);
 			}
+		});
+		collector.on('end', async () => {
+			await response.edit({
+				components: [],
+			});
 		});
 	},
 };

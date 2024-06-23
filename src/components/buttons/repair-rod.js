@@ -1,8 +1,8 @@
 const { ButtonStyle, ActionRowBuilder, ButtonBuilder, EmbedBuilder } = require('discord.js');
 const { RodData } = require('../../schemas/RodSchema');
-const { User, getUser } = require('../../class/User');
+const { User } = require('../../class/User');
 const config = require('../../config');
-const { generateCommandObject } = require('../../class/Interaction');
+const { Interaction } = require('../../class/Interaction');
 
 module.exports = {
 	customId: 'repair-rod',
@@ -12,7 +12,7 @@ module.exports = {
 	 * @param {ButtonInteraction} interaction
 	 */
 	run: async (client, interaction, analyticsObject) => {
-		const user = new User(await getUser(interaction.user.id));
+		const user = new User(await User.get(interaction.user.id));
 		const rod = await user.getEquippedRod();
 		if (!rod) {
 			if (process.env.ANALYTICS || config.client.analytics) {
@@ -72,7 +72,7 @@ module.exports = {
 			const confirmation = await response.awaitMessageComponent({ filter: collectorFilter, time: 90_000 });
 			
 			if (process.env.ANALYTICS || config.client.analytics) {
-				await generateCommandObject(confirmation, analyticsObject);
+				await Interaction.generateCommandObject(confirmation, analyticsObject);
 			}
 
 			if (confirmation.customId === 'confirm') {

@@ -1,8 +1,8 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
-const { User, getUser } = require('../../../class/User');
+const { User } = require('../../../class/User');
 const { ItemData } = require('../../../schemas/ItemSchema');
 const config = require('../../../config');
-const { generateCommandObject } = require('../../../class/Interaction');
+const { Interaction } = require('../../../class/Interaction');
 
 const selectionOptions = async (inventoryPath, userData, allowNone = true) => {
 	const uniqueValues = new Set();
@@ -128,10 +128,10 @@ module.exports = {
 
 		try {
 			const choice = await buttonResponse.awaitMessageComponent({ filter: collectorFilter, time: 90_000 });
-			const userData = new User(await getUser(user.id));
+			const userData = new User(await User.get(user.id));
 
 			if (process.env.ANALYTICS || config.client.analytics) {
-				await generateCommandObject(choice, analyticsObject);
+				await Interaction.generateCommandObject(choice, analyticsObject);
 			}
 
 			if (choice.customId === 'equip-rod') {
@@ -262,7 +262,7 @@ module.exports = {
 				const chosenBait = selection.values[0];
 
 				if (process.env.ANALYTICS || config.client.analytics) {
-					await generateCommandObject(selection, analyticsObject);
+					await Interaction.generateCommandObject(selection, analyticsObject);
 				}
 
 				const item = await ItemData.findById(chosenBait);
@@ -347,7 +347,7 @@ module.exports = {
 				const chosenBooster = selection.values[0];
 
 				if (process.env.ANALYTICS || config.client.analytics) {
-					await generateCommandObject(selection, analyticsObject);
+					await Interaction.generateCommandObject(selection, analyticsObject);
 				}
 
 				let newBooster = {};

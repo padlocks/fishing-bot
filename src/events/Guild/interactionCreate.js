@@ -1,6 +1,6 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 const config = require('../../config');
-const { User, getUser } = require('../../class/User');
+const { User } = require('../../class/User');
 const { Item } = require('../../schemas/ItemSchema');
 const { Guild } = require('../../schemas/GuildSchema');
 const { Pond } = require('../../schemas/PondSchema');
@@ -158,7 +158,7 @@ module.exports = {
 				}
 			}
 
-			const data = new User(await getUser(interaction.user.id));
+			const data = new User(await User.get(interaction.user.id));
 			const equippedRod = await data.getEquippedRod();
 			if (!equippedRod || (equippedRod.name === 'Old Rod' && equippedRod.state === 'destroyed')) {
 				const rod = await Item.findOne({ name: 'Old Rod' });

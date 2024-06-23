@@ -1,11 +1,11 @@
 const { connect } = require('mongoose');
 const config = require('../config');
-const { log } = require('../util/Utils');
+const { Utils } = require('../class/Utils');
 
 module.exports = async () => {
-	log('Started connecting to MongoDB...', 'warn');
+	Utils.log('Started connecting to MongoDB...', 'warn');
 
 	await connect(process.env.MONGODB_URI || config.handler.mongodb.uri).then(() => {
-		log('MongoDB is connected to the atlas!', 'done');
+		Utils.log('MongoDB is connected to the atlas!', 'done');
 	});
 };

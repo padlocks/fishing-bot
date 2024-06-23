@@ -1,5 +1,5 @@
 const { REST, Routes } = require('discord.js');
-const { log, isSnowflake } = require('../util/Utils');
+const { Utils } = require('../class/Utils');
 const config = require('../config');
 
 /**
@@ -12,13 +12,13 @@ module.exports = async (client) => {
 	);
 
 	try {
-		log('Started loading application commands... (this might take minutes!)', 'info');
+		Utils.log('Started loading application commands... (this might take minutes!)', 'info');
 
 		const guildId = process.env.GUILD_ID || config.development.guild;
 
 		if (config.development && config.development.enabled && guildId) {
-			if (!isSnowflake(guildId)) {
-				log('Guild ID is missing. Please set it in .env or config file or disable development in the config', 'err');
+			if (!Utils.isSnowflake(guildId)) {
+				Utils.log('Guild ID is missing. Please set it in .env or config file or disable development in the config', 'err');
 				return;
 			}
 
@@ -28,7 +28,7 @@ module.exports = async (client) => {
 				},
 			);
 
-			log(`Successfully loaded application commands to guild ${guildId}.`, 'done');
+			Utils.log(`Successfully loaded application commands to guild ${guildId}.`, 'done');
 		}
 		else {
 			await rest.put(
@@ -37,10 +37,10 @@ module.exports = async (client) => {
 				},
 			);
 
-			log('Successfully loaded application commands globally to Discord API.', 'done');
+			Utils.log('Successfully loaded application commands globally to Discord API.', 'done');
 		}
 	}
 	catch (e) {
-		log(`Unable to load application commands to Discord API: ${e.message}`, 'err');
+		Utils.log(`Unable to load application commands to Discord API: ${e.message}`, 'err');
 	}
 };
