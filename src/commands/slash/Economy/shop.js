@@ -13,7 +13,7 @@ module.exports = {
      * @param {ExtendedClient} client
      * @param {ChatInputCommandInteraction} interaction
      */
-	run: async (client, interaction) => {
+	run: async (client, interaction, analyticsObject) => {
 		try {
 			const embeds = [];
 			const shopItems = await Item.find({ shopItem: true });
@@ -65,7 +65,7 @@ module.exports = {
 			const buttonRow = new ActionRowBuilder()
 				.addComponents(buyRod, buyBait, buyOther);
 
-			await buttonPagination(interaction, embeds, false, [buttonRow]);
+			await buttonPagination(interaction, embeds, analyticsObject, false, [buttonRow]);
 		}
 		catch (err) {
 			console.error(err);

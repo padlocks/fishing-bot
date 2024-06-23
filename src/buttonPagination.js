@@ -1,6 +1,8 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
+const config = require('./config');
+const { generateCommandObject } = require('./class/Interaction');
 
-module.exports = async (interaction, pages, deferred = false, components = [], time = 90_000) => {
+module.exports = async (interaction, pages, analyticsObject = null, deferred = false, components = [], time = 90_000) => {
 	try {
 		if (!interaction || !pages || !pages.length > 0) throw new Error('Invalid arguments');
 
@@ -39,6 +41,10 @@ module.exports = async (interaction, pages, deferred = false, components = [], t
 			if (i.user.id !== interaction.user.id) return i.reply({ content: 'You are not allowed to do this!', ephemeral: true });
 
 			await i.deferUpdate({});
+
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await generateCommandObject(i, analyticsObject);
+			}
 
 			if (i.customId === 'prev') {
 				if (index > 0) index--;

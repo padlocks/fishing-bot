@@ -1,6 +1,8 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 const { User, getUser } = require('../../../class/User');
 const { ItemData } = require('../../../schemas/ItemSchema');
+const config = require('../../../config');
+const { generateCommandObject } = require('../../../class/Interaction');
 
 const selectionOptions = async (inventoryPath, userData, allowNone = true) => {
 	const uniqueValues = new Set();
@@ -83,7 +85,7 @@ module.exports = {
      * @param {ExtendedClient} client
      * @param {ChatInputCommandInteraction} interaction
      */
-	async run(client, interaction, user = null) {
+	async run(client, interaction, analyticsObject, user = null) {
 		if (user === null) user = interaction.user;
 
 		// Buttons
@@ -128,10 +130,19 @@ module.exports = {
 			const choice = await buttonResponse.awaitMessageComponent({ filter: collectorFilter, time: 90_000 });
 			const userData = new User(await getUser(user.id));
 
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await generateCommandObject(choice, analyticsObject);
+			}
+
 			if (choice.customId === 'equip-rod') {
 				let options = [];
 				options = await Promise.all(await selectionOptions('rods', userData, true));
 				options = options.filter((option) => option !== undefined);
+
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('No fishing rods found.');
+				}
 
 				if (options.length === 0) {
 					return await choice.update({
@@ -165,6 +176,10 @@ module.exports = {
 				const rodChoice = selection.values[0];
 				const item = await ItemData.findById(rodChoice);
 				if (!await checkItemRequirements(item, userData)) {
+					if (process.env.ANALYTICS || config.client.analytics) {
+						await analyticsObject.setStatus('failed');
+						await analyticsObject.setStatusMessage('Requirements not met.');
+					}
 					return await selection.update({
 						embeds: [
 							new EmbedBuilder()
@@ -178,6 +193,10 @@ module.exports = {
 				const newRod = await userData.setEquippedRod(rodChoice);
 
 				if (newRod === null) {
+					if (process.env.ANALYTICS || config.client.analytics) {
+						await analyticsObject.setStatus('completed');
+						await analyticsObject.setStatusMessage('Unequipped fishing rod.');
+					}
 					return await selection.update({
 						embeds: [
 							new EmbedBuilder()
@@ -188,6 +207,10 @@ module.exports = {
 					});
 				}
 				else {
+					if (process.env.ANALYTICS || config.client.analytics) {
+						await analyticsObject.setStatus('completed');
+						await analyticsObject.setStatusMessage('Equipped fishing rod.');
+					}
 					await selection.update({
 						components: [],
 						embeds: [
@@ -204,6 +227,10 @@ module.exports = {
 				options = options.filter((option) => option !== undefined);
 
 				if (options.length === 1) {
+					if (process.env.ANALYTICS || config.client.analytics) {
+						await analyticsObject.setStatus('failed');
+						await analyticsObject.setStatusMessage('No bait found.');
+					}
 					return await choice.update({
 						embeds: [
 							new EmbedBuilder()
@@ -234,8 +261,16 @@ module.exports = {
 				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 90_000 });
 				const chosenBait = selection.values[0];
 
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await generateCommandObject(selection, analyticsObject);
+				}
+
 				const item = await ItemData.findById(chosenBait);
 				if (!await checkItemRequirements(item, userData)) {
+					if (process.env.ANALYTICS || config.client.analytics) {
+						await analyticsObject.setStatus('failed');
+						await analyticsObject.setStatusMessage('Requirements not met.');
+					}
 					return await selection.update({
 						embeds: [
 							new EmbedBuilder()
@@ -257,6 +292,11 @@ module.exports = {
 					description = `Equipped bait: **${newBait.name}**`;
 				}
 
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('completed');
+					await analyticsObject.setStatusMessage('Equipped bait.');
+				}
+
 				await selection.update({
 					embeds: [
 						new EmbedBuilder()
@@ -272,6 +312,10 @@ module.exports = {
 				options = options.filter((option) => option !== undefined);
 
 				if (options.length === 0) {
+					if (process.env.ANALYTICS || config.client.analytics) {
+						await analyticsObject.setStatus('failed');
+						await analyticsObject.setStatusMessage('No boosters found.');
+					}
 					return await choice.update({
 						embeds: [
 							new EmbedBuilder()
@@ -302,10 +346,19 @@ module.exports = {
 				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 90_000 });
 				const chosenBooster = selection.values[0];
 
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await generateCommandObject(selection, analyticsObject);
+				}
+
 				let newBooster = {};
 				let description = '';
 				newBooster = await userData.startBooster(chosenBooster);
 				description = `Equipped booster: **${newBooster.name}**`;
+
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('completed');
+					await analyticsObject.setStatusMessage('Equipped booster.');
+				}
 
 				await selection.update({
 					embeds: [
@@ -317,6 +370,10 @@ module.exports = {
 				});
 			}
 			else if (choice.customId === 'cancel') {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('completed');
+					await analyticsObject.setStatusMessage('Cancelled equip.');
+				}
 				await choice.update({
 					embeds: [
 						new EmbedBuilder()
@@ -328,6 +385,11 @@ module.exports = {
 			}
 		}
 		catch (e) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage(e);
+			}
+
 			await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()

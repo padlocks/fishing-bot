@@ -14,7 +14,7 @@ module.exports = {
      * @param {ExtendedClient} client
      * @param {ChatInputCommandInteraction} interaction
      */
-	run: async (client, interaction) => {
+	run: async (client, interaction, analyticsObject) => {
 		try {
 			const embeds = [];
 			const target = interaction.options.getUser('user') || interaction.user;
@@ -50,7 +50,12 @@ module.exports = {
 				);
 			}
 
-			await buttonPagination(interaction, embeds);
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('completed');
+				await analyticsObject.setStatusMessage('Checked collection.');
+			}
+
+			await buttonPagination(interaction, embeds, analyticsObject);
 		}
 		catch (err) {
 			console.error(err);

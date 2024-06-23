@@ -2,10 +2,12 @@ const { ActionRowBuilder, StringSelectMenuBuilder, ButtonStyle, ButtonBuilder, C
 const { selectionOptions, getCollectionFilter } = require('../../util/Utils');
 const { Item, ItemData } = require('../../schemas/ItemSchema');
 const { User, getUser } = require('../../class/User');
+const config = require('../../config');
+const { generateCommandObject } = require('../../class/Interaction');
 
 module.exports = {
 	customId: 'buy-bait',
-	run: async (client, interaction) => {
+	run: async (client, interaction, analyticsObject) => {
 		const user = interaction.user;
 
 		try {
@@ -29,11 +31,15 @@ module.exports = {
 				components: [...components, row],
 			});
 
-			await getBaitSelection(response, user.id);
+			await getBaitSelection(response, user.id, analyticsObject);
 
 		}
 		catch (err) {
 			// console.error(err);
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage(err);
+			}
 		}
 	},
 };
@@ -72,20 +78,27 @@ const removeAdditionalActionRows = (num, components) => {
 	return components;
 };
 
-const getBaitSelection = async (response, user) => {
+const getBaitSelection = async (response, user, analyticsObject) => {
 	const collector = response.createMessageComponentCollector({ filter: getCollectionFilter(['select-bait'], user), time: 90_000 });
 
 	collector.on('collect', async i => {
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await generateCommandObject(i, analyticsObject);
+		}
 		const userData = new User(await getUser(user));
-		return await processBaitSelection(i, userData, user);
+		return await processBaitSelection(i, userData, user, analyticsObject);
 	});
 };
 
-const processBaitSelection = async (selection, userData, user) => {
+const processBaitSelection = async (selection, userData, user, analyticsObject) => {
 	const baitChoice = selection.values[0];
 	const originalItem = await getItemById(baitChoice);
 
 	if (!meetsItemRequirements(userData, originalItem)) {
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await analyticsObject.setStatus('failed');
+			await analyticsObject.setStatusMessage('User does not meet level requirements');
+		}
 		return await selection.reply({
 			content: `You need to be level ${originalItem.toJSON().requirements.level} to buy this item!`,
 			ephemeral: true,
@@ -106,7 +119,14 @@ const processBaitSelection = async (selection, userData, user) => {
 		const amountChoice = i.customId;
 		const amount = await getAmountFromChoice(amountChoice);
 
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await generateCommandObject(i, analyticsObject);
+		}
+
 		if (!await hasEnoughMoney(userData, originalItem, amount)) {
+			// update interaction
+			await analyticsObject.setStatus('completed');
+			await analyticsObject.setStatusMessage('User does not have enough money to buy item');
 			return await i.reply({
 				content: 'You do not have enough money to buy this item!',
 				ephemeral: true,
@@ -115,6 +135,9 @@ const processBaitSelection = async (selection, userData, user) => {
 		}
 		else {
 			await buyItem(userData, originalItem, amount);
+			// update interaction
+			await analyticsObject.setStatus('completed');
+			await analyticsObject.setStatusMessage('Successfully bought item');
 			await i.reply({
 				components: [],
 				content: `You have successfully bought ${amount} ${originalItem.name}!`,
