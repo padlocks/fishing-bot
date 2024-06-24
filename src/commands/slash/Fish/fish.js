@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, ButtonStyle, ActionRowBuilder, ButtonBuilder, ComponentType } = require('discord.js');
 const { Fish } = require('../../../class/Fish');
-const { findQuests } = require('../../../util/Quest');
+const { Quest } = require('../../../class/Quest');
 const { Pond } = require('../../../schemas/PondSchema');
 const { Item } = require('../../../schemas/ItemSchema');
 const { User } = require('../../../class/User');
@@ -97,11 +97,11 @@ const updateUserWithFish = async (interaction, userId) => {
 			}
 
 			// quest stuff
-			const quests = await findQuests(f.name.toLowerCase(), rod.name.toLowerCase(), f.qualities.map(q => q.toLowerCase()));
+			const quests = await user.findQuests(f.name.toLowerCase(), rod.name.toLowerCase(), f.qualities.map(q => q.toLowerCase()));
 
 			for (let j = 0; j < quests.length; j++) {
-				const quest = quests[j];
-				fishArray.forEach(oneFish => {
+				const quest = new Quest(quests[j]);
+				fishArray.forEach(async (oneFish) => {
 					// check to see if fish matches progressType
 					const questProgress = {
 						fish: false,
@@ -110,30 +110,33 @@ const updateUserWithFish = async (interaction, userId) => {
 						qualities: false,
 					};
 
-					if (quest.progressType.fish.includes('any') || quest.progressType.fish.includes(oneFish.name.toLowerCase())) questProgress.fish = true;
-					if (quest.progressType.rarity.includes('any') || quest.progressType.rarity.includes(oneFish.rarity.toLowerCase())) questProgress.rarity = true;
-					if (quest.progressType.rod === 'any' || quest.progressType.rod === rod.name.toLowerCase()) questProgress.rod = true;
-					if (quest.progressType.qualities.includes('any') || quest.progressType.qualities.some(q => oneFish.qualities.map(quality => quality.toLowerCase()).includes(q))) questProgress.qualities = true;
+					const progressType = await quest.getProgressType();
+
+					if (progressType.fish.includes('any') || progressType.fish.includes(oneFish.name.toLowerCase())) questProgress.fish = true;
+					if (progressType.rarity.includes('any') || progressType.rarity.includes(oneFish.rarity.toLowerCase())) questProgress.rarity = true;
+					if (progressType.rod === 'any' || progressType.rod === rod.name.toLowerCase()) questProgress.rod = true;
+					if (progressType.qualities.includes('any') || progressType.qualities.some(q => oneFish.qualities.map(quality => quality.toLowerCase()).includes(q))) questProgress.qualities = true;
 
 					if (questProgress.fish && questProgress.rarity && questProgress.rod && questProgress.qualities) {
-						quest.progress += oneFish.count || 1;
+						await quest.setProgress(await quest.getProgress() + (oneFish.count || 1));
 					}
 				});
-				if (quest.progress >= quest.progressMax) {
-					quest.status = 'completed';
-					await user.addXP(quest.xp);
+				if (await quest.getProgress() >= await quest.getMaxProgress()) {
+					await user.addXP(await quest.getXP());
 					if (await user.updateLevel()) levelUp = true;
-					await user.addMoney(quest.cash);
-					if (quest.reward && quest.reward.length > 0) {
-						quest.reward.forEach(async reward => {
-							await user.sendToInventory(reward);
+					await user.addMoney(await quest.getCash());
+
+					const reward = await quest.getReward();
+					if (reward && reward.length > 0) {
+						reward.forEach(async (r) => {
+							await user.sendToInventory(r);
 						});
 					}
 
-					quest.endDate = Date.now();
+					quest.end();
 					completedQuests.push(quest);
 				}
-				await quest.save();
+				// await quest.save();
 			}
 			// end quest stuff
 
@@ -143,7 +146,7 @@ const updateUserWithFish = async (interaction, userId) => {
 		await rod.save();
 		if (bait) await bait.save();
 		// await user.save();
-		return { fish: fishArray, questsCompleted: completedQuests.filter((quest, index, self) => self.findIndex(q => q.title === quest.title) === index), xp: xp, rodState: rod.state, bait: bait, levelUp: levelUp, success: true, message: '' };
+		return { fish: fishArray, questsCompleted: completedQuests.filter((quest, index, self) => self.findIndex(async q => await q.getTitle() === await quest.getTitle()) === index), xp: xp, rodState: rod.state, bait: bait, levelUp: levelUp, success: true, message: '' };
 	}
 };
 
@@ -168,12 +171,14 @@ const followUpMessage = async (interaction, user, fishArray, completedQuests, xp
 
 		if (completedQuests.length > 0) {
 			for await (const quest of completedQuests) {
-				questString += `**${quest.title}** completed\n`;
-				totalQuestXp += quest.xp;
-				totalQuestCash += quest.cash;
-				if (quest.reward && quest.reward.length > 0) {
-					for await (const reward of quest.reward) {
-						const r = await Item.findById(reward);
+				questString += `**${await quest.getTitle()}** completed\n`;
+				totalQuestXp += await quest.getXP();
+				totalQuestCash += await quest.getCash();
+
+				const reward = await quest.getReward();
+				if (reward && reward.length > 0) {
+					for await (const rew of reward) {
+						const r = await Item.findById(rew);
 						questRewards.push(r.name);
 					}
 				}

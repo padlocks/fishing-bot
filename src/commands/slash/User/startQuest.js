@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ComponentType } = require('discord.js');
-const { Quest } = require('../../../schemas/QuestSchema');
+const { Quest: QuestSchema } = require('../../../schemas/QuestSchema');
 const { User } = require('../../../class/User');
-const { startQuest, getQuests } = require('../../../util/Quest');
+const { Quest } = require('../../../class/Quest');
 const config = require('../../../config');
 const { Interaction } = require('../../../class/Interaction');
 
@@ -19,7 +19,7 @@ module.exports = {
 	async run(client, interaction, analyticsObject, user = null) {
 		if (user === null) user = interaction.user;
 
-		const questOptions = await Quest.find({ daily: false });
+		const questOptions = await QuestSchema.find({ daily: false });
 		const uniqueValues = new Set();
 
 		let options = [];
@@ -68,10 +68,11 @@ module.exports = {
 			let canAccept = true;
 			const selection = i.values[0];
 			const userData = new User(await User.get(user.id));
-			const originalQuest = await Quest.findById(selection);
+			const originalQuest = new Quest(await Quest.get(selection));
+			const title = await originalQuest.getTitle()
 
 			// Check if user meets quest requirements
-			const reqLevel = originalQuest.requirements.level;
+			const reqLevel = await originalQuest.getLevelRequirement();
 			const level = await userData.getLevel();
 			if (level < reqLevel) {
 				if (process.env.ANALYTICS || config.client.analytics) {
@@ -86,9 +87,10 @@ module.exports = {
 				return;
 			}
 
-			if (originalQuest.requirements.previous.length > 0) {
-				const existingQuests = await getQuests(user.id) || [];
-				const hasPrevious = existingQuests.some(quest => originalQuest.requirements.previous.includes(quest.title) && quest.status === 'completed');
+			const prereq = await originalQuest.getPrerequesites()
+			if (prereq > 0) {
+				const existingQuests = await userData.getQuests();
+				const hasPrevious = existingQuests.some(quest => prereq.includes(quest.title) && quest.status === 'completed');
 
 				if (!hasPrevious) {
 					if (process.env.ANALYTICS || config.client.analytics) {
@@ -104,8 +106,8 @@ module.exports = {
 				}
 			}
 
-			const existingQuest = await getQuests(user.id) || [];
-			const hasExistingQuest = existingQuest.some(quest => quest.title === originalQuest.title && quest.status === 'in_progress');
+			const existingQuests = await userData.getQuests();
+			const hasExistingQuest = existingQuests.some((quest) => quest.title === title && quest.status === 'in_progress');
 
 			if (hasExistingQuest) {
 				if (process.env.ANALYTICS || config.client.analytics) {
@@ -113,7 +115,7 @@ module.exports = {
 					await analyticsObject.setStatusMessage('User already has quest');
 				}
 				await i.reply({
-					content: `You already have a quest with the title **${originalQuest.title}**!`,
+					content: `You already have a quest with the title **${title}**!`,
 					ephemeral: true,
 				});
 				return;
@@ -123,10 +125,11 @@ module.exports = {
 					await analyticsObject.setStatus('completed');
 					await analyticsObject.setStatusMessage('Quest started.');
 				}
-				await startQuest(await userData.getUserId(), originalQuest._id);
-				await i.reply(`${i.user} has started quest **${originalQuest.title}**!`);
+				await userData.startQuest(originalQuest);
+				await i.reply(`${i.user} has started quest **${title}**!`);
 			}
 		});
+
 		collector.on('end', async () => {
 			await response.edit({
 				components: [],
