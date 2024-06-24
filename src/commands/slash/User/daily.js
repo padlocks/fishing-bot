@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { generateDailyQuest, getQuests } = require('../../../util/Quest');
+const { Quest } = require('../../../class/Quest');
 const { Item } = require('../../../schemas/ItemSchema');
+const { User } = require('../../../class/User');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -15,7 +16,8 @@ module.exports = {
      */
 	run: async (client, interaction, analyticsObject) => {
 		// check if user already has an incomplete daily quest
-		const userQuests = await getQuests(interaction.user.id);
+		const user = new User(await User.get(interaction.user.id));
+		const userQuests = await user.getQuests();
 		const dailyQuests = userQuests.filter((quest) => quest.daily);
 		const incompleteDailyQuests = dailyQuests.filter((quest) => quest.status === 'in_progress');
 		if (incompleteDailyQuests.length > 0) {
@@ -29,7 +31,7 @@ module.exports = {
 			});
 		}
 
-		const quest = await generateDailyQuest(interaction.user.id);
+		const quest = await Quest.generateDailyQuest(interaction.user.id);
 
 		if (!quest) {
 			if (process.env.ANALYTICS || config.client.analytics) {

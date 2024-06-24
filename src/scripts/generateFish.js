@@ -291,6 +291,7 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 					case 'Common Pond weak Fish': {
 						fish.name = 'Frog';
 						fish.description = 'Frog is a type of amphibian commonly found in ponds and wetlands. It is known for its long legs and distinctive croaking sound. Frogs play an important role in the ecosystem as both predator and prey.';
+						fish.icon.data = 'Frog:1254439000803119227';
 						break;
 					}
 					case 'Uncommon Pond strong Fish': {
@@ -302,6 +303,7 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 					case 'Uncommon Pond weak Fish': {
 						fish.name = 'Koi';
 						fish.description = 'Koi is a type of fish commonly found in ponds and water gardens. It is known for its large size and colorful appearance. Koi are popular ornamental fish and are often kept in decorative ponds.';
+						fish.icon.data = 'Dorado:1244064546608386239';
 						break;
 					}
 					case 'Rare Pond strong Fish': {
@@ -313,6 +315,7 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 					case 'Rare Pond weak Fish': {
 						fish.name = 'Giant Frog';
 						fish.description = 'Giant Frog is a type of amphibian commonly found in ponds and wetlands. It is known for its massive size and deep croaking sound. Giant Frogs are often associated with myths and legends.';
+						fish.icon.data = 'Frog:1254439000803119227';
 						break;
 					}
 					case 'Ultra Pond strong Fish': {
@@ -324,11 +327,13 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 					case 'Ultra Pond weak Fish': {
 						fish.name = 'Golden Frog';
 						fish.description = 'Golden Frog is a rare and mystical creature found in ponds and wetlands. It is known for its golden color and magical properties. Golden Frogs are said to bring good luck and prosperity to those who encounter them.';
+						fish.icon.data = 'Frog:1254439000803119227';
 						break;
 					}
 					case 'Giant Pond strong Fish': {
 						fish.name = 'Jumbo Koi';
 						fish.description = 'Jumbo Koi is a massive and majestic fish found in ponds and water gardens. It is known for its enormous size and vibrant colors. Jumbo Koi are prized for their beauty and are often kept in decorative ponds.';
+						fish.icon.data = 'Dorado:1244064546608386239';
 						break;
 					}
 					case 'Giant Pond weak Fish': {
@@ -346,6 +351,7 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 					case 'Legendary Pond weak Fish': {
 						fish.name = 'Platinum Frog';
 						fish.description = 'Platinum Frog is a legendary creature said to dwell in the depths of ponds and wetlands. It is known for its shimmering platinum color and mystical properties. Platinum Frog are said to bring youth and vitality to those who encounter them.';
+						fish.icon.data = 'Frog:1254439000803119227';
 						break;
 					}
 					case 'Lucky Pond strong Fish': {
@@ -381,6 +387,7 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 					case 'Uncommon Swamp weak Fish': {
 						fish.name = 'Bullfrog';
 						fish.description = 'Bullfrog is a type of amphibian found in swamps and wetlands. It is known for its large size and deep croaking sound. Bullfrog are often associated with myths and legends.';
+						fish.icon.data = 'Frog:1254439000803119227';
 						break;
 					}
 					case 'Rare Swamp strong Fish': {
@@ -410,11 +417,13 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 					case 'Giant Swamp strong Fish': {
 						fish.name = 'Crocodile';
 						fish.description = 'Crocodile is a type of reptile found in swamps and wetlands. It is known for its large size and powerful jaws. Crocodiles are apex predators of the water and are often feared by humans.';
+						fish.icon.data = 'Mutant_Carp:1244064581484023819';
 						break;
 					}
 					case 'Giant Swamp weak Fish': {
 						fish.name = 'Alligator';
 						fish.description = 'Alligator is a type of reptile found in swamps and wetlands. It is known for its large size and armored body. Alligators will often bask in the sun to regulate their body temperature.';
+						fish.icon.data = 'Mutant_Carp:1244064581484023819';
 						break;
 					}
 					case 'Legendary Swamp strong Fish': {
@@ -476,6 +485,7 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 					case 'Rare Coast weak Fish': {
 						fish.name = 'Starfish';
 						fish.description = 'Starfish is a type of echinoderm found in coastal waters. It is known for its five arms and distinctive shape. Starfish play an important role in the ecosystem as scavengers and predators.';
+						fish.icon.data = 'Starfish:1254439001872535653';
 						break;
 					}
 					case 'Ultra Coast strong Fish': {
@@ -493,6 +503,7 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 					case 'Giant Coast strong Fish': {
 						fish.name = 'Jellyfish';
 						fish.description = 'Jellyfish is a type of gelatinous creature found in coastal waters. It is known for its translucent body and stinging tentacles. Jellyfish are often found in large swarms and can be dangerous to humans.';
+						fish.icon.data = 'Jellyfish:1254441082347978763';
 						break;
 					}
 					case 'Giant Coast weak Fish': {
@@ -510,6 +521,7 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 					case 'Legendary Coast weak Fish': {
 						fish.name = 'Golden Starfish';
 						fish.description = 'Golden Starfish is a legendary creature said to dwell in the depths of coastal waters. It is known for its shimmering golden color and magical properties. Golden Starfish are said to bring luck and prosperity to those who encounter them.';
+						fish.icon.data = 'Dried_Starfish:1254439003038548041';
 						break;
 					}
 					case 'Lucky Coast strong Fish': {

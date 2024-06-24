@@ -5,13 +5,13 @@ const { Utils } = require('./Utils');
 const { User } = require('../class/User');
 
 class Fish {
-	constructor(data) {
-		this.fish = new FishSchema(data);
-	}
+	// constructor(data) {
+	// 	this.fish = new FishData(data);
+	// }
 
-	save() {
-		return FishSchema.findOneAndUpdate({ _id: this.fish._id }, this.fish, { upsert: true });
-	}
+	// save() {
+	// 	return FishData.findOneAndUpdate({ _id: this.fish._id }, this.fish, { upsert: true });
+	// }
 
 	static async reel(rod, bait, biome, user) {
 		const rodObject = await ItemData.findById(rod);

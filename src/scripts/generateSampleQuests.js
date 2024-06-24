@@ -61,8 +61,8 @@ async function generateSampleQuests() {
 			type: 'quest',
 		},
 		{
-			title: 'Find the Legendary Magikarp',
-			description: 'Embark on a journey to find and catch the legendary magikarp.',
+			title: 'Find the Lucky Magikarp',
+			description: 'Embark on a journey to find and catch the lucky magikarp.',
 			reward: [],
 			cash: 1000,
 			xp: 2000,

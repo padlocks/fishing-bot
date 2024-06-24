@@ -5,6 +5,7 @@ const { User: UserSchema } = require('../schemas/UserSchema');
 const { BuffData } = require('../schemas/BuffSchema');
 const config = require('../config');
 const fetch = require('node-fetch');
+const { QuestData } = require('../schemas/QuestSchema');
 
 class User {
 	constructor(data) {
@@ -33,7 +34,7 @@ class User {
 
 	async setCurrentBiome(biome) {
 		this.user.currentBiome = biome;
-		await this.save();
+		this.save();
 	}
 
 	async getStats() {
@@ -42,7 +43,7 @@ class User {
 
 	async setStats(stats) {
 		this.user.stats = stats;
-		await this.save();
+		this.save();
 	}
 
 	async getMoney() {
@@ -51,7 +52,7 @@ class User {
 
 	async addMoney(amount) {
 		this.user.inventory.money += parseInt(amount);
-		await this.save();
+		this.save();
 	}
 
 	async getInventory() {
@@ -66,7 +67,7 @@ class User {
 
 	async removeBait(baitId) {
 		this.user.inventory.baits = this.user.inventory.baits.filter((b) => b.valueOf() !== baitId);
-		await this.save();
+		this.save();
 	}
 
 	async getItems() {
@@ -83,13 +84,14 @@ class User {
 
 	async getQuests() {
 		const questIds = this.user.inventory.quests;
-		const quests = await ItemData.find({ _id: { $in: questIds } });
-		return quests;
+		const quests = await QuestData.find({ _id: { $in: questIds } });
+		return quests || [];
 	}
 
 	async addQuest(questId) {
-		this.user.inventory.quests.push(questId);
-		await this.save();
+		const inventory = await this.getInventory();
+		inventory.quests.push(questId);
+		return this.save();
 	}
 
 	async getGacha() {
@@ -120,7 +122,7 @@ class User {
 
 		if (fish.count <= 0) {
 			this.user.inventory.fish = this.user.inventory.fish.filter((f) => f.valueOf() !== fishId);
-			return await this.save();
+			return this.save();
 		}
 
 		return;
@@ -129,7 +131,7 @@ class User {
 	async removeListOfFish(fishIds) {
 		fishIds = fishIds.map((f) => f.valueOf());
 		this.user.inventory.fish = this.user.inventory.fish.filter((f) => !fishIds.includes(f.valueOf()));
-		await this.save();
+		this.save();
 	}
 
 	async getCodes() {
@@ -181,7 +183,7 @@ class User {
 		const user = this.user;
 		if (rodId === 'none') {
 			user.inventory.equippedRod = null;
-			await this.save();
+			this.save();
 			return null;
 		}
 		else {
@@ -200,7 +202,7 @@ class User {
 			const rodObject = await ItemData.findById(rod.valueOf());
 
 			// Save the updated user document
-			await this.save();
+			this.save();
 			return rodObject;
 		}
 	}
@@ -211,7 +213,7 @@ class User {
 
 	async addXP(amount) {
 		this.user.xp += amount;
-		await this.save();
+		this.save();
 	}
 
 	async getLevel() {
@@ -271,7 +273,7 @@ class User {
 		}
 
 		await rod.save();
-		await this.save();
+		this.save();
 		return rod;
 	}
 
@@ -301,7 +303,7 @@ class User {
 		user.inventory.equippedBait = bait;
 		const baitObject = await ItemData.findById(bait?.valueOf()) || null;
 
-		await this.save();
+		this.save();
 		return baitObject;
 	}
 
@@ -333,7 +335,7 @@ class User {
 			// remove box from user inventory
 			if (box.count <= 0) {
 				user.inventory.gacha = user.inventory.gacha.filter((i) => i.valueOf() !== box.id);
-				await this.save();
+				this.save();
 			}
 
 			// check box capabilities to generate items
@@ -418,12 +420,12 @@ class User {
 			}
 		});
 
-		await this.save();
+		this.save();
 	}
 
 	async addCustomRodToInventory(rodId) {
 		(await this.getInventory()).rods.push(rodId);
-		await this.save();
+		this.save();
 	}
 
 	async sendToInventory(item, count = 1) {
@@ -523,7 +525,7 @@ class User {
 			break;
 		}
 		await finalItem.save();
-		await this.save();
+		this.save();
 
 		return { item: finalItem, count: newItemCount };
 	}
@@ -545,7 +547,7 @@ class User {
 		await buff.save();
 
 		user.inventory.buffs = user.inventory.buffs.filter((b) => b.id !== buff.id);
-		await this.save();
+		this.save();
 	}
 
 	async updateLevel() {
@@ -553,7 +555,7 @@ class User {
 		const level = await this.getLevel();
 		const oldLevel = user.level;
 		user.level = level;
-		await this.save();
+		this.save();
 
 		return oldLevel < level;
 	}
@@ -565,7 +567,7 @@ class User {
 	async setLastVoted() {
 		const user = this.user;
 		user.stats.lastVoted = Date.now();
-		await this.save();
+		this.save();
 	}
 
 	async vote() {
@@ -602,6 +604,29 @@ class User {
 				return { voted: true, message: "Thank you for voting! You have received:\n- 1x Voter's Crate\n- $10000" };
 			});
 	}
+
+	async findQuests(specificFish, specificRod, specificQualities) {
+		const query = {
+			'status': 'in_progress',
+			$and: [],
+		};
+		
+		query.$and.push({ user: await this.getUserId() });
+		query.$and.push({ $or: [{ 'progressType.fish': specificFish }, { 'progressType.fish': 'any' }] });
+		query.$and.push({ $or: [{ 'progressType.rod': specificRod }, { 'progressType.rod': 'any' }] });
+		specificQualities.map(quality => query.$and.push({ $or: [{ 'progressType.qualities': quality }, { 'progressType.qualities': 'any' }] }));
+	
+		const quests = await QuestData.find(query);
+		return quests;
+	};
+
+	async startQuest(originalQuest) {
+		const userId = await this.getUserId();
+		const cloned = await originalQuest.clone(userId);
+
+		await this.addQuest(await cloned.getId());
+		return cloned;
+	};
 
 	static async create(userId) {
 		const rod = await Item.findOne({ name: 'Old Rod' });
