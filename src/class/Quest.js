@@ -112,7 +112,7 @@ class Quest {
 	
 		const hasDailyQuest = await Promise.all(inventory.quests.map(async (questId) => {
 			const quest = await QuestData.findById(questId);
-			return (quest.daily && quest.status === 'in_progress');
+			return (quest && quest.daily && quest.status === 'in_progress');
 		})).then(results => results.some(Boolean));
 	
 		if (hasDailyQuest || Date.now() - stats.lastDailyQuest < 86400000) {

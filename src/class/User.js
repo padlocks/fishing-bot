@@ -6,7 +6,6 @@ const { BuffData } = require('../schemas/BuffSchema');
 const config = require('../config');
 const fetch = require('node-fetch');
 const { QuestData } = require('../schemas/QuestSchema');
-const { Quest } = require('./Quest');
 
 class User {
 	constructor(data) {
