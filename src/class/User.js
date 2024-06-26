@@ -30,7 +30,7 @@ class User {
 
 	async incrementCommandCount() {
 		this.user.commands++;
-		return this.save();
+		return await this.save();
 	}
 
 	async getCurrentBiome() {
@@ -39,7 +39,7 @@ class User {
 
 	async setCurrentBiome(biome) {
 		this.user.currentBiome = biome;
-		return this.save();
+		return await this.save();
 	}
 
 	async getStats() {
@@ -48,7 +48,7 @@ class User {
 
 	async setStats(stats) {
 		this.user.stats = stats;
-		return this.save();
+		return await this.save();
 	}
 
 	async getMoney() {
@@ -57,7 +57,7 @@ class User {
 
 	async addMoney(amount) {
 		this.user.inventory.money += parseInt(amount);
-		return this.save();
+		return await this.save();
 	}
 
 	async getInventory() {
@@ -72,7 +72,7 @@ class User {
 
 	async removeBait(baitId) {
 		this.user.inventory.baits = this.user.inventory.baits.filter((b) => b.valueOf() !== baitId);
-		this.save();
+		await this.save();
 	}
 
 	async getItems() {
@@ -96,7 +96,7 @@ class User {
 	async addQuest(questId) {
 		const inventory = await this.getInventory();
 		inventory.quests.push(questId);
-		return this.save();
+		return await this.save();
 	}
 
 	async getGacha() {
@@ -117,7 +117,9 @@ class User {
 		return fish;
 	}
 
-	async removeFish(fishId, count = 1) {
+	async removeFish(fishId, count) {
+		if (!count || count < 1) count = 1;
+
 		// if fish count is greater than 1, decrement count
 		const fish = await FishData.findById(fishId);
 		if (fish.count >= 1) {
@@ -126,8 +128,8 @@ class User {
 		}
 
 		if (fish.count <= 0) {
-			this.user.inventory.fish = this.user.inventory.fish.filter((f) => f.valueOf() !== fishId);
-			this.save();
+			this.user.inventory.fish = this.user.inventory.fish.filter((f) => f.valueOf() !== fishId.valueOf());
+			await this.save();
 		}
 
 		return;
@@ -136,7 +138,7 @@ class User {
 	async removeListOfFish(fishIds) {
 		fishIds = fishIds.map((f) => f.valueOf());
 		this.user.inventory.fish = this.user.inventory.fish.filter((f) => !fishIds.includes(f.valueOf()));
-		this.save();
+		await this.save();
 	}
 
 	async getCodes() {
@@ -146,7 +148,7 @@ class User {
 	async addCode(codeId) {
 		const codes = await this.getCodes();
 		codes.push(codeId);
-		return this.save();
+		return await this.save();
 	}
 
 	async generateBoostedXP() {
@@ -188,7 +190,7 @@ class User {
 		const user = this.user;
 		if (rodId === 'none') {
 			user.inventory.equippedRod = null;
-			this.save();
+			await this.save();
 			return null;
 		}
 		else {
@@ -207,7 +209,7 @@ class User {
 			const rodObject = await ItemData.findById(rod.valueOf());
 
 			// Save the updated user document
-			this.save();
+			await this.save();
 			return rodObject;
 		}
 	}
@@ -218,7 +220,7 @@ class User {
 
 	async addXP(amount) {
 		this.user.xp += amount;
-		return this.save();
+		return await this.save();
 	}
 
 	async getLevel() {
@@ -278,7 +280,7 @@ class User {
 		}
 
 		await rod.save();
-		this.save();
+		await this.save();
 		return rod;
 	}
 
@@ -308,7 +310,7 @@ class User {
 		user.inventory.equippedBait = bait;
 		const baitObject = await ItemData.findById(bait?.valueOf()) || null;
 
-		this.save();
+		await this.save();
 		return baitObject;
 	}
 
@@ -340,7 +342,7 @@ class User {
 			// remove box from user inventory
 			if (box.count <= 0) {
 				user.inventory.gacha = user.inventory.gacha.filter((i) => i.valueOf() !== box.id);
-				this.save();
+				await this.save();
 			}
 
 			// check box capabilities to generate items
@@ -425,15 +427,16 @@ class User {
 			}
 		});
 
-		this.save();
+		await this.save();
 	}
 
 	async addCustomRodToInventory(rodId) {
 		(await this.getInventory()).rods.push(rodId);
-		return this.save();
+		return await this.save();
 	}
 
-	async sendToInventory(item, count = 1) {
+	async sendToInventory(item, count) {
+		if (!count) count = 1;
 		const user = this.user;
 		const userId = await this.getUserId();
 		let itemObject = await Item.findById(item);
@@ -470,6 +473,7 @@ class User {
 			break;
 		case 'fish':
 			clonedItem = await Utils.clone(itemObject, userId);
+			clonedItem.count = count;
 			user.inventory.fish.push(clonedItem);
 			finalItem = clonedItem;
 			newItemCount = clonedItem.count || 1;
@@ -530,7 +534,7 @@ class User {
 			break;
 		}
 		await finalItem.save();
-		this.save();
+		await await this.save();
 
 		return { item: finalItem, count: newItemCount };
 	}
@@ -552,7 +556,7 @@ class User {
 		await buff.save();
 
 		user.inventory.buffs = user.inventory.buffs.filter((b) => b.id !== buff.id);
-		return this.save();
+		return await this.save();
 	}
 
 	async updateLevel() {
@@ -560,7 +564,7 @@ class User {
 		const level = await this.getLevel();
 		const oldLevel = user.level;
 		user.level = level;
-		this.save();
+		await this.save();
 
 		return oldLevel < level;
 	}
@@ -572,7 +576,7 @@ class User {
 	async setLastVoted() {
 		const user = this.user;
 		user.stats.lastVoted = Date.now();
-		return this.save();
+		return await this.save();
 	}
 
 	async vote() {
