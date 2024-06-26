@@ -29,19 +29,16 @@ class Fish {
 	};
 
 	static async sendToUser(capabilities, choices, weights, user) {
-		const fishArray = [];
+		let fishArray = [];
 		const numberCapability = capabilities.find(capability => !isNaN(capability));
-		if (numberCapability !== undefined) {
-			for (let i = 0; i < numberCapability; i++) {
-				const nextChoice = await this.generateFish(capabilities, choices, weights, user);
-				fishArray.push(nextChoice);
-			}
+
+		if (!isNaN(numberCapability)) {
+			fishArray = await this.generateFish(numberCapability, capabilities, choices, weights, user);
 		}
 		else {
-			const nextChoice = await this.generateFish(capabilities, choices, weights, user);
-			fishArray.push(nextChoice);
+			fishArray = await this.generateFish(1, capabilities, choices, weights, user);
 		}
-	
+
 		const uniqueFishArray = [];
 		fishArray.forEach(oneFish => {
 			const countCapability = capabilities.find(capability => capability.toLowerCase().includes('count'));
@@ -64,48 +61,67 @@ class Fish {
 		return await uniqueFishArray.map(element => element.item);
 	};
 	
-	static async generateFish(capabilities, choices, weights, user) {
+	static async generateFish(number, capabilities, choices, weights, user) {
 		// const userData = await User.findOne({ userId: user });
-		let draw = await Utils.getWeightedChoice(choices, weights);
-		draw = draw.charAt(0).toUpperCase() + draw.slice(1);
-		const currentBiome = await user.getCurrentBiome();
-		const biome = currentBiome.charAt(0).toUpperCase() + currentBiome.slice(1);
-	
-		let f = await FishSchema.find({ rarity: draw, biome: biome });
-		if (draw === 'Lucky') {
-			const itemFind = await Utils.getWeightedChoice(['fish', 'item'], [80, 20]);
-			if (itemFind === 'item') {
-				const options = await Item.find({ rarity: draw });
-				const random = Math.floor(Math.random() * options.length);
-				f = [options[random]];
+		const choice = [];
+		for (let i = 0; i < number; i++) {
+		
+			let draw = await Utils.getWeightedChoice(choices, weights);
+			draw = draw.charAt(0).toUpperCase() + draw.slice(1);
+			const currentBiome = await user.getCurrentBiome();
+			const biome = currentBiome.charAt(0).toUpperCase() + currentBiome.slice(1);
+		
+			let f = await FishSchema.find({ rarity: draw, biome: biome });
+			if (draw === 'Lucky') {
+				const itemFind = await Utils.getWeightedChoice(['fish', 'item'], [80, 20]);
+				if (itemFind === 'item') {
+					const options = await Item.find({ rarity: draw });
+					const random = Math.floor(Math.random() * options.length);
+					f = [options[random]];
+				}
 			}
+			const filteredChoices = await Promise.all(f.map(async fishObj => {
+				await new Promise(resolve => setTimeout(resolve, 100));
+		
+				const isMatch = capabilities.some(capability => fishObj.qualities.includes(capability));
+		
+				if (isMatch) {
+					return fishObj;
+				}
+				else {
+					return null;
+				}
+			}));
+		
+			// Remove null values (fish that didn't match the capabilities) from the array
+			const validChoices = filteredChoices.filter(choice => choice !== null);
+		
+			if (validChoices.length === 0) {
+				return await this.generateFish(number, capabilities, choices, weights, user);
+			}
+		
+			choice.push(validChoices[Math.floor(Math.random() * validChoices.length)]);
 		}
-		const filteredChoices = await Promise.all(f.map(async fishObj => {
-			await new Promise(resolve => setTimeout(resolve, 100));
-	
-			const isMatch = capabilities.some(capability => fishObj.qualities.includes(capability));
-	
-			if (isMatch) {
-				return fishObj;
+
+		// merge any duplicate fish
+		const uniqueChoices = [];
+		choice.forEach(fish => {
+			const existingFish = uniqueChoices.find(f => f.name === fish.name);
+			if (existingFish) {
+				existingFish.count++;
 			}
 			else {
-				return null;
+				uniqueChoices.push({ ...fish._doc });
 			}
-		}));
-	
-		// Remove null values (fish that didn't match the capabilities) from the array
-		const validChoices = filteredChoices.filter(choice => choice !== null);
-	
-		if (validChoices.length === 0) {
-			return await this.generateFish(capabilities, choices, weights, user);
-		}
-	
-		const random = Math.floor(Math.random() * validChoices.length);
-		const choice = validChoices[random];
+		});
 	
 		// const clonedChoice = await Utils.clone(choice, user);
-		const clonedChoice = await user.sendToInventory(choice, 1);
-	
+		// const clonedChoice = await user.sendToInventory(choice, 1);
+		const clonedChoice = [];
+		for (const fish of uniqueChoices) {
+			clonedChoice.push(await user.sendToInventory(fish, fish.count));
+		}
+
 		// Check for locked status and update the cloned fish as necessary.
 		if (user) {
 			const fishIds = (await user.getInventory()).fish;
