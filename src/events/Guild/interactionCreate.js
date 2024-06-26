@@ -168,7 +168,7 @@ module.exports = {
 					});
 			}
 
-			data.commands += 1;
+			await data.incrementCommandCount();
 			data.save();
 
 			// check for active buffs

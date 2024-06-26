@@ -79,9 +79,18 @@ class Interaction {
 	}
 
 	static async findMostRecentInteraction (userId) {
-		const command = await Command.findOne({ user: userId, type: 'command' })
+		let command;
+		command = await Command.findOne({ user: userId, type: 'command' })
 			.sort('-time')
 			.exec();
+		
+		if (!command) {
+			command = await Command.findOne({ user: userId, type: 'component' })
+				.sort('-time')
+				.exec();
+		}
+
+		if (!command) return null;
 			
 		const interactionId = command.chainedTo;
 		const analyticsObject = new Interaction(await InteractionSchema.findById(interactionId));

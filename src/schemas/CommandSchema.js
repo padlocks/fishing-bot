@@ -27,7 +27,8 @@ const commandSchema = new Schema({
 	},
 	chainedTo: {
 		type: Schema.Types.ObjectId,
-		ref: 'Interaction'
+		ref: 'Interaction',
+		required: true,
 	},
 	type: {
 		type: String,
