@@ -43,3 +43,21 @@ async function dbConnect() {
 }
 
 export default dbConnect;
+
+export async function setupChangeStream(collectionName: string, callback: (change: any) => void) {
+    await dbConnect();
+    const db = mongoose.connection.db;
+    const collection = db.collection(collectionName);
+
+    const changeStream = collection.watch();
+
+    // changeStream.on('change', (change) => {
+    //     callback(change);
+    // });
+
+	// Read the first change directly from the stream
+    let doc;
+    while ((doc = await changeStream.next()) !== null) {
+        callback(doc);
+    }
+}

@@ -13,25 +13,20 @@ async function sortCommandsByRecency(commands: ICommand[]): Promise<ICommand[]> 
 }
 
 export async function fetchLatestCommands() {
-	noStore();
-	await dbConnect();
+    noStore();
+	
+    return new Promise((resolve, reject) => {
+        let commands: ICommand[] = [];
 
-	/* find all the data in our database */
-	const result = await Command.find({});
+        // Initial fetch of commands
+        const findCommands = async () => {
+            const result = await Command.find({});
+            commands = result.map((doc: any) => JSON.parse(JSON.stringify(doc)));
+            resolve((await sortCommandsByRecency(commands)).slice(0, 10)); // Return the latest 10 commands
+        };
 
-	/* Ensures all objectIds and nested objectIds are serialized as JSON data */
-	let commands: ICommand[] = result.map((doc: any) => {
-		const command = JSON.parse(JSON.stringify(doc));
-		return command;
-	});
-
-	// Sort commands by most recent time field
-	commands = await sortCommandsByRecency(commands);
-
-	// Only keep most recent 10 commands
-	commands = commands.slice(0, 10);
-
-	return commands;
+        findCommands().catch(reject);
+    });
 }
 
 export async function fetchCommands() {

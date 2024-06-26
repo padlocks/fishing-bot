@@ -1,10 +1,11 @@
 import CardWrapper, { Card } from '@/app/ui/dashboard/cards';
-import LatestCommands from '@/app/ui/dashboard/latest-commands';
 import { lusitana } from '@/app/ui/fonts';
-import { fetchCommandsLength, fetchUserCount, fetchTotalFishCaught } from '@/app/lib/data';
 import CommandsChart from '@/app/ui/dashboard/commands-chart';
 import { Suspense } from 'react';
 import { LatestCommandsSkeleton, ChartSkeleton, CardsSkeleton } from '@/app/ui/skeletons';
+import dynamic from 'next/dynamic';
+
+const LatestCommands = dynamic(() => import('@/app/ui/dashboard/latest-commands'), { ssr: false });
  
 export default async function Page() {
   return (
