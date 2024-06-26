@@ -230,7 +230,7 @@ class User {
 	async getXPToNextLevel() {
 		const xp = await this.getXP();
 		const level = await this.getLevel(xp);
-		const progress = xp - (level ** 2 * 100);
+		const progress = Math.max((xp - (level ** 2 * 100)), 0);
 		const nextLevelProgress = ((level + 1) ** 2 * 100) - (level ** 2 * 100);
 		return `${progress.toLocaleString()} / ${nextLevelProgress.toLocaleString()}`;
 	}
