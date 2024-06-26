@@ -120,14 +120,14 @@ class User {
 	async removeFish(fishId, count = 1) {
 		// if fish count is greater than 1, decrement count
 		const fish = await FishData.findById(fishId);
-		if (fish.count > 1) {
+		if (fish.count >= 1) {
 			fish.count -= count;
 			await fish.save();
 		}
 
 		if (fish.count <= 0) {
 			this.user.inventory.fish = this.user.inventory.fish.filter((f) => f.valueOf() !== fishId);
-			return this.save();
+			this.save();
 		}
 
 		return;
@@ -230,7 +230,7 @@ class User {
 	async getXPToNextLevel() {
 		const xp = await this.getXP();
 		const level = await this.getLevel(xp);
-		const progress = xp - (level ** 2 * 100);
+		const progress = Math.max((xp - (level ** 2 * 100)), 0);
 		const nextLevelProgress = ((level + 1) ** 2 * 100) - (level ** 2 * 100);
 		return `${progress.toLocaleString()} / ${nextLevelProgress.toLocaleString()}`;
 	}
