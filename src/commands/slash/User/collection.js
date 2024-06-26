@@ -17,7 +17,7 @@ module.exports = {
 	run: async (client, interaction, analyticsObject) => {
 		try {
 			const embeds = [];
-			const target = interaction.options.User.get('user') || interaction.user;
+			const target = interaction.user;
 			const user = new User(await User.get(target.id));
 
 			const fields = [];

@@ -28,13 +28,18 @@ class User {
 		return this.user.commands;
 	}
 
+	async incrementCommandCount() {
+		this.user.commands++;
+		return this.save();
+	}
+
 	async getCurrentBiome() {
 		return this.user.currentBiome;
 	}
 
 	async setCurrentBiome(biome) {
 		this.user.currentBiome = biome;
-		this.save();
+		return this.save();
 	}
 
 	async getStats() {
@@ -43,7 +48,7 @@ class User {
 
 	async setStats(stats) {
 		this.user.stats = stats;
-		this.save();
+		return this.save();
 	}
 
 	async getMoney() {
@@ -52,7 +57,7 @@ class User {
 
 	async addMoney(amount) {
 		this.user.inventory.money += parseInt(amount);
-		this.save();
+		return this.save();
 	}
 
 	async getInventory() {
@@ -213,7 +218,7 @@ class User {
 
 	async addXP(amount) {
 		this.user.xp += amount;
-		this.save();
+		return this.save();
 	}
 
 	async getLevel() {
@@ -425,7 +430,7 @@ class User {
 
 	async addCustomRodToInventory(rodId) {
 		(await this.getInventory()).rods.push(rodId);
-		this.save();
+		return this.save();
 	}
 
 	async sendToInventory(item, count = 1) {
@@ -547,7 +552,7 @@ class User {
 		await buff.save();
 
 		user.inventory.buffs = user.inventory.buffs.filter((b) => b.id !== buff.id);
-		this.save();
+		return this.save();
 	}
 
 	async updateLevel() {
@@ -567,7 +572,7 @@ class User {
 	async setLastVoted() {
 		const user = this.user;
 		user.stats.lastVoted = Date.now();
-		this.save();
+		return this.save();
 	}
 
 	async vote() {
