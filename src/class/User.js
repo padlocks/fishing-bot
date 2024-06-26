@@ -120,14 +120,14 @@ class User {
 	async removeFish(fishId, count = 1) {
 		// if fish count is greater than 1, decrement count
 		const fish = await FishData.findById(fishId);
-		if (fish.count > 1) {
+		if (fish.count >= 1) {
 			fish.count -= count;
 			await fish.save();
 		}
 
 		if (fish.count <= 0) {
 			this.user.inventory.fish = this.user.inventory.fish.filter((f) => f.valueOf() !== fishId);
-			return this.save();
+			this.save();
 		}
 
 		return;
