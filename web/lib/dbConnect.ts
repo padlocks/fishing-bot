@@ -44,12 +44,14 @@ async function dbConnect() {
 
 export default dbConnect;
 
-export async function setupChangeStream(collectionName: string, callback: (change: any) => void) {
+export async function setupChangeStream(collectionName: string, pipeline, callback: (change: any) => void) {
     await dbConnect();
     const db = mongoose.connection.db;
     const collection = db.collection(collectionName);
 
-    const changeStream = collection.watch();
+    const changeStream = collection.watch(pipeline, {
+		fullDocument: "updateLookup",
+	  });
 
     // changeStream.on('change', (change) => {
     //     callback(change);

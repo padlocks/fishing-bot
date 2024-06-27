@@ -3,47 +3,71 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
-import Image from 'next/image';
 import { lusitana } from '@/app/ui/fonts';
 import { LatestCommandsSkeleton } from '../skeletons';
-import { io } from 'socket.io-client';
 
 const API = '/api/stream?collection=commands';
 
 export default function LatestCommands() {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    try {
-      const socket = io('http://127.0.0.1:3001' + API);
+    let ignore = false;
 
-      socket.on('connect', () => {
-        socket.emit('join', 'commands');
-      });
+    const fetchData = async () => {
+      try {
+        const res = await fetch(API);
+        if (!res.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const json = await res.json();
+        if (!ignore) setData(json);
+      } catch (err) {
+        console.error('Fetch error:', err);
+        if (!ignore) setError(err);
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
 
-      socket.on('initialData', (message) => {
-        setData(message.data);
-      });
+    fetchData();
 
-      socket.on('change', (message) => {
-        setData((prevData) => [message.data, ...prevData]);
-      });
+    return () => {
+      ignore = true;
+    };
+  }, [data]);
 
-      return () => socket.disconnect(); // Cleanup on unmount
-    } catch (error) {
-      console.error(error);
-    }
-  }, []);
+  if (loading) {
+    return <LatestCommandsSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex w-full flex-col md:col-span-4">
+        <h2 className={`${lusitana.className} mb-4 text-xl md:text-2xl`}>Latest Commands</h2>
+        <p className="text-red-500">Error fetching commands: {error.message}</p>
+      </div>
+    );
+  }
+
+  if (data.length === 0) {
+    return (
+      <div className="flex w-full flex-col md:col-span-4">
+        <h2 className={`${lusitana.className} mb-4 text-xl md:text-2xl`}>Latest Commands</h2>
+        <p>No commands available.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex w-full flex-col md:col-span-4">
-      <h2 className={`${lusitana.className} mb-4 text-xl md:text-2xl`}>
-        Latest Commands
-      </h2>
+      <h2 className={`${lusitana.className} mb-4 text-xl md:text-2xl`}>Latest Commands</h2>
       <div className="flex grow flex-col justify-between rounded-xl bg-gray-50 p-4">
         {data.map((command, i) => (
           <div
-            key={command._id} // Assuming _id is the unique identifier in your documents
+            key={command._id}
             className={clsx(
               'flex flex-row items-center justify-between py-4',
               {

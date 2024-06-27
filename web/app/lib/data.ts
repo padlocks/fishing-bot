@@ -1,4 +1,4 @@
-import dbConnect from '@/lib/dbConnect';
+import dbConnect, { setupChangeStream } from '@/lib/dbConnect';
 import { ICommand, Command } from '@/app/models/CommandModel';
 import { User } from '@/app/models/UserModel';
 import { FishData } from '@/app/models/FishModel';

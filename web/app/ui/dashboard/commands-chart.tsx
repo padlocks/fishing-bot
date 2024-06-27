@@ -1,3 +1,5 @@
+'use server';
+
 import { generateYAxis } from '@/app/lib/utils';
 import { CalendarIcon } from '@heroicons/react/24/outline';
 import { lusitana } from '@/app/ui/fonts';
@@ -9,7 +11,7 @@ import { fetchCommands } from '@/app/lib/data';
 // https://www.chartjs.org/
 // https://airbnb.io/visx/
 
-export default async function RevenueChart() {
+export default async function CommandsChart() {
   const commands = await fetchCommands();
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   let monthlyCommands: { month: string; count: number }[] = [];
