@@ -27,7 +27,7 @@ class Aquarium {
 	}
 
 	async getCleanliness() {
-		return this.aquarium.cleanliness;
+		return Math.max(0, Math.min(100, this.aquarium.cleanliness));
 	}
 
 	async getInhabitants() {
