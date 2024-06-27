@@ -288,7 +288,7 @@ module.exports = {
 		const collector = followUp.createMessageComponentCollector({
 			componentType: ComponentType.Button,
 			// filter,
-			time: 10000,
+			time: 30_000,
 		});
 
 		collector.on('collect', async collectionInteraction => {
