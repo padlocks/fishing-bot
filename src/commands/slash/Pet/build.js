@@ -79,42 +79,55 @@ module.exports = {
 			return interaction.followUp({ content: 'You do not have an aquarium license for that water type!', ephemeral: true });
 		}
 
-		let success = false;
-		let newAquarium;
-		if (license) {
-			newAquarium = new Aquarium({
-				name,
-				size: license.aquarium.size,
-				waterType,
-				owner: await user.getUserId(),
-			});
+		try {
+			let newAquarium;
+			if (license) {
+				newAquarium = new Aquarium({
+					name,
+					size: license.aquarium.size,
+					waterType,
+					owner: await user.getUserId(),
+				});
 
-			success = await newAquarium.save();
-			if (success) {
+				await newAquarium.save();
+				
 				(await user.getInventory()).aquariums.push(await newAquarium.getId());
 				await user.save();
-			}
-		}
 
-		if (success) {
-			if (process.env.ANALYTICS || config.client.analytics) {
-				await analyticsObject.setStatus('completed');
-				await analyticsObject.setStatusMessage('Aquarium built.');
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('completed');
+					await analyticsObject.setStatusMessage('Aquarium built.');
+				}
+				await interaction.followUp({
+					embeds: [
+						new EmbedBuilder()
+							.setTitle('Aquarium')
+							.addFields(
+								{ name: 'Construction Complete', value: `You have successfully constructed aquarium **${name}**!` },
+							),
+					],
+				});
+			} 
+			else {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('Aquarium not built.');
+				}
+				await interaction.followUp({
+					embeds: [
+						new EmbedBuilder()
+							.setTitle('Aquarium')
+							.addFields(
+								{ name: 'Construction Incomplete', value: 'Aquarium was unable to be constructed.' },
+							),
+					],
+				});
 			}
-			await interaction.followUp({
-				embeds: [
-					new EmbedBuilder()
-						.setTitle('Aquarium')
-						.addFields(
-							{ name: 'Construction Complete', value: `You have successfully constructed aquarium **${name}**!` },
-						),
-				],
-			});
 		}
-		else {
+		catch (error) {
 			if (process.env.ANALYTICS || config.client.analytics) {
 				await analyticsObject.setStatus('failed');
-				await analyticsObject.setStatusMessage('Aquarium not built.');
+				await analyticsObject.setStatusMessage('Aquarium not built: ' + error);
 			}
 			await interaction.followUp({
 				embeds: [
