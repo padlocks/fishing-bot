@@ -73,7 +73,7 @@ module.exports = {
 				await analyticsObject.setStatusMessage('Displayed pets.');
 			}
 
-			return await buttonPagination(interaction, analyticsObject, embeds, true);
+			return await buttonPagination(interaction, embeds, analyticsObject, true);
 		}
 
 		if (subcommand === 'rename') {
