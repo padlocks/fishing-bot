@@ -19,7 +19,6 @@ class Aquarium {
 	}
 
 	async getWaterType() {
-		console.log(this.aquarium.waterType);
 		return this.aquarium.waterType;
 	}
 
