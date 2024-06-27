@@ -21,7 +21,7 @@ const selectionOptions = async (inventoryPath, userData, allowNone = true) => {
 			}
 
 			if (uniqueValues.has(name)) {
-				counts[name] = (counts[name] || 1) + (item.count || 1);
+				counts[name] += (item.count || 1);
 				continue;
 			}
 			else {
