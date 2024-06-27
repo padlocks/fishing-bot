@@ -40,6 +40,17 @@ module.exports = {
 	run: async (client, interaction, analyticsObject) => {
 		await interaction.deferReply();
 
+		const user = new User(await User.get(interaction.user.id));
+		if (!user) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('User not found.');
+			}
+			return interaction.editReply({ content: 'There was an error retrieving your data!', ephemeral: true });
+		}
+
+		const inventory = await user.getInventory();
+
 		let species = interaction.options.getString('species');
 		species = Utils.capitalizeWords(species.toLowerCase());
 		// check if species exists in database
@@ -64,8 +75,9 @@ module.exports = {
 		}
 
 		const aquariumName = interaction.options.getString('aquarium');
-		// check if aquarium exists in database
-		const aquariumExists = await Habitat.exists({ name: aquariumName, owner: interaction.user.id });
+		// check if aquarium exists in user's inventory
+		const aquariums = await Promise.all(inventory.aquariums.map(async (a) => await Habitat.findById(a)));
+		const aquariumExists = await aquariums.find((a) => a.name.toLowerCase() === aquariumName.toLowerCase());
 		if (!aquariumExists) {
 			if (process.env.ANALYTICS || config.client.analytics) {
 				await analyticsObject.setStatus('failed');
@@ -74,17 +86,7 @@ module.exports = {
 			return interaction.editReply({ content: 'That aquarium does not exist! Use the `build` command to construct one.', ephemeral: true });
 		}
 
-		const user = new User(await User.get(interaction.user.id));
-		if (!user) {
-			if (process.env.ANALYTICS || config.client.analytics) {
-				await analyticsObject.setStatus('failed');
-				await analyticsObject.setStatusMessage('User not found.');
-			}
-			return interaction.editReply({ content: 'There was an error retrieving your data!', ephemeral: true });
-		}
-
-		// find the desired aquarium
-		const aquariums = await Promise.all((await user.getInventory()).aquariums.map(async (a) => await Habitat.findById(a)));
+		// find the desired aquarium in user's inventory
 		const aquariumData = await aquariums.find((a) => a.name.toLowerCase() === aquariumName.toLowerCase());
 		const aquarium = new Aquarium(aquariumData);
 
