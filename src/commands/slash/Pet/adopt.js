@@ -88,12 +88,27 @@ module.exports = {
 		const aquariumData = await aquariums.find((a) => a.name.toLowerCase() === aquariumName.toLowerCase());
 		const aquarium = new Aquarium(aquariumData);
 
+		// check if aquarium is full
+		if (await aquarium.isFull()) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage('Aquarium is full.');
+			}
+			return interaction.editReply({ content: 'Your aquarium is full! Use the `upgrade` command to increase its capacity.', ephemeral: true });
+		}
+
 		// find the desired fish in user's inventory
 		const fishes = await user.getFish();
 		const fishInInventory = await fishes.find((f) => f.name.toLowerCase() === species.toLowerCase() && !f.locked);
 
 		// check if biome origin is the same as the aquarium's water type
-		if (!await aquarium.compareBiome(fishInInventory.biome)) return await interaction.followUp(`**${fishInInventory.name}** cannot live in a ${await aquarium.getWaterType()} aquarium.`);
+		if (!await aquarium.compareBiome(fishInInventory.biome)) {
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage(`Fish cannot live in a ${await aquarium.getWaterType()} aquarium.`);
+			}
+			return await interaction.followUp(`**${fishInInventory.name}** cannot live in a ${await aquarium.getWaterType()} aquarium.`);
+		}
 
 		// remove fish from inventory
 		await user.removeFish(fishInInventory.id);

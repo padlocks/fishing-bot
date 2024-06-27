@@ -72,7 +72,7 @@ class User {
 
 	async removeBait(baitId) {
 		this.user.inventory.baits = this.user.inventory.baits.filter((b) => b.valueOf() !== baitId);
-		await this.save();
+		return await this.save();
 	}
 
 	async getItems() {

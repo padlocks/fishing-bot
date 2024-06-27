@@ -54,6 +54,10 @@ class Aquarium {
 		return this.aquarium.lastAdjusted;
 	}
 
+	async isFull() {
+		return this.aquarium.fish.length >= this.aquarium.size;
+	}
+
 	async updateStatus() {
 		const now = new Date();
 		const lastCleaned = new Date(this.aquarium.lastCleaned);

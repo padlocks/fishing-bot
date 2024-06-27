@@ -34,7 +34,7 @@ const updateUserWithFish = async (interaction, userId) => {
 		const stats = await user.getStats();
 		stats.latestFish = [];
 		if (bait) {
-			bait.count -= fishArray.length;
+			bait.count -= fishArray.reduce((acc, f) => acc + (f.count || 1), 0);
 			if (bait.count <= 0) {
 				await user.setEquippedBait(null);
 				// delete bait from user inventory
@@ -288,7 +288,7 @@ module.exports = {
 		const collector = followUp.createMessageComponentCollector({
 			componentType: ComponentType.Button,
 			// filter,
-			time: 10000,
+			time: 30_000,
 		});
 
 		collector.on('collect', async collectionInteraction => {

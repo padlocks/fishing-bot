@@ -221,6 +221,7 @@ const hasEnoughMoney = async (userData, item, amount) => {
 
 const buyItem = async (userData, item, amount) => {
 	await userData.addMoney(-item.price * amount);
+	item.count = amount;
 	let baitItem;
 	const baits = await userData.getAllBaits();
 	const itemId = baits.find((bait) => bait.name === item.name);
