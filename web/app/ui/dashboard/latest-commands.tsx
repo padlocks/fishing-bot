@@ -6,7 +6,7 @@ import clsx from 'clsx';
 import { lusitana } from '@/app/ui/fonts';
 import { LatestCommandsSkeleton } from '../skeletons';
 
-const API = '/api/stream?collection=commands';
+const API = '/api/latest/commands';
 
 export default function LatestCommands() {
   const [data, setData] = useState<any[]>([]);
@@ -34,10 +34,13 @@ export default function LatestCommands() {
 
     fetchData();
 
+    const interval = setInterval(fetchData, 5000);
+
     return () => {
       ignore = true;
+      clearInterval(interval);
     };
-  }, [data]);
+  }, []);
 
   if (loading) {
     return <LatestCommandsSkeleton />;

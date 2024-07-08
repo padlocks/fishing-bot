@@ -17,16 +17,14 @@
     "clsx": "^2.0.0",
     "mongoose": "^8.4.1",
     "next": "15.0.0-rc.0",
+    "next-auth": "^5.0.0-beta.19",
     "postcss": "8.4.31",
     "react": "19.0.0-rc-6230622a1a-20240610",
     "react-dom": "19.0.0-rc-6230622a1a-20240610",
-    "socket.io": "^4.7.5",
-    "socket.io-client": "^4.7.5",
     "swr": "^2.2.5",
     "tailwindcss": "3.3.3",
     "typescript": "5.2.2",
     "use-debounce": "^10.0.1",
-    "ws": "^8.17.1",
     "zod": "^3.22.2"
   },
   "devDependencies": {

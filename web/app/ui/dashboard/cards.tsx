@@ -1,3 +1,5 @@
+'use client';
+
 import {
   BanknotesIcon,
   ClockIcon,
@@ -5,7 +7,8 @@ import {
   InboxIcon,
 } from '@heroicons/react/24/outline';
 import { lusitana } from '@/app/ui/fonts';
-import { fetchCommandsLength, fetchTotalFishCaught, fetchUserCount } from '@/app/lib/data';
+import { useEffect, useState } from 'react';
+import { CardsSkeleton } from '../skeletons';
 
 const iconMap = {
   collected: BanknotesIcon,
@@ -15,9 +18,59 @@ const iconMap = {
 };
 
 export default async function CardWrapper() {
-  const numberOfCommands = await fetchCommandsLength();
-  const numberOfUsers = await fetchUserCount();
-  const numberOfFishCaught = await fetchTotalFishCaught();
+  const [numberOfCommands, setCommands] = useState(0);
+  const [numberOfUsers, setUsers] = useState(0);
+  const [numberOfFishCaught, setFish] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const fetchData = async () => {
+      try {
+        const commandsRes = await fetch('/api/latest/commandCount');
+        const usersRes = await fetch('/api/latest/userCount');
+        const fishRes = await fetch('/api/latest/fishCount');
+
+        if (!commandsRes.ok || !usersRes.ok || !fishRes.ok) {
+          throw new Error('Network response was not ok');
+        }
+        if (!ignore) setCommands(await commandsRes.json());
+        if (!ignore) setUsers(await usersRes.json());
+        if (!ignore) setFish(await fishRes.json());
+
+      } catch (err) {
+        console.error('Fetch error:', err);
+        if (!ignore) setError(err);
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
+
+    fetchData();
+
+    const interval = setInterval(fetchData, 5000);
+
+    return () => {
+      ignore = true;
+      clearInterval(interval);
+    };
+  }, []);
+
+  if (loading) {
+    return <CardsSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex w-full flex-col md:col-span-4">
+        <h2 className={`${lusitana.className} mb-4 text-xl md:text-2xl`}>Latest Commands</h2>
+        <p className="text-red-500">Error fetching commands: {error.message}</p>
+      </div>
+    );
+  }
+
   return (
     <>
       { <Card title="Total Commands" value={numberOfCommands} type="commands" /> }

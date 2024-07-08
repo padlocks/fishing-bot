@@ -12,6 +12,19 @@ async function sortCommandsByRecency(commands: ICommand[]): Promise<ICommand[]> 
 	});
 }
 
+export async function checkIfUserIsAdmin(userId: string) {
+	noStore();
+	await dbConnect();
+	const user = await User.findOne({ userId });
+	return user?.isAdmin;
+}
+
+export async function getUserById(userId: string) {
+	noStore();
+	await dbConnect();
+	return await User.findOne({ userId });
+}
+
 export async function fetchLatestCommands() {
     noStore();
 	
