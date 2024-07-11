@@ -12,6 +12,156 @@ async function sortCommandsByRecency(commands: ICommand[]): Promise<ICommand[]> 
 	});
 }
 
+export async function getUserTrend() {
+	noStore();
+	await dbConnect();
+
+	// Get user data for this month
+	const thisMonthStart = new Date();
+	thisMonthStart.setDate(1);
+	thisMonthStart.setHours(0, 0, 0, 0);
+
+	const thisMonthEnd = new Date();
+	thisMonthEnd.setMonth(thisMonthEnd.getMonth() + 1);
+	thisMonthEnd.setDate(0);
+	thisMonthEnd.setHours(23, 59, 59, 999);
+
+	const thisMonthUsers = await User.find({
+		createdAt: { $gte: thisMonthStart, $lte: thisMonthEnd },
+	});
+
+	// Get user data for last month
+	const lastMonthStart = new Date();
+	lastMonthStart.setMonth(lastMonthStart.getMonth() - 1);
+	lastMonthStart.setDate(1);
+	lastMonthStart.setHours(0, 0, 0, 0);
+
+	const lastMonthEnd = new Date();
+	lastMonthEnd.setDate(0);
+	lastMonthEnd.setHours(23, 59, 59, 999);
+
+	const lastMonthUsers = await User.find({
+		createdAt: { $gte: lastMonthStart, $lte: lastMonthEnd },
+	});
+
+	// Calculate the percent change
+	const thisMonthCount = thisMonthUsers.length;
+	const lastMonthCount = lastMonthUsers.length;
+	const percentChange = ((thisMonthCount - lastMonthCount) / lastMonthCount) * 100;
+
+	// Calculate the average growth rate per day
+	const daysInLastMonth = lastMonthEnd.getDate();
+	const averageGrowthRate = (thisMonthCount - lastMonthCount) / daysInLastMonth;
+
+	// Calculate the projected growth for the entire month
+	const projectedGrowth = averageGrowthRate * daysInLastMonth;
+
+	// Calculate the projected percentage change
+	const projectedPercentChange = (projectedGrowth / lastMonthCount) * 100;
+
+	return Math.round(projectedPercentChange);
+}
+
+export async function getFishTrend() {
+	noStore();
+	await dbConnect();
+
+	// Get fish data for this month
+	const thisMonthStart = new Date();
+	thisMonthStart.setDate(1);
+	thisMonthStart.setHours(0, 0, 0, 0);
+
+	const thisMonthEnd = new Date();
+	thisMonthEnd.setMonth(thisMonthEnd.getMonth() + 1);
+	thisMonthEnd.setDate(0);
+	thisMonthEnd.setHours(23, 59, 59, 999);
+
+	const thisMonthFishData = await FishData.find({
+		obtained: { $gte: thisMonthStart, $lte: thisMonthEnd },
+	});
+
+	// Get fish data for last month
+	const lastMonthStart = new Date();
+	lastMonthStart.setMonth(lastMonthStart.getMonth() - 1);
+	lastMonthStart.setDate(1);
+	lastMonthStart.setHours(0, 0, 0, 0);
+
+	const lastMonthEnd = new Date();
+	lastMonthEnd.setDate(0);
+	lastMonthEnd.setHours(23, 59, 59, 999);
+
+	const lastMonthFishData = await FishData.find({
+		obtained: { $gte: lastMonthStart, $lte: lastMonthEnd },
+	});
+
+	// Calculate the percent change
+	const thisMonthCount = thisMonthFishData.reduce((a, b) => a + b.count, 0);
+	const lastMonthCount = lastMonthFishData.reduce((a, b) => a + b.count, 0);
+	const percentChange = ((thisMonthCount - lastMonthCount) / lastMonthCount) * 100;
+
+	// Calculate the average growth rate per day
+	const daysInLastMonth = lastMonthEnd.getDate();
+	const averageGrowthRate = (thisMonthCount - lastMonthCount) / daysInLastMonth;
+
+	// Calculate the projected growth for the entire month
+	const projectedGrowth = averageGrowthRate * daysInLastMonth;
+
+	// Calculate the projected percentage change
+	const projectedPercentChange = (projectedGrowth / lastMonthCount) * 100;
+
+	return Math.round(projectedPercentChange);
+}
+
+export async function getCommandTrend() {
+	noStore();
+	await dbConnect();
+
+	// Get commands for this month
+	const thisMonthStart = new Date();
+	thisMonthStart.setDate(1);
+	thisMonthStart.setHours(0, 0, 0, 0);
+
+	const thisMonthEnd = new Date();
+	thisMonthEnd.setMonth(thisMonthEnd.getMonth() + 1);
+	thisMonthEnd.setDate(0);
+	thisMonthEnd.setHours(23, 59, 59, 999);
+
+	const thisMonthCommands = await Command.find({
+		time: { $gte: thisMonthStart, $lte: thisMonthEnd },
+	});
+
+	// Get commands for last month
+	const lastMonthStart = new Date();
+	lastMonthStart.setMonth(lastMonthStart.getMonth() - 1);
+	lastMonthStart.setDate(1);
+	lastMonthStart.setHours(0, 0, 0, 0);
+
+	const lastMonthEnd = new Date();
+	lastMonthEnd.setDate(0);
+	lastMonthEnd.setHours(23, 59, 59, 999);
+
+	const lastMonthCommands = await Command.find({
+		time: { $gte: lastMonthStart, $lte: lastMonthEnd },
+	});
+
+	// Calculate the percent change
+	const thisMonthCount = thisMonthCommands.length;
+	const lastMonthCount = lastMonthCommands.length;
+	const percentChange = ((thisMonthCount - lastMonthCount) / lastMonthCount) * 100;
+
+	// Calculate the average growth rate per day
+	const daysInLastMonth = lastMonthEnd.getDate();
+	const averageGrowthRate = (thisMonthCount - lastMonthCount) / daysInLastMonth;
+
+	// Calculate the projected growth for the entire month
+	const projectedGrowth = averageGrowthRate * daysInLastMonth;
+
+	// Calculate the projected percentage change
+	const projectedPercentChange = (projectedGrowth / lastMonthCount) * 100;
+
+	return Math.round(projectedPercentChange);
+}
+
 export async function checkIfUserIsAdmin(userId: string) {
 	noStore();
 	await dbConnect();

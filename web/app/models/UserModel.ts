@@ -34,6 +34,7 @@ interface IUser extends Document {
 		codes: Types.ObjectId[];
 	};
 	isAdmin: boolean;
+	createdAt: Date;
 }
 
 const UserSchema = new Schema<IUser>({
@@ -136,6 +137,10 @@ const UserSchema = new Schema<IUser>({
 	isAdmin: {
 		type: Boolean,
 		default: false,
+	},
+	createdAt: {
+		type: Date,
+		default: Date.now,
 	},
 });
 

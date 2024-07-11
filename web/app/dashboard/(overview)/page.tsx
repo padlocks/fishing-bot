@@ -1,14 +1,23 @@
 import { lusitana } from '@/app/ui/fonts';
 import CommandsChart from '@/app/ui/dashboard/commands-chart';
 import { Suspense } from 'react';
-import { LatestCommandsSkeleton, ChartSkeleton, CardsSkeleton } from '@/app/ui/skeletons';
+import {
+  LatestCommandsSkeleton,
+  ChartSkeleton,
+  CardsSkeleton,
+} from '@/app/ui/skeletons';
 import dynamic from 'next/dynamic';
 import { auth } from '@/auth';
 import { checkIfUserIsAdmin } from '@/app/lib/data';
 
-const LatestCommands = dynamic(() => import('@/app/ui/dashboard/latest-commands'), { ssr: false });
-const CardWrapper = dynamic(() => import('@/app/ui/dashboard/cards'), { ssr: false });
- 
+const LatestCommands = dynamic(
+  () => import('@/app/ui/dashboard/latest-commands'),
+  { ssr: false },
+);
+const CardWrapper = dynamic(() => import('@/app/ui/dashboard/cards'), {
+  ssr: false,
+});
+
 export default async function Page() {
   const session = await auth();
   const id = session?.user?.image?.split('/')[4]?.split('.')[0] ?? '';
@@ -27,7 +36,7 @@ export default async function Page() {
         </div>
         <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-8">
           <Suspense fallback={<ChartSkeleton />}>
-            <CommandsChart  />
+            <CommandsChart />
           </Suspense>
           <Suspense fallback={<LatestCommandsSkeleton />}>
             <LatestCommands />
@@ -35,15 +44,13 @@ export default async function Page() {
         </div>
       </main>
     );
-  }
-  else if (session) {
+  } else if (session) {
     return (
       <div>
         <p>You need to be an admin to view this page</p>
       </div>
     );
-  }
-  else {
+  } else {
     return (
       <div>
         <p>You need to be logged in to view this page</p>
@@ -51,3 +58,4 @@ export default async function Page() {
     );
   }
 }
+
