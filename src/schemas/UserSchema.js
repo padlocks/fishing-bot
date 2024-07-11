@@ -108,6 +108,14 @@ const UserSchema = new Schema ({
 			ref: 'Code',
 		}],
 	},
+	isAdmin: {
+		type: Boolean,
+		default: false,
+	},
+	createdAt: {
+		type: Date,
+		default: Date.now,
+	},
 });
 
 const User = model('User', UserSchema, 'users');
