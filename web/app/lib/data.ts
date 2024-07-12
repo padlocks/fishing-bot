@@ -37,7 +37,7 @@ export async function getUserTrend() {
 	const projectedGrowth = averageGrowthRate * daysInLastMonth;
 	const projectedPercentChange = (projectedGrowth / lastMonthCount) * 100;
 
-	return Math.round(projectedPercentChange);
+	return Math.max(Math.min(Math.round(projectedPercentChange), 200), -200);
 }
 
 export async function getFishTrend() {
@@ -65,7 +65,7 @@ export async function getFishTrend() {
 	const projectedGrowth = averageGrowthRate * daysInLastMonth;
 	const projectedPercentChange = (projectedGrowth / lastMonthCount) * 100;
 
-	return Math.round(projectedPercentChange);
+	return Math.max(Math.min(Math.round(projectedPercentChange), 200), -200);
 }
 
 export async function getCommandTrend() {
@@ -93,7 +93,7 @@ export async function getCommandTrend() {
 	const projectedGrowth = averageGrowthRate * daysInLastMonth;
 	const projectedPercentChange = (projectedGrowth / lastMonthCount) * 100;
 
-	return Math.round(projectedPercentChange);
+	return Math.max(Math.min(Math.round(projectedPercentChange), 200), -200);
 }
 
 export async function checkIfUserIsAdmin(userId: string) {
