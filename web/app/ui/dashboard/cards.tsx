@@ -16,6 +16,7 @@ export default function CardWrapper() {
     commands: 0,
     commandTrend: 0,
     users: 0,
+    userTrend: 0,
     fish: 0,
     fishTrend: 0,
   });
@@ -68,7 +69,7 @@ export default function CardWrapper() {
   return (
     <>
       <NewCard title="Commands" value={data.commands} type="commands" percent={data.commandTrend} />
-      <NewCard title="Users" value={data.users} type="users" percent={-10} />
+      <NewCard title="Users" value={data.users} type="users" percent={data.userTrend} />
       <NewCard title="Fish" value={data.fish} type="fish" percent={data.fishTrend} />
     </>
   );

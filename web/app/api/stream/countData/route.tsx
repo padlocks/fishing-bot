@@ -1,5 +1,5 @@
 import { NextApiRequest } from 'next';
-import { fetchCommandsLength, fetchTotalFishCaught, fetchUserCount, getCommandTrend, getFishTrend } from '@/app/lib/data';
+import { fetchCommandsLength, fetchTotalFishCaught, fetchUserCount, getCommandTrend, getFishTrend, getUserTrend } from '@/app/lib/data';
 import { setupChangeStream } from '@/lib/dbConnect';
 
 export const runtime = 'nodejs';
@@ -14,9 +14,10 @@ export const GET = async (req: NextApiRequest) => {
 	const initialCommandCount = await fetchCommandsLength();
 	const initialCommandTrend = await getCommandTrend();
 	const initialUserCount = await fetchUserCount();
+  const initialUserTrend = await getUserTrend();
 	const initialFishCount = await fetchTotalFishCaught();
 	const initialFishTrend = await getFishTrend();
-    writer.write(encoder.encode(`data: ${JSON.stringify({commands: initialCommandCount, commandTrend: initialCommandTrend, users: initialUserCount, fish: initialFishCount, fishTrend: initialFishTrend})}\n\n`));
+    writer.write(encoder.encode(`data: ${JSON.stringify({commands: initialCommandCount, commandTrend: initialCommandTrend, users: initialUserCount, userTrend: initialUserTrend, fish: initialFishCount, fishTrend: initialFishTrend})}\n\n`));
 
     const pipeline = [
       {
@@ -28,14 +29,14 @@ export const GET = async (req: NextApiRequest) => {
 
     const changeStream = await setupChangeStream("commands", pipeline, async (change) => {
       try {
+        const commands = await fetchCommandsLength();
+        const commandTrend = await getCommandTrend();
+        const users = await fetchUserCount();
+        const userTrend = await getUserTrend();
+        const fish = await fetchTotalFishCaught();
+        const fishTrend = await getFishTrend();
 
-		const commands = await fetchCommandsLength();
-		const commandTrend = await getCommandTrend();
-		const users = await fetchUserCount();
-		const fish = await fetchTotalFishCaught();
-		const fishTrend = await getFishTrend();
-
-        writer.write(encoder.encode(`data: ${JSON.stringify({commands, commandTrend, users, fish, fishTrend})}\n\n`));
+        writer.write(encoder.encode(`data: ${JSON.stringify({commands, commandTrend, users, userTrend, fish, fishTrend})}\n\n`));
       } catch (writeError) {
         console.error('Error writing to stream:', writeError);
       }
