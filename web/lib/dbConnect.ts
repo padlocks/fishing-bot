@@ -50,16 +50,24 @@ export async function setupChangeStream(collectionName: string, pipeline, callba
     const collection = db.collection(collectionName);
 
     const changeStream = collection.watch(pipeline, {
-		fullDocument: "updateLookup",
-	  });
+        fullDocument: "updateLookup",
+    });
 
-    // changeStream.on('change', (change) => {
-    //     callback(change);
-    // });
+    changeStream.on('change', (change) => {
+        try {
+            callback(change);
+        } catch (callbackError) {
+            console.error('Error in change stream callback:', callbackError);
+        }
+    });
 
-	// Read the first change directly from the stream
-    let doc;
-    while ((doc = await changeStream.next()) !== null) {
-        callback(doc);
-    }
+    changeStream.on('error', (error) => {
+        console.error('Change stream error:', error);
+    });
+
+    changeStream.on('end', () => {
+        console.log('Change stream ended');
+    });
+
+    return changeStream;
 }

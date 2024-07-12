@@ -18,12 +18,24 @@ export default function LatestCommands() {
 
     const fetchData = async () => {
       try {
-        const res = await fetch(API);
-        if (!res.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const json = await res.json();
-        if (!ignore) setData(json);
+        const eventSource = new EventSource(`/api/stream?collection=commands`);
+
+        eventSource.onmessage = (event) => {
+          const newData = JSON.parse(event.data);
+          if (newData.length === 1) {
+            // Remove the last element from data and prepend the new data
+            setData((prevData) => [newData[0], ...prevData].slice(0, 10));
+            console.log(data.length);
+          }
+          else {
+            setData(newData);
+          }
+        };
+
+        eventSource.onerror = (event) => {
+          console.log("Connection was closed due to an error:", event);
+          eventSource.close();
+        };
       } catch (err) {
         console.error('Fetch error:', err);
         if (!ignore) setError(err);
@@ -33,13 +45,6 @@ export default function LatestCommands() {
     };
 
     fetchData();
-
-    const interval = setInterval(fetchData, 5000);
-
-    return () => {
-      ignore = true;
-      clearInterval(interval);
-    };
   }, []);
 
   if (loading) {

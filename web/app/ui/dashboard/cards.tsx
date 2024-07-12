@@ -27,36 +27,19 @@ export default function CardWrapper() {
 
     const fetchData = async () => {
       try {
-        const [commandsRes, commandTrendRes, usersRes, fishRes, fishTrendRes] = await Promise.all([
-          fetch('/api/latest/commandCount'),
-          fetch('/api/latest/commandTrend'),
-          fetch('/api/latest/userCount'),
-          fetch('/api/latest/fishCount'),
-          fetch('/api/latest/fishTrend'),
-        ]);
+        const eventSource = new EventSource(`/api/stream/countData`);
 
-        if (!commandsRes.ok || !commandTrendRes.ok || !usersRes.ok || !fishRes.ok || !fishTrendRes.ok) {
-          throw new Error('Network response was not ok');
-        }
-
-        const [commandsData, commandTrendData, usersData, fishData, fishTrendData] = await Promise.all([
-          commandsRes.json(),
-          commandTrendRes.json(),
-          usersRes.json(),
-          fishRes.json(),
-          fishTrendRes.json(),
-        ]);
-
-        const newData = {
-          commands: commandsData,
-          commandTrend: commandTrendData,
-          users: usersData,
-          fish: fishData,
-          fishTrend: fishTrendData,
+        eventSource.onmessage = (event) => {
+          const newData = JSON.parse(event.data);
+          setData(newData);
         };
 
-        if (!ignore && JSON.stringify(data) !== JSON.stringify(newData)) {
-          setData(newData);
+        eventSource.onerror = (event) => {
+          console.log("Connection was closed due to an error:", event);
+          eventSource.close();
+        };
+
+        if (!ignore) {
           setLoading(false);
         }
       } catch (err) {
@@ -67,13 +50,7 @@ export default function CardWrapper() {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 5000);
-
-    return () => {
-      ignore = true;
-      clearInterval(interval);
-    };
-  }, [data]);
+  }, []);
 
   if (loading) {
     return <CardsSkeleton />;

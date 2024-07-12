@@ -1,33 +1,22 @@
 import { NextApiRequest } from 'next';
-import { fetchLatestCommands } from '@/app/lib/data';
+import { fetchCommandsLength, fetchTotalFishCaught, fetchUserCount, getCommandTrend, getFishTrend } from '@/app/lib/data';
 import { setupChangeStream } from '@/lib/dbConnect';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export const GET = async (req: NextApiRequest) => {
-  const { searchParams } = new URL(req.url);
-  const collectionParam = searchParams.get("collection");
-  const collection = collectionParam;
-
-  if (!collection) {
-    return new Response('No collection specified.', {
-      status: 400,
-      headers: {
-        'Content-Type': 'text/event-stream',
-        Connection: 'keep-alive',
-        'Cache-Control': 'no-cache, no-transform',
-      },
-    });
-  }
-
   try {
     const responseStream = new TransformStream();
     const writer = responseStream.writable.getWriter();
     const encoder = new TextEncoder();
 
-    const initialCommands = await fetchLatestCommands();
-    writer.write(encoder.encode(`data: ${JSON.stringify(initialCommands)}\n\n`));
+	const initialCommandCount = await fetchCommandsLength();
+	const initialCommandTrend = await getCommandTrend();
+	const initialUserCount = await fetchUserCount();
+	const initialFishCount = await fetchTotalFishCaught();
+	const initialFishTrend = await getFishTrend();
+    writer.write(encoder.encode(`data: ${JSON.stringify({commands: initialCommandCount, commandTrend: initialCommandTrend, users: initialUserCount, fish: initialFishCount, fishTrend: initialFishTrend})}\n\n`));
 
     const pipeline = [
       {
@@ -37,9 +26,16 @@ export const GET = async (req: NextApiRequest) => {
       },
     ];
 
-    const changeStream = await setupChangeStream(collection, pipeline, async (change) => {
+    const changeStream = await setupChangeStream("commands", pipeline, async (change) => {
       try {
-        writer.write(encoder.encode(`data: ${JSON.stringify([change.fullDocument])}\n\n`));
+
+		const commands = await fetchCommandsLength();
+		const commandTrend = await getCommandTrend();
+		const users = await fetchUserCount();
+		const fish = await fetchTotalFishCaught();
+		const fishTrend = await getFishTrend();
+
+        writer.write(encoder.encode(`data: ${JSON.stringify({commands, commandTrend, users, fish, fishTrend})}\n\n`));
       } catch (writeError) {
         console.error('Error writing to stream:', writeError);
       }
