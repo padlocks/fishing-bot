@@ -32,16 +32,14 @@ export default function CardWrapper() {
         eventSource.onmessage = (event) => {
           const newData = JSON.parse(event.data);
           setData(newData);
+
+          if (!ignore) setLoading(false);
         };
 
         eventSource.onerror = (event) => {
           console.log("Connection was closed due to an error:", event);
           eventSource.close();
         };
-
-        if (!ignore) {
-          setLoading(false);
-        }
       } catch (err) {
         console.error('Fetch error:', err);
         eventSource.close();
@@ -99,7 +97,7 @@ export function Card({
   const percentColor = percent > 0 ? 'bg-green-500' : 'bg-red-500';
 
   return (
-    <div className={`flex rounded-xl ${color} p-2 shadow-sm`}>
+    <div className={`flex rounded-xl ${color} dark:bg-gray-900 p-2 shadow-sm`}>
       <div className="flex-1 p-4">
         <div className="flex flex-col items-start">
           {Icon ? <Icon className={`h-4 w-4 ${iconColor}`} /> : null}

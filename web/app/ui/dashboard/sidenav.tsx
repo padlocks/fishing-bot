@@ -9,19 +9,19 @@ export default async function SideNav() {
 
   return (
     <div className="flex h-full flex-col px-3 py-4 md:px-2">
-      <div className="flex h-20 shrink-0 items-end rounded-lg bg-blue-500 p-4 md:h-42">
+      <div className="flex h-20 shrink-0 items-end rounded-lg bg-blue-500 dark:bg-gray-800 p-4 md:h-42">
         {<FishingRPGLogo />}
       </div>
       <div className="flex grow flex-row justify-between space-x-2 md:flex-col md:space-x-0 md:space-y-2">
         <NavLinks />
-        <div className="hidden h-auto w-full grow rounded-md bg-gray-50 md:block"></div>
+        <div className="hidden h-auto w-full grow rounded-md bg-gray-50 dark:bg-gray-900 md:block"></div>
         <form
           action={async () => {
             'use server';
             await signOut();
           }}
         >
-          <div className="flex items-center bg-gray-50">
+          <div className="flex items-center bg-gray-50 dark:bg-gray-900">
             {session && session.user && (
               <>
                 <img src={session.user.image ?? ''} alt="Profile Picture" className="w-12 h-12 rounded-full" />
@@ -29,7 +29,7 @@ export default async function SideNav() {
               </>
             )}
             <div className="flex-grow"></div>
-            <button className="flex h-[48px] grow items-center gap-2 rounded-md bg-gray-50 p-3 text-sm font-medium hover:bg-sky-100 hover:text-blue-600 md:flex-none md:justify-start md:p-2 md:px-3">
+            <button className="flex h-[48px] grow items-center gap-2 rounded-md bg-gray-50 dark:bg-gray-900 p-3 text-sm font-medium hover:bg-sky-100 hover:text-blue-600 md:flex-none md:justify-start md:p-2 md:px-3">
               <PowerIcon className="w-6" />
               <div className="hidden md:block">Sign Out</div>
             </button>

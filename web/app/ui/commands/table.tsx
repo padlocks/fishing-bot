@@ -15,12 +15,12 @@ export default async function CommandsTable({
 	return (
 		<div className="mt-6 flow-root">
 			<div className="inline-block min-w-full align-middle">
-				<div className="rounded-lg bg-gray-50 p-2 md:pt-0">
+				<div className="rounded-lg bg-gray-50 dark:bg-gray-800 p-2 md:pt-0">
 					<div className="md:hidden">
 						{commands?.map((command) => (
 							<div
 								key={command.id}
-								className="mb-2 w-full rounded-md bg-white p-4"
+								className="mb-2 w-full rounded-md bg-white dark:bg-gray-900 p-4"
 							>
 								<div className="flex items-center justify-between border-b pb-4">
 									<div>
@@ -45,7 +45,7 @@ export default async function CommandsTable({
 							</div>
 						))}
 					</div>
-					<table className="hidden min-w-full text-gray-900 md:table">
+					<table className="hidden min-w-full text-gray-900 dark:text-gray-200 dark:bg-gray-900 md:table">
 						<thead className="rounded-lg text-left text-sm font-normal">
 							<tr>
 								<th scope="col" className="px-4 py-5 font-medium sm:pl-6">
@@ -62,7 +62,7 @@ export default async function CommandsTable({
 								</th>
 							</tr>
 						</thead>
-						<tbody className="bg-white">
+						<tbody className="bg-white dark:bg-gray-900">
 							{commands?.map((command) => (
 								<tr
 									key={command.id}

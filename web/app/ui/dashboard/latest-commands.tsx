@@ -27,6 +27,8 @@ export default function LatestCommands() {
           else {
             setData(newData);
           }
+
+          if (!ignore) setLoading(false);
         };
 
         eventSource.onerror = (event) => {
@@ -37,8 +39,6 @@ export default function LatestCommands() {
         console.error('Fetch error:', err);
         eventSource.close();
         if (!ignore) setError(err);
-      } finally {
-        if (!ignore) setLoading(false);
       }
     };
 
@@ -76,7 +76,7 @@ export default function LatestCommands() {
   return (
     <div className="flex w-full flex-col md:col-span-4">
       <h2 className={`${lusitana.className} mb-4 text-xl md:text-2xl`}>Latest Commands</h2>
-      <div className="flex grow flex-col justify-between rounded-xl bg-gray-50 p-4">
+      <div className="flex grow flex-col justify-between rounded-xl bg-gray-50 dark:bg-gray-900 p-4">
         {data.map((command, i) => (
           <div
             key={command._id}
