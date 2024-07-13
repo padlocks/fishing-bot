@@ -15,17 +15,14 @@ export default function LatestCommands() {
 
   useEffect(() => {
     let ignore = false;
+    const eventSource = new EventSource(`/api/stream?collection=commands`);
 
     const fetchData = async () => {
       try {
-        const eventSource = new EventSource(`/api/stream?collection=commands`);
-
         eventSource.onmessage = (event) => {
           const newData = JSON.parse(event.data);
           if (newData.length === 1) {
-            // Remove the last element from data and prepend the new data
             setData((prevData) => [newData[0], ...prevData].slice(0, 10));
-            console.log(data.length);
           }
           else {
             setData(newData);
@@ -38,6 +35,7 @@ export default function LatestCommands() {
         };
       } catch (err) {
         console.error('Fetch error:', err);
+        eventSource.close();
         if (!ignore) setError(err);
       } finally {
         if (!ignore) setLoading(false);
@@ -45,6 +43,12 @@ export default function LatestCommands() {
     };
 
     fetchData();
+    
+    return () => {
+      ignore = true;
+      console.log("Closing EventSource for commands");
+      eventSource.close();
+    }
   }, []);
 
   if (loading) {

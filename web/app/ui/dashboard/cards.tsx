@@ -25,11 +25,10 @@ export default function CardWrapper() {
 
   useEffect(() => {
     let ignore = false;
+    const eventSource = new EventSource(`/api/stream/countData`);
 
     const fetchData = async () => {
       try {
-        const eventSource = new EventSource(`/api/stream/countData`);
-
         eventSource.onmessage = (event) => {
           const newData = JSON.parse(event.data);
           setData(newData);
@@ -45,12 +44,19 @@ export default function CardWrapper() {
         }
       } catch (err) {
         console.error('Fetch error:', err);
+        eventSource.close();
         if (!ignore) setError(err);
         setLoading(false);
       }
     };
 
     fetchData();
+
+    return () => {
+      ignore = true;
+      console.log("Closing EventSource for countData");
+      eventSource.close();
+    }
   }, []);
 
   if (loading) {
@@ -68,14 +74,14 @@ export default function CardWrapper() {
 
   return (
     <>
-      <NewCard title="Commands" value={data.commands} type="commands" percent={data.commandTrend} />
-      <NewCard title="Users" value={data.users} type="users" percent={data.userTrend} />
-      <NewCard title="Fish" value={data.fish} type="fish" percent={data.fishTrend} />
+      <Card title="Commands" value={data.commands} type="commands" percent={data.commandTrend} />
+      <Card title="Users" value={data.users} type="users" percent={data.userTrend} />
+      <Card title="Fish" value={data.fish} type="fish" percent={data.fishTrend} />
     </>
   );
 }
 
-export function NewCard({
+export function Card({
   title,
   value,
   type,

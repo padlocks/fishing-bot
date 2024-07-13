@@ -53,7 +53,7 @@ export default async function CommandsChart() {
                   height: `${(chartHeight / topLabel) * monthCommands.count}px`,
                 }}
               ></div>
-              <p className="-rotate-90 text-sm text-gray-400 sm:rotate-0">
+              <p className="-rotate-90 text-xs text-gray-400 sm:rotate-0">
                 {monthCommands.month}
               </p>
             </div>

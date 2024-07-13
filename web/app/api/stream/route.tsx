@@ -1,11 +1,25 @@
 import { NextApiRequest } from 'next';
-import { fetchLatestCommands } from '@/app/lib/data';
+import { checkIfUserIsAdmin, fetchLatestCommands } from '@/app/lib/data';
 import { setupChangeStream } from '@/lib/dbConnect';
+import { auth } from '@/auth';
+import { NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export const GET = async (req: NextApiRequest) => {
+
+  const session = await auth();
+  const id = session?.user?.image?.split('/')[4]?.split('.')[0] ?? '';
+  const admin = await checkIfUserIsAdmin(id);
+
+  if (!session || !admin) {
+    return NextResponse.json(
+      { error: { message: 'Not authorized' } },
+      { status: 401 }
+    );
+  }
+
   const { searchParams } = new URL(req.url);
   const collectionParam = searchParams.get("collection");
   const collection = collectionParam;
@@ -37,7 +51,7 @@ export const GET = async (req: NextApiRequest) => {
       },
     ];
 
-    const changeStream = await setupChangeStream(collection, pipeline, async (change) => {
+    await setupChangeStream(collection, pipeline, async (change) => {
       try {
         writer.write(encoder.encode(`data: ${JSON.stringify([change.fullDocument])}\n\n`));
       } catch (writeError) {

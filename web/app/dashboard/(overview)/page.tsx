@@ -14,7 +14,9 @@ const LatestCommands = dynamic(
   () => import('@/app/ui/dashboard/latest-commands'),
   { ssr: false },
 );
-const CardWrapper = dynamic(() => import('@/app/ui/dashboard/cards'), {
+
+const CardWrapper = dynamic(
+  () => import('@/app/ui/dashboard/cards'), {
   ssr: false,
 });
 
