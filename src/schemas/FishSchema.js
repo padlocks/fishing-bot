@@ -53,6 +53,10 @@ const FishSchema = new Schema({
 		type: String,
 		default: 'ocean',
 	},
+	guild: {
+		type: String,
+		default: '0',
+	},
 });
 
 const Fish = model('Fish', FishSchema);

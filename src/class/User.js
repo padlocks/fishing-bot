@@ -466,6 +466,7 @@ class User {
 			}
 			else {
 				clonedItem = await Utils.clone(itemObject, userId);
+				clonedItem.count = count;
 				user.inventory.baits.push(clonedItem);
 				finalItem = clonedItem;
 				newItemCount = clonedItem.count || 1;
@@ -489,6 +490,7 @@ class User {
 			}
 			else {
 				clonedItem = await Utils.clone(itemObject, userId);
+				clonedItem.count = count;
 				user.inventory.buffs.push(clonedItem);
 				finalItem = clonedItem;
 				newItemCount = clonedItem.count || 1;
@@ -505,6 +507,7 @@ class User {
 			}
 			else {
 				clonedItem = await Utils.clone(itemObject, userId);
+				clonedItem.count = count;
 				user.inventory.gacha.push(clonedItem);
 				finalItem = clonedItem;
 				newItemCount = clonedItem.count || 1;
@@ -527,6 +530,7 @@ class User {
 			}
 			else {
 				clonedItem = await Utils.clone(itemObject, userId);
+				clonedItem.count = count;
 				user.inventory.items.push(clonedItem);
 				finalItem = clonedItem;
 				newItemCount = clonedItem.count || 1;

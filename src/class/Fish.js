@@ -13,7 +13,7 @@ class Fish {
 	// 	return FishData.findOneAndUpdate({ _id: this.fish._id }, this.fish, { upsert: true });
 	// }
 
-	static async reel(rod, bait, biome, user) {
+	static async reel(rod, bait, biome, guild, user) {
 		const rodObject = await ItemData.findById(rod);
 		const rarities = Object.keys(rodObject.weights);
 		let capabilities = rodObject.capabilities;
@@ -25,10 +25,10 @@ class Fish {
 			weights = await Utils.sumArrays(Object.values(rodObject.weights), Object.values(bait.weights));
 		}
 	
-		return await this.sendToUser(capabilities, rarities, weights, user);
+		return await this.sendToUser(capabilities, rarities, weights, guild, user);
 	};
 
-	static async sendToUser(capabilities, choices, weights, user) {
+	static async sendToUser(capabilities, choices, weights, guild, user) {
 		let fishArray = [];
 		const numberCapability = capabilities.find(capability => !isNaN(capability));
 
@@ -54,7 +54,8 @@ class Fish {
 			else {
 				uniqueFishArray.push(oneFish);
 			}
-	
+			
+			oneFish.item.guild = guild;
 			oneFish.item.save();
 		});
 	
