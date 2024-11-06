@@ -184,6 +184,11 @@ class Fish {
 		const capitalized = fishName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 		return await FishSchema.findOne({ name: capitalized });
 	};
+
+	static async isValidRarity(rarity) {
+		const rarities = ['common', 'uncommon', 'rare', 'ultra', 'giant', 'legendary', 'lucky'];
+		return rarities.includes(rarity.toLowerCase()) || rarity.toLowerCase() === 'all';
+	};
 }
 
 module.exports = { Fish };
