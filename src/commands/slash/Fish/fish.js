@@ -16,7 +16,7 @@ const updateUserWithFish = async (interaction, userId) => {
 	let rod = await user.getEquippedRod();
 	const bait = await user.getEquippedBait();
 	const biome = await user.getCurrentBiome();
-	const fishArray = await Fish.reel(rod._id, bait, biome, user);
+	const fishArray = await Fish.reel(rod._id, bait, biome, interaction.guild.id, user);
 	let xp = 0;
 	let levelUp = false;
 

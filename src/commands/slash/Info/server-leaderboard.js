@@ -6,7 +6,7 @@ const config = require('../../../config');
 module.exports = {
 	structure: new SlashCommandBuilder()
 		.setName('leaderboard')
-		.setDescription('Check the leaderboard!'),
+		.setDescription('Check the server leaderboard!'),
 	options: {
 		cooldown: 10_000,
 	},
@@ -20,9 +20,8 @@ module.exports = {
 			const fields = [];
 
 			const fish = await FishData.find({});
-			const monthlyFish = await fish.filter((f) => {
-				if (f.obtained < new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)) return false;
-				else return true;
+			const monthlyFish = fish.filter((f) => {
+				return f.obtained >= new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) && f.guild === interaction.guild.id;
 			});
 
 			const userData = [];
@@ -57,9 +56,18 @@ module.exports = {
 				embeds.push(
 					new EmbedBuilder()
 						.setFooter({ text: `Page ${Math.floor(i / chunkSize) + 1} / ${Math.ceil(fields.length / chunkSize)} ` })
-						.setTitle('Monthly Leaderboard')
+						.setTitle('Monthly Server Leaderboard')
 						.setColor('Green')
 						.addFields([{ name: 'Rankings', value: chunk.join('') }]),
+				);
+			}
+
+			if (embeds.length === 0) {
+				embeds.push(
+					new EmbedBuilder()
+						.setTitle('Monthly Server Leaderboard')
+						.setColor('Green')
+						.setDescription('No fish have been caught this month!')
 				);
 			}
 
