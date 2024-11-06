@@ -42,7 +42,7 @@ const LicenseSchema = new Schema({
 		type: String,
 		default: 'license',
 	},
-});
+}, { timestamps: true });
 
 const License = Item.discriminator('License', LicenseSchema);
 const LicenseData = ItemData.discriminator('LicenseData', LicenseSchema);

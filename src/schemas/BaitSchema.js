@@ -73,7 +73,7 @@ const baitSchema = new Schema({
 		type: String,
 		default: 'bait',
 	},
-});
+}, { timestamps: true });
 
 const Bait = Item.discriminator('Bait', baitSchema);
 const BaitData = ItemData.discriminator('BaitData', baitSchema);

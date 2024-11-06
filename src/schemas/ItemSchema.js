@@ -50,7 +50,7 @@ const itemSchema = new Schema({
 			default: 'old_rod:1210508306662301706',
 		},
 	},
-});
+}, { timestamps: true });
 
 const Item = model('Item', itemSchema);
 const ItemData = model('ItemData', itemSchema);

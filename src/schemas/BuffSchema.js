@@ -56,7 +56,7 @@ const buffSchema = new Schema({
 		type: String,
 		default: 'buff',
 	},
-});
+}, { timestamps: true });
 
 const Buff = Item.discriminator('Buff', buffSchema);
 const BuffData = ItemData.discriminator('BuffData', buffSchema);

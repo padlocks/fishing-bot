@@ -109,7 +109,7 @@ const CustomRodSchema = new Schema({
 			default: 1,
 		},
 	},
-});
+}, { timestamps: true });
 
 const CustomRod = Item.discriminator('CustomRod', CustomRodSchema);
 const CustomRodData = ItemData.discriminator('CustomRodData', CustomRodSchema);

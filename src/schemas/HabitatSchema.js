@@ -29,10 +29,6 @@ const AquariumSchema = new Schema({
 		required: true,
 		default: 100,
 	},
-	createdAt: {
-		type: Date,
-		default: Date.now,
-	},
 	owner: {
 		type: String,
 		required: true,
@@ -49,7 +45,7 @@ const AquariumSchema = new Schema({
 		type: String,
 		default: 'aquarium',
 	},
-});
+}, { timestamps: true });
 
 
 const Habitat = model('Habitat', AquariumSchema);

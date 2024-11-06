@@ -84,7 +84,7 @@ const gachaSchema = new Schema({
 		type: String,
 		default: 'gacha',
 	},
-});
+}, { timestamps: true });
 
 const Gacha = Item.discriminator('Gacha', gachaSchema);
 const GachaData = ItemData.discriminator('GachaData', gachaSchema);

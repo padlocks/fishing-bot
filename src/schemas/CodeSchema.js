@@ -27,15 +27,11 @@ const CodeSchema = new Schema({
 	items: [{
 		type: Schema.Types.ObjectId,
 	}],
-	createdAt: {
-		type: Date,
-		default: Date.now,
-	},
 	expiresAt: {
 		type: Date,
 		default: Date.now,
 	},
-});
+}, { timestamps: true });
 
 const Code = model('Code', CodeSchema);
 module.exports = { Code };

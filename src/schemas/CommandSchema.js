@@ -34,7 +34,7 @@ const commandSchema = new Schema({
 		type: String,
 		default: 'command',
 	},
-});
+}, { timestamps: true });
 
 const Command = model('Command', commandSchema);
 module.exports = { Command };

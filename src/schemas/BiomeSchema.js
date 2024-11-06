@@ -22,7 +22,7 @@ const biomeSchema = new Schema({
 		type: String,
 		default: 'biome',
 	},
-});
+}, { timestamps: true });
 
 const Biome = model('Biome', biomeSchema);
 module.exports = { Biome };

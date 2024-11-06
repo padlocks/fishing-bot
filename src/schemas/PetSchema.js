@@ -86,7 +86,7 @@ const PetSchema = new Schema({
 		type: String,
 		default: 'pet',
 	},
-});
+}, { timestamps: true });
 
 
 const PetFish = model('Pet', PetSchema);
