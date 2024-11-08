@@ -351,6 +351,32 @@ class Utils {
 	static capitalizeWords(str) {
 		return str.toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
 	};
+
+	static async binomialRandomInRange(n, p, min, max) {
+		if (n <= 0) {
+			throw new Error('n must be greater than 0');
+		}
+	
+		if (min >= max) {
+			throw new Error('max must be greater than min');
+		}
+	
+		let successes = 0;
+		for (let i = 0; i < n; i++) {
+			if (Math.random() < p) {
+				successes++;
+			}
+		}
+	
+		// Ensure range is positive
+		const range = max - min;
+		
+		// Scale the result to fit within the min and max range
+		const scaled = (successes / n) * range;
+		const jitter = (Math.random() - 0.5) * (range * 0.1); // Add some jitter for variety
+		return min + scaled + jitter;
+	}
+	
 }
 
 module.exports = { Utils };

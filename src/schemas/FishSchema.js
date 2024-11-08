@@ -17,6 +17,10 @@ const FishSchema = new Schema({
 		type: Number,
 		default: 10,
 	},
+	baseValue: {
+		type: Number,
+		default: 10,
+	},
 	locked: {
 		type: Boolean,
 		default: false,
@@ -56,6 +60,34 @@ const FishSchema = new Schema({
 	guild: {
 		type: String,
 		default: '0',
+	},
+	size : {
+		type: Number,
+		default: 0.0,
+	},
+	weight : {
+		type: Number,
+		default: 0.0,
+	},
+	minSize : {
+		type: Number,
+		default: 0.1,
+		required: true,
+	},
+	minWeight : {
+		type: Number,
+		default: 0.1,
+		required: true,
+	},
+	maxSize : {
+		type: Number,
+		default: 10.0,
+		required: true,
+	},
+	maxWeight : {
+		type: Number,
+		default: 5.0,
+		required: true,
 	},
 }, { timestamps: true });
 
