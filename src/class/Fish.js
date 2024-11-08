@@ -64,10 +64,10 @@ class Fish {
 			const probability = 0.5;
 
 			const size = parseFloat((await Utils.binomialRandomInRange(trials, probability, oneFish.item.minSize, oneFish.item.maxSize)).toFixed(3));
-			const weight = parseFloat((await this.calculateWeight(size)).toFixed(3));
+			const weight = parseFloat((await Utils.binomialRandomInRange(trials, probability, oneFish.item.minWeight, oneFish.item.maxWeight)).toFixed(3));
 			const value = parseInt((await this.calculateSellValue(oneFish.item.baseValue, size, weight, oneFish.item.rarity)));
 
-			// console.log(`Generated fish: ${oneFish.item.name} with size ${size}, weight ${weight} and value $${value}`);
+			console.log(`Generated fish: ${oneFish.item.name} with size ${size}, weight ${weight} and value $${value}`);
 			
 			oneFish.item.guild = guild;
 			oneFish.item.size = size;
@@ -204,13 +204,6 @@ class Fish {
 		const rarities = ['common', 'uncommon', 'rare', 'ultra', 'giant', 'legendary', 'lucky'];
 		return rarities.includes(rarity.toLowerCase()) || rarity.toLowerCase() === 'all';
 	};
-
-	static async calculateWeight(size) {
-		const weightMultiplier = 0.0005 // Base weight multiplier per unit size
-		const variation = Math.random() * 0.005; // Random variation
-
-		return size * weightMultiplier + variation;
-	}
 
 	static async calculateSellValue(baseValue, size, weight, rarity) {
 		const weightFactor = 1.005; // Extra multiplier based on weight
