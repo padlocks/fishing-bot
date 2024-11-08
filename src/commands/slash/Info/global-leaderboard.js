@@ -11,19 +11,19 @@ module.exports = {
 		cooldown: 10_000,
 	},
 	/**
-     * @param {ExtendedClient} client
-     * @param {ChatInputCommandInteraction} interaction
-     */
+	 * @param {ExtendedClient} client
+	 * @param {ChatInputCommandInteraction} interaction
+	 */
 	run: async (client, interaction, analyticsObject) => {
 		try {
 			const embeds = [];
 			const fields = [];
 
 			const fish = await FishData.find({});
-			const monthlyFish = await fish.filter((f) => {
-				if (f.obtained < new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)) return false;
-				else return true;
-			});
+			const now = new Date();
+			const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+			const monthlyFish = fish.filter((f) => f.obtained >= startOfMonth);
 
 			const userData = [];
 			for (const f of monthlyFish) {
