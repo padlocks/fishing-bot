@@ -57,7 +57,7 @@ class Fish {
 
 			// Get the latest catchId and increment it by 1
 			const latestCatchId = await FishData.findOne().sort({ catchId: -1 });
-			const catchId = latestCatchId ? latestCatchId.catchId + 1 : 1;
+			const catchId = latestCatchId ? (parseInt(latestCatchId.catchId, 10) + 1).toString() : '1';
 
 			// Weight, size and value calculations
 			const trials = 10;
@@ -67,7 +67,7 @@ class Fish {
 			const weight = parseFloat((await Utils.binomialRandomInRange(trials, probability, oneFish.item.minWeight, oneFish.item.maxWeight)).toFixed(3));
 			const value = parseInt((await this.calculateSellValue(oneFish.item.baseValue, size, weight, oneFish.item.rarity)));
 
-			console.log(`Generated fish: ${oneFish.item.name} with size ${size}, weight ${weight} and value $${value}`);
+			// console.log(`Generated fish: ${oneFish.item.name} with size ${size}, weight ${weight} and value $${value}`);
 			
 			oneFish.item.guild = guild;
 			oneFish.item.size = size;

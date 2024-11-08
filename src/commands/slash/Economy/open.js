@@ -1,11 +1,15 @@
 const {
 	SlashCommandBuilder,
 	EmbedBuilder,
+	ActionRowBuilder,
+	ButtonBuilder,
+	ButtonStyle,
 } = require('discord.js');
 const { User } = require('../../../class/User');
 const config = require('../../../config');
 
 module.exports = {
+	customId: 'open-again',
 	structure: new SlashCommandBuilder()
 		.setName('open')
 		.setDescription('Opens a gacha box.')
@@ -16,16 +20,16 @@ module.exports = {
 				.setRequired(true),
 		),
 	/**
-     * @param {ExtendedClient} client
-     * @param {ChatInputCommandInteraction<true>} interaction
-     */
-	run: async (client, interaction, analyticsObject) => {
+	 * @param {ExtendedClient} client
+	 * @param {ChatInputCommandInteraction<true>} interaction
+	 */
+	run: async (client, interaction, analyticsObject, usr = null, prop) => {
 		await interaction.deferReply();
 
-		const name = interaction.options.getString('name');
+		const name = prop ? prop : interaction.options.getString('name');
 
 		// Open the box
-		const user = new User(await User.get(interaction.user.id));
+		const user = usr ? usr : new User(await User.get(interaction.user.id));
 		const opened = await user.openBox(name.toLowerCase());
 		let description = 'Rewards: \n';
 
@@ -40,6 +44,40 @@ module.exports = {
 				await analyticsObject.setStatusMessage('Opened a box.');
 			}
 
+			let components = [
+				new ActionRowBuilder()
+					.addComponents(
+						new ButtonBuilder()
+							.setCustomId('open-again:' + name)
+							.setLabel('Open Again')
+							.setStyle(ButtonStyle.Primary)
+							.setDisabled(false),
+					)
+			];
+
+			const filter = (i) => i.user.id === interaction.user.id;
+			const collector = interaction.channel.createMessageComponentCollector({
+				filter,
+				time: 30000,
+			});
+			
+			collector.on('collect', async (i) => {
+				const cId = i.customId.split(':')[0];
+				const propName = i.customId.split(':').pop();
+				if (cId === 'open-again') {
+					collector.stop();
+					await module.exports.run(client, i, analyticsObject, user, propName);
+				}
+			});
+			
+			collector.on('end', async (collected) => {
+				if (collected.size === 0) {
+					await interaction.editReply({
+						components: [],
+					});
+				}
+			});
+
 			return await interaction.editReply({
 				embeds: [
 					new EmbedBuilder()
@@ -47,6 +85,7 @@ module.exports = {
 						.setDescription(description)
 						.setColor('Green'),
 				],
+				components: components,
 			});
 		}
 		else {
