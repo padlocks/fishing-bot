@@ -713,7 +713,7 @@ function getFishStats(name) {
 	const stats = {
 		'Seabass': { minSize: 30, maxSize: 70, minWeight: 1, maxWeight: 5, baseValue: 100 },
 		'Sardine': { minSize: 10, maxSize: 20, minWeight: 0.02, maxWeight: 0.1, baseValue: 5 },
-		'Tuna': { minSize: 100, maxSize: 200, minWeight: 30, maxWeight: 100, baseValue: 500 },
+		'Tuna': { minSize: 100, maxSize: 200, minWeight: 30, maxWeight: 100, baseValue: 150 },
 		'Anchovy': { minSize: 10, maxSize: 20, minWeight: 0.02, maxWeight: 0.1, baseValue: 10 },
 		'Swordfish': { minSize: 150, maxSize: 300, minWeight: 50, maxWeight: 200, baseValue: 300 },
 		'Pufferfish': { minSize: 20, maxSize: 50, minWeight: 0.5, maxWeight: 2, baseValue: 30 },
