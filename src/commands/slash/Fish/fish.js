@@ -35,7 +35,8 @@ const updateUserWithFish = async (interaction, userId) => {
 		stats.latestFish = [];
 		if (bait) {
 			bait.count -= fishArray.reduce((acc, f) => acc + (f.count || 1), 0);
-			if (bait.count <= 0) {
+			if (bait.count < 0) bait.count = 0;
+			if (bait.count == 0) {
 				await user.setEquippedBait(null);
 				// delete bait from user inventory
 				await user.removeBait(bait._id);
@@ -108,6 +109,8 @@ const updateUserWithFish = async (interaction, userId) => {
 						rarity: false,
 						rod: false,
 						qualities: false,
+						size: false,
+						weight: false,
 					};
 
 					const progressType = await quest.getProgressType();
@@ -116,8 +119,10 @@ const updateUserWithFish = async (interaction, userId) => {
 					if (progressType.rarity.includes('any') || progressType.rarity.includes(oneFish.rarity.toLowerCase())) questProgress.rarity = true;
 					if (progressType.rod === 'any' || progressType.rod === rod.name.toLowerCase()) questProgress.rod = true;
 					if (progressType.qualities.includes('any') || progressType.qualities.some(q => oneFish.qualities.map(quality => quality.toLowerCase()).includes(q))) questProgress.qualities = true;
+					if (progressType.size.includes('any') || progressType.size <= oneFish.size) questProgress.size = true;
+					if (progressType.weight.includes('any') || progressType.weight <= oneFish.weight) questProgress.weight = true;
 
-					if (questProgress.fish && questProgress.rarity && questProgress.rod && questProgress.qualities) {
+					if (questProgress.fish && questProgress.rarity && questProgress.rod && questProgress.qualities && questProgress.size && questProgress.weight) {
 						await quest.setProgress(await quest.getProgress() + (oneFish.count || 1));
 					}
 				});
@@ -160,9 +165,11 @@ const followUpMessage = async (interaction, user, fishArray, completedQuests, xp
 	let fishAgainDisabled = false;
 	const userObj = new User(await User.get(user.id));
 
+	let catchId;
 	if (success) {
 		fishArray.forEach(f => {
-			fishString += `<${f.icon?.animated ? 'a' : ''}:${f.icon?.data}> ${f.count} **${f.rarity}** ${f.name}\n`;
+			if (!catchId) catchId = f.catchId;
+			fishString += `<${f.icon?.animated ? 'a' : ''}:${f.icon?.data}> ${f.count} **${f.rarity}** ${f.name} \n-# <:blankblock:1304335977275457567> ${f.size}cm, ${f.weight}kg\n`;
 			// fields.push({ name: 'Congratulations!', value: `<${f.icon?.animated ? 'a' : ''}:${f.icon?.data}> ${user.globalName} caught ${f.count} **${f.rarity}** ${f.name}!` });
 		});
 
@@ -196,7 +203,7 @@ const followUpMessage = async (interaction, user, fishArray, completedQuests, xp
 			fields.push({ name: 'Uh oh!', value: 'Your fishing rod has been destroyed! Looks like you need to buy a new one..' });
 		}
 
-		if (bait?.count <= 0) {
+		if (bait?.count == 0) {
 			fields.push({ name: 'Uh oh!', value: 'You ran out of bait!' });
 		}
 
@@ -218,7 +225,7 @@ const followUpMessage = async (interaction, user, fishArray, completedQuests, xp
 					.setStyle(ButtonStyle.Primary)
 					.setDisabled(fishAgainDisabled),
 				new ButtonBuilder()
-					.setCustomId('sell-one-fish')
+					.setCustomId(`sell-one-fish:${catchId || '0'}`)
 					.setLabel('Sell')
 					.setStyle(ButtonStyle.Danger)
 					.setDisabled(fishArray.length === 0),

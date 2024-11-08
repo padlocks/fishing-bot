@@ -435,6 +435,34 @@ class User {
 		return await this.save();
 	}
 
+	async sendFishToInventory(fish, fields) {
+		const user = this.user;
+		const userId = await this.getUserId();
+		let fishObject = await Fish.findById(fish);
+
+		let clonedFish;
+		let finalFish;
+		let newFishCount;
+		clonedFish = await Utils.clone(fishObject, userId);
+		
+		if (fields) {
+			Object.keys(fields).forEach((key) => {
+				if (clonedFish[key] !== undefined) {
+					clonedFish[key] = fields[key];
+				}
+			});
+		}
+
+		user.inventory.fish.push(clonedFish);
+		finalFish = clonedFish;
+		newFishCount = clonedFish.count || 1;
+
+		await finalFish.save();
+		await await this.save();
+
+		return { fish: finalFish, count: newFishCount, size: finalFish.size, weight: finalFish.weight, value: finalFish.value };
+	}
+
 	async sendToInventory(item, count) {
 		if (!count) count = 1;
 		const user = this.user;

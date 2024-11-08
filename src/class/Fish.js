@@ -40,7 +40,7 @@ class Fish {
 		}
 
 		const uniqueFishArray = [];
-		fishArray.forEach(oneFish => {
+		fishArray.forEach(async oneFish => {
 			const countCapability = capabilities.find(capability => capability.toLowerCase().includes('count'));
 			if (countCapability !== undefined) {
 				const count = Number(countCapability.split(' ')[0]);
@@ -54,8 +54,26 @@ class Fish {
 			else {
 				uniqueFishArray.push(oneFish);
 			}
+
+			// Get the latest catchId and increment it by 1
+			const latestCatchId = await FishData.findOne().sort({ catchId: -1 });
+			const catchId = latestCatchId ? latestCatchId.catchId + 1 : 1;
+
+			// Weight, size and value calculations
+			const trials = 10;
+			const probability = 0.5;
+
+			const size = parseFloat((await Utils.binomialRandomInRange(trials, probability, oneFish.item.minSize, oneFish.item.maxSize)).toFixed(3));
+			const weight = parseFloat((await this.calculateWeight(size)).toFixed(3));
+			const value = parseInt((await this.calculateSellValue(oneFish.item.baseValue, size, weight, oneFish.item.rarity)));
+
+			// console.log(`Generated fish: ${oneFish.item.name} with size ${size}, weight ${weight} and value $${value}`);
 			
 			oneFish.item.guild = guild;
+			oneFish.item.size = size;
+			oneFish.item.weight = weight;
+			oneFish.item.value = value;
+			oneFish.item.catchId = catchId;
 			oneFish.item.save();
 		});
 	
@@ -63,7 +81,6 @@ class Fish {
 	};
 	
 	static async generateFish(number, capabilities, choices, weights, user) {
-		// const userData = await User.findOne({ userId: user });
 		const choice = [];
 		for (let i = 0; i < number; i++) {
 		
@@ -115,9 +132,7 @@ class Fish {
 				uniqueChoices.push({ ...fish._doc });
 			}
 		});
-	
-		// const clonedChoice = await Utils.clone(choice, user);
-		// const clonedChoice = await user.sendToInventory(choice, 1);
+
 		const clonedChoice = [];
 		for (const fish of uniqueChoices) {
 			clonedChoice.push(await user.sendToInventory(fish, fish.count));
@@ -189,6 +204,31 @@ class Fish {
 		const rarities = ['common', 'uncommon', 'rare', 'ultra', 'giant', 'legendary', 'lucky'];
 		return rarities.includes(rarity.toLowerCase()) || rarity.toLowerCase() === 'all';
 	};
+
+	static async calculateWeight(size) {
+		const weightMultiplier = 0.0005 // Base weight multiplier per unit size
+		const variation = Math.random() * 0.005; // Random variation
+
+		return size * weightMultiplier + variation;
+	}
+
+	static async calculateSellValue(baseValue, size, weight, rarity) {
+		const weightFactor = 1.005; // Extra multiplier based on weight
+		const sizeFactor = 0.05; // Extra multiplier based on size
+		const rarityFactors = {
+			common: 1,
+			uncommon: 1.35,
+			rare: 1.65,
+			ultra: 2.2,
+			giant: 3.0,
+			legendary: 3.5,
+			lucky: 4.0
+		};
+
+		const rarityFactor = rarityFactors[rarity.toLowerCase()] || 1;
+
+		return Math.round(size * baseValue * sizeFactor + weight * weightFactor * rarityFactor);
+	}
 }
 
 module.exports = { Fish };

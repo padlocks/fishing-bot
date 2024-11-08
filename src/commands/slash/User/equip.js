@@ -16,9 +16,8 @@ const selectionOptions = async (inventoryPath, userData, allowNone = true) => {
 			const item = await ItemData.findById(objectId.valueOf());
 			const name = item.name;
 
-			if (item.state && item.state === 'destroyed') {
-				continue;
-			}
+			if (item.state && item.state === 'destroyed') continue;
+			if (item.count <= 0) continue;
 
 			if (uniqueValues.has(name)) {
 				counts[name] += (item.count || 1);
