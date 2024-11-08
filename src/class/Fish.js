@@ -67,7 +67,7 @@ class Fish {
 			const weight = parseFloat((await Utils.binomialRandomInRange(trials, probability, oneFish.item.minWeight, oneFish.item.maxWeight)).toFixed(3));
 			const value = parseInt((await this.calculateSellValue(oneFish.item.baseValue, size, weight, oneFish.item.rarity)));
 
-			console.log(`Generated fish: ${oneFish.item.name} with size ${size}, weight ${weight} and value $${value}`);
+			// console.log(`Generated fish: ${oneFish.item.name} with size ${size}, weight ${weight} and value $${value}`);
 			
 			oneFish.item.guild = guild;
 			oneFish.item.size = size;
