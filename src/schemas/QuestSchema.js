@@ -82,7 +82,7 @@ const questSchema = new Schema({
 		type: String,
 		default: 'quest',
 	},
-});
+}, { timestamps: true });
 
 const Quest = model('Quest', questSchema);
 const QuestData = model('QuestData', questSchema);

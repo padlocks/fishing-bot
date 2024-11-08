@@ -57,7 +57,7 @@ const FishSchema = new Schema({
 		type: String,
 		default: '0',
 	},
-});
+}, { timestamps: true });
 
 const Fish = model('Fish', FishSchema);
 const FishData = model('FishData', FishSchema);

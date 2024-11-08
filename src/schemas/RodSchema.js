@@ -87,7 +87,7 @@ const rodSchema = new Schema({
 		type: String,
 		default: 'rod',
 	},
-});
+}, { timestamps: true });
 
 const Rod = Item.discriminator('Rod', rodSchema);
 const RodData = ItemData.discriminator('RodData', rodSchema);

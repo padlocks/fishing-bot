@@ -14,7 +14,7 @@ const GuildSchema = new Schema({
 		type: [String],
 		default: [],
 	},
-});
+}, { timestamps: true });
 
 
 const Guild = model('Guild', GuildSchema);

@@ -25,6 +25,24 @@ module.exports = {
 		let sold = 0;
 		const rarity = interaction.options.getString('rarity');
 
+		// Check if the rarity is valid
+		if (!await Fish.isValidRarity(rarity)) {
+			const message = 'Please provide a valid rarity. Alternatively, you may choose to sell "all" fish.';
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage(message);
+			}
+
+			return interaction.editReply({
+				embeds: [
+					new EmbedBuilder()
+						.setTitle('Invalid Input')
+						.setDescription(message)
+						.setColor('Red'),
+				],
+			});
+		}
+
 		sold = await Fish.sellByRarity(interaction.user.id, rarity);
 
 		if (process.env.ANALYTICS || config.client.analytics) {

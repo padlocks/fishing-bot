@@ -22,7 +22,7 @@ const PondSchema = new Schema({
 		type: Boolean,
 		default: false,
 	},
-});
+}, { timestamps: true });
 
 const Pond = model('Pond', PondSchema);
 module.exports = { Pond };

@@ -35,7 +35,7 @@ const interactionSchema = new Schema({
 		type: String,
 		default: 'interaction',
 	},
-});
+}, { timestamps: true });
 
 const Interaction = model('Interaction', interactionSchema);
 module.exports = { Interaction };

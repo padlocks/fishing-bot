@@ -111,12 +111,8 @@ const UserSchema = new Schema ({
 	isAdmin: {
 		type: Boolean,
 		default: false,
-	},
-	createdAt: {
-		type: Date,
-		default: Date.now,
-	},
-});
+	}
+}, { timestamps: true });
 
 const User = model('User', UserSchema, 'users');
 module.exports = { User };
