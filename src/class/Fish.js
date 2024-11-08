@@ -57,7 +57,7 @@ class Fish {
 
 			// Get the latest catchId and increment it by 1
 			const latestCatchId = await FishData.findOne().sort({ catchId: -1 });
-			const catchId = latestCatchId ? latestCatchId.catchId + 1 : 1;
+			const catchId = latestCatchId ? (parseInt(latestCatchId.catchId, 10) + 1).toString() : '1';
 
 			// Weight, size and value calculations
 			const trials = 10;
