@@ -165,8 +165,10 @@ const followUpMessage = async (interaction, user, fishArray, completedQuests, xp
 	let fishAgainDisabled = false;
 	const userObj = new User(await User.get(user.id));
 
+	let catchId;
 	if (success) {
 		fishArray.forEach(f => {
+			if (!catchId) catchId = f.catchId;
 			fishString += `<${f.icon?.animated ? 'a' : ''}:${f.icon?.data}> ${f.count} **${f.rarity}** ${f.name} \n-# <:blankblock:1304335977275457567> ${f.size}cm, ${f.weight}kg\n`;
 			// fields.push({ name: 'Congratulations!', value: `<${f.icon?.animated ? 'a' : ''}:${f.icon?.data}> ${user.globalName} caught ${f.count} **${f.rarity}** ${f.name}!` });
 		});
@@ -223,7 +225,7 @@ const followUpMessage = async (interaction, user, fishArray, completedQuests, xp
 					.setStyle(ButtonStyle.Primary)
 					.setDisabled(fishAgainDisabled),
 				new ButtonBuilder()
-					.setCustomId('sell-one-fish')
+					.setCustomId(`sell-one-fish:${catchId || '0'}`)
 					.setLabel('Sell')
 					.setStyle(ButtonStyle.Danger)
 					.setDisabled(fishArray.length === 0),

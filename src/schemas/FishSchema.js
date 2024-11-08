@@ -89,6 +89,10 @@ const FishSchema = new Schema({
 		default: 5.0,
 		required: true,
 	},
+	catchId : {
+		type: String,
+		default: '0',
+	},
 }, { timestamps: true });
 
 const Fish = model('Fish', FishSchema);

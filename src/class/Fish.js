@@ -55,6 +55,10 @@ class Fish {
 				uniqueFishArray.push(oneFish);
 			}
 
+			// Get the latest catchId and increment it by 1
+			const latestCatchId = await FishData.findOne().sort({ catchId: -1 });
+			const catchId = latestCatchId ? latestCatchId.catchId + 1 : 1;
+
 			// Weight, size and value calculations
 			const trials = 10;
 			const probability = 0.5;
@@ -69,6 +73,7 @@ class Fish {
 			oneFish.item.size = size;
 			oneFish.item.weight = weight;
 			oneFish.item.value = value;
+			oneFish.item.catchId = catchId;
 			oneFish.item.save();
 		});
 	

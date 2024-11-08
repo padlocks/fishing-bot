@@ -10,26 +10,39 @@ module.exports = {
 	 * @param {ExtendedClient} client
 	 * @param {ButtonInteraction} interaction
 	 */
-	run: async (client, interaction, analyticsObject) => {
+	run: async (client, interaction, analyticsObject, prop) => {
+		const catchId = prop;
 		const userData = new User(await User.get(interaction.user.id));
 		if (!userData) return;
 
 		const stats = await userData.getStats();
 
-		if (stats.soldLatestFish) {
+		// if (stats.soldLatestFish) {
+		// 	if (process.env.ANALYTICS || config.client.analytics) {
+		// 		await analyticsObject.setStatus('failed');
+		// 		await analyticsObject.setStatusMessage('User already sold these fish!');
+		// 	}
+		// 	await interaction.reply({
+		// 		content: 'You already sold these fish!',
+		// 		ephemeral: true,
+		// 	});
+		// 	return;
+		// }
+
+		const fishArray = (await userData.getFish()).filter(fish => fish.catchId === catchId);
+		// let newFish = (await userData.getInventory()).fish;
+
+		if (fishArray.length === 0) {
 			if (process.env.ANALYTICS || config.client.analytics) {
 				await analyticsObject.setStatus('failed');
-				await analyticsObject.setStatusMessage('User already sold these fish!');
+				await analyticsObject.setStatusMessage('User tried to sell fish that no longer exist!');
 			}
 			await interaction.reply({
-				content: 'You already sold these fish!',
+				content: 'This catch has already been sold!',
 				ephemeral: true,
 			});
 			return;
 		}
-
-		const fishArray = (await userData.getStats()).latestFish;
-		// let newFish = (await userData.getInventory()).fish;
 
 		// check for buffs
 		const activeBuffs = await BuffData.find({ user: await userData.getUserId(), active: true });
@@ -46,19 +59,19 @@ module.exports = {
 			await userData.addMoney(value);
 		}
 
-		stats.soldLatestFish = true;
-		await userData.setStats(stats);
+		//stats.soldLatestFish = true;
+		//await userData.setStats(stats);
 
 		if (process.env.ANALYTICS || config.client.analytics) {
 			await analyticsObject.setStatus('completed');
-			await analyticsObject.setStatusMessage('User sold their recent catch!');
+			await analyticsObject.setStatusMessage('User sold catch with id: ' + catchId);
 		}
 		
 		// disable the sell button
 		const embeds = interaction.message.embeds
 		const components = interaction.message.components
 
-		embeds[0].fields.push({ name: 'Sold Fish', value: `You sold your fish for a total of $${total.toLocaleString()}!` });
+		embeds[0].fields.push({ name: 'Sold Fish', value: `You sold this catch for a total of $${total.toLocaleString()}!` });
 		components[0].components[1] = ButtonBuilder.from(components[0].components[1])
 		components[0].components[1].setDisabled(true);
 
