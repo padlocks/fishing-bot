@@ -35,7 +35,8 @@ const updateUserWithFish = async (interaction, userId) => {
 		stats.latestFish = [];
 		if (bait) {
 			bait.count -= fishArray.reduce((acc, f) => acc + (f.count || 1), 0);
-			if (bait.count <= 0) {
+			if (bait.count < 0) bait.count = 0;
+			if (bait.count == 0) {
 				await user.setEquippedBait(null);
 				// delete bait from user inventory
 				await user.removeBait(bait._id);
@@ -200,7 +201,7 @@ const followUpMessage = async (interaction, user, fishArray, completedQuests, xp
 			fields.push({ name: 'Uh oh!', value: 'Your fishing rod has been destroyed! Looks like you need to buy a new one..' });
 		}
 
-		if (bait?.count <= 0) {
+		if (bait?.count == 0) {
 			fields.push({ name: 'Uh oh!', value: 'You ran out of bait!' });
 		}
 
