@@ -38,9 +38,12 @@ module.exports = {
 				if (q.reward.length > 0) {
 					for (const reward of q.reward) {
 						const rewardObject = await Item.findById(reward);
-						rewards.push(rewardObject.name);
+						if (rewardObject) {
+							rewards.push(rewardObject.name);
+						}
 					}
 				}
+				
 
 				fields.push({
 					name: q.title,

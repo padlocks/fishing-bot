@@ -367,7 +367,7 @@ const autumnFish = [
 		'animated': false,
 		'data': 'Sunfish:1244065960982482945',
 	  },
-	  'qualities': ['strong'],
+	  'qualities': ['weak'],
 	  'type': 'fish',
 	  'biome': 'Ocean',
 	  'weather': 'all',
