@@ -7,7 +7,9 @@ const { Pond } = require('../../schemas/PondSchema');
 const { BuffData } = require('../../schemas/BuffSchema');
 const { Interaction } = require('../../class/Interaction');
 const { Command } = require('../../schemas/CommandSchema')
-
+const { WeatherType } = require('../../schemas/WeatherTypeSchema');
+const { WeatherPattern } = require('../../class/WeatherPattern');
+const { WeatherPattern: WeatherPatternSchema } = require('../../schemas/WeatherPatternSchema');
 
 const cooldown = new Map();
 
@@ -208,6 +210,47 @@ module.exports = {
 		}
 		catch (error) {
 			console.error(error);
+		}
+
+		// Update weather data
+
+		// Get the current weather pattern
+		const currentDateTime = new Date();
+		const currentWeatherPattern = new WeatherPattern(await WeatherPatternSchema.findOne({
+			type: 'weather',
+			active: true,
+		}));
+
+		if (currentWeatherPattern && currentWeatherPattern.isActive()) {
+			// Check if the current weather pattern has ended
+			if (currentWeatherPattern.getDateEnd() < currentDateTime) {
+				// Get the next weather pattern
+				const nextWeatherPattern = await currentWeatherPattern.getNextWeatherPattern();
+
+				// Update the current weather pattern
+				currentWeatherPattern.setActive(false);
+				await currentWeatherPattern.save();
+
+				// Update the next weather pattern
+				nextWeatherPattern.setActive(true);
+				await nextWeatherPattern.save();
+
+				// Create a new weather pattern, for after 6 days
+				const weatherTypes = await WeatherType.find({ type: 'weather' });
+				const randomWeatherType = weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
+				const newWeatherPattern = new WeatherPattern({
+					weather: randomWeatherType.weather,
+					dateStart: new Date(nextWeatherPattern.getDateEnd().getTime() + 6 * 24 * 3600000),
+					dateEnd: new Date(nextWeatherPattern.getDateEnd().getTime() + 7 * 24 * 3600000),
+					active: false,
+					icon: randomWeatherType.icon,
+				});
+				await newWeatherPattern.save();
+
+				// Find the last weather pattern in the chain and update it to point to the new weather pattern
+				let lastWeatherPattern = new WeatherPattern(await WeatherPatternSchema.findOne({ nextWeatherPattern: null }));
+				lastWeatherPattern.setNextWeatherPattern(await newWeatherPattern.getId());
+			}
 		}
 	},
 };
