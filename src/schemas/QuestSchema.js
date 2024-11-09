@@ -77,6 +77,14 @@ const questSchema = new Schema({
 			type: String,
 			default: 'any',
 		}],
+		size: {
+			type: String,
+			default: 'any',
+		},
+		weight: {
+			type: String,
+			default: 'any',
+		},
 	},
 	type: {
 		type: String,

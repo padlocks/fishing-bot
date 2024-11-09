@@ -102,30 +102,30 @@ const updateUserWithFish = async (interaction, userId) => {
 
 			for (let j = 0; j < quests.length; j++) {
 				const quest = new Quest(quests[j]);
-				fishArray.forEach(async (oneFish) => {
-					// check to see if fish matches progressType
-					const questProgress = {
-						fish: false,
-						rarity: false,
-						rod: false,
-						qualities: false,
-						size: false,
-						weight: false,
-					};
+				// check to see if fish matches progressType
+				const questProgress = {
+					fish: false,
+					rarity: false,
+					rod: false,
+					qualities: false,
+					size: false,
+					weight: false,
+				};
 
-					const progressType = await quest.getProgressType();
+				const progressType = await quest.getProgressType();
 
-					if (progressType.fish.includes('any') || progressType.fish.includes(oneFish.name.toLowerCase())) questProgress.fish = true;
-					if (progressType.rarity.includes('any') || progressType.rarity.includes(oneFish.rarity.toLowerCase())) questProgress.rarity = true;
-					if (progressType.rod === 'any' || progressType.rod === rod.name.toLowerCase()) questProgress.rod = true;
-					if (progressType.qualities.includes('any') || progressType.qualities.some(q => oneFish.qualities.map(quality => quality.toLowerCase()).includes(q))) questProgress.qualities = true;
-					if (progressType.size.includes('any') || progressType.size <= oneFish.size) questProgress.size = true;
-					if (progressType.weight.includes('any') || progressType.weight <= oneFish.weight) questProgress.weight = true;
+				if (progressType.fish.includes('any') || progressType.fish.includes(f.name.toLowerCase())) questProgress.fish = true;
+				if (progressType.rarity.includes('any') || progressType.rarity.includes(f.rarity.toLowerCase())) questProgress.rarity = true;
+				if (progressType.rod === 'any' || progressType.rod === rod.name.toLowerCase()) questProgress.rod = true;
+				if (progressType.qualities.includes('any') || progressType.qualities.some(q => f.qualities.map(quality => quality.toLowerCase()).includes(q))) questProgress.qualities = true;
+				if (progressType.size === 'any' || parseFloat(progressType.size).toFixed(3) <= f.size.toFixed(3)) questProgress.size = true;
+				if (progressType.weight === 'any' || parseFloat(progressType.weight).toFixed(3) <= f.weight.toFixed(3)) questProgress.weight = true;
 
-					if (questProgress.fish && questProgress.rarity && questProgress.rod && questProgress.qualities && questProgress.size && questProgress.weight) {
-						await quest.setProgress(await quest.getProgress() + (oneFish.count || 1));
-					}
-				});
+				if (questProgress.fish && questProgress.rarity && questProgress.rod && questProgress.qualities && questProgress.size && questProgress.weight) {
+					const currentProgress = await quest.getProgress();
+					await quest.setProgress(currentProgress + (f.count || 1));
+				}
+
 				if (await quest.getProgress() >= await quest.getMaxProgress()) {
 					await user.addXP(await quest.getXP());
 					if (await user.updateLevel()) levelUp = true;
@@ -133,9 +133,9 @@ const updateUserWithFish = async (interaction, userId) => {
 
 					const reward = await quest.getReward();
 					if (reward && reward.length > 0) {
-						reward.forEach(async (r) => {
+						for (const r of reward) {
 							await user.sendToInventory(r);
-						});
+						}
 					}
 
 					quest.end();
