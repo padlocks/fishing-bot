@@ -5,7 +5,7 @@ const snowyFish = [
 	  'value': 90,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Carp:1244064525859422228',
 	  },
 	  'qualities': ['weak'],
 	  'type': 'fish',
@@ -20,7 +20,7 @@ const snowyFish = [
 	  'value': 50,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Rainbow_Trout:1244064595681869834',
 	  },
 	  'qualities': ['weak'],
 	  'type': 'fish',
@@ -35,7 +35,7 @@ const snowyFish = [
 	  'value': 25,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Perch:1244064588530581544',
 	  },
 	  'qualities': ['weak'],
 	  'type': 'fish',
@@ -50,7 +50,7 @@ const snowyFish = [
 	  'value': 170,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Pike:1244065312924504094',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -65,7 +65,7 @@ const snowyFish = [
 	  'value': 80,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Largemouth_Bass:1244065155361407111',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -80,7 +80,7 @@ const snowyFish = [
 	  'value': 70,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Lingcod:1244065304716513392',
 	  },
 	  'qualities': ['weak'],
 	  'type': 'fish',
@@ -95,7 +95,7 @@ const snowyFish = [
 	  'value': 90,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Salmon:1244064602682036234',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -110,7 +110,7 @@ const snowyFish = [
 	  'value': 25,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Perch:1244064588530581544',
 	  },
 	  'qualities': ['weak'],
 	  'type': 'fish',
@@ -125,7 +125,7 @@ const snowyFish = [
 	  'value': 120,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Eel:1244064547313291285',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -140,7 +140,7 @@ const snowyFish = [
 	  'value': 90,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Glacierfish:1244064552341999726',
 	  },
 	  'qualities': ['weak'],
 	  'type': 'fish',
@@ -155,7 +155,7 @@ const snowyFish = [
 	  'value': 28,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Rainbow_Trout:1244064595681869834',
 	  },
 	  'qualities': ['weak'],
 	  'type': 'fish',
@@ -170,7 +170,7 @@ const snowyFish = [
 	  'value': 160,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Pike:1244065312924504094',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -188,7 +188,7 @@ const snowyFish = [
 	  'value': 35,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Sunfish:1244065960982482945',
 	  },
 	  'qualities': ['weak'],
 	  'type': 'fish',
@@ -203,7 +203,7 @@ const snowyFish = [
 	  'value': 50,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Smallmouth_Bass:1244065949930487889',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -218,7 +218,7 @@ const snowyFish = [
 	  'value': 90,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Pike:1244065312924504094',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -233,7 +233,7 @@ const snowyFish = [
 	  'value': 100,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Carp:1244064525859422228',
 	  },
 	  'qualities': ['weak'],
 	  'type': 'fish',
@@ -248,7 +248,7 @@ const snowyFish = [
 	  'value': 160,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Rainbow_Trout:1244064595681869834',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -263,7 +263,7 @@ const snowyFish = [
 	  'value': 60,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Salmon:1244064602682036234',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -278,7 +278,7 @@ const snowyFish = [
 	  'value': 30,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Carp:1244064525859422228',
 	  },
 	  'qualities': ['weak'],
 	  'type': 'fish',
@@ -293,7 +293,7 @@ const snowyFish = [
 	  'value': 80,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Smallmouth_Bass:1244065949930487889',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -308,7 +308,7 @@ const snowyFish = [
 	  'value': 180,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Pike:1244065312924504094',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -323,7 +323,7 @@ const snowyFish = [
 	  'value': 150,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Sturgeon:1244066061964283934',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -338,7 +338,7 @@ const snowyFish = [
 	  'value': 85,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Tiger_Trout:1244065964501368872',
 	  },
 	  'qualities': ['weak'],
 	  'type': 'fish',
@@ -356,7 +356,7 @@ const snowyFish = [
 	  'value': 40,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Largemouth_Bass:1244065155361407111',
 	  },
 	  'qualities': ['weak'],
 	  'type': 'fish',
@@ -371,7 +371,7 @@ const snowyFish = [
 	  'value': 55,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Carp:1244064525859422228',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -386,7 +386,7 @@ const snowyFish = [
 	  'value': 90,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Rainbow_Trout:1244064595681869834',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -401,7 +401,7 @@ const snowyFish = [
 	  'value': 120,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Pike:1244065312924504094',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -416,7 +416,7 @@ const snowyFish = [
 	  'value': 160,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Salmon:1244064602682036234',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -431,7 +431,7 @@ const snowyFish = [
 	  'value': 65,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Sturgeon:1244066061964283934',
 	  },
 	  'qualities': ['weak'],
 	  'type': 'fish',
@@ -446,7 +446,7 @@ const snowyFish = [
 	  'value': 30,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Carp:1244064525859422228',
 	  },
 	  'qualities': ['weak'],
 	  'type': 'fish',
@@ -461,7 +461,7 @@ const snowyFish = [
 	  'value': 100,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Pike:1244065312924504094',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -476,7 +476,7 @@ const snowyFish = [
 	  'value': 180,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Rainbow_Trout:1244064595681869834',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -491,7 +491,7 @@ const snowyFish = [
 	  'value': 50,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Salmon:1244064602682036234',
 	  },
 	  'qualities': ['weak'],
 	  'type': 'fish',
@@ -509,7 +509,7 @@ const cloudyFish = [
 	  'value': 35,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Rainbow_Trout:1244064595681869834',
 	  },
 	  'qualities': ['weak'],
 	  'type': 'fish',
@@ -524,7 +524,7 @@ const cloudyFish = [
 	  'value': 50,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Carp:1244064525859422228',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -539,7 +539,7 @@ const cloudyFish = [
 	  'value': 85,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Pike:1244065312924504094',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -554,7 +554,7 @@ const cloudyFish = [
 	  'value': 100,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Sturgeon:1244066061964283934',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -569,7 +569,7 @@ const cloudyFish = [
 	  'value': 150,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Salmon:1244064602682036234',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -584,7 +584,7 @@ const cloudyFish = [
 	  'value': 60,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Carp:1244064525859422228',
 	  },
 	  'qualities': ['weak'],
 	  'type': 'fish',
@@ -599,7 +599,7 @@ const cloudyFish = [
 	  'value': 40,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Rainbow_Trout:1244064595681869834',
 	  },
 	  'qualities': ['weak'],
 	  'type': 'fish',
@@ -614,7 +614,7 @@ const cloudyFish = [
 	  'value': 95,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Pike:1244065312924504094',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -629,7 +629,7 @@ const cloudyFish = [
 	  'value': 175,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Salmon:1244064602682036234',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -644,7 +644,7 @@ const cloudyFish = [
 	  'value': 110,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Sturgeon:1244066061964283934',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -659,7 +659,7 @@ const cloudyFish = [
 	  'value': 45,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Rainbow_Trout:1244064595681869834',
 	  },
 	  'qualities': ['weak'],
 	  'type': 'fish',
@@ -677,7 +677,7 @@ const cloudyFish = [
 	  'value': 40,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Rainbow_Trout:1244064595681869834',
 	  },
 	  'qualities': ['weak'],
 	  'type': 'fish',
@@ -692,7 +692,7 @@ const cloudyFish = [
 	  'value': 60,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Pike:1244065312924504094',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -707,7 +707,7 @@ const cloudyFish = [
 	  'value': 100,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Sturgeon:1244066061964283934',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -722,7 +722,7 @@ const cloudyFish = [
 	  'value': 150,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Salmon:1244064602682036234',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -737,7 +737,7 @@ const cloudyFish = [
 	  'value': 95,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Carp:1244064525859422228',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -752,7 +752,7 @@ const cloudyFish = [
 	  'value': 55,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Rainbow_Trout:1244064595681869834',
 	  },
 	  'qualities': ['weak'],
 	  'type': 'fish',
@@ -767,7 +767,7 @@ const cloudyFish = [
 	  'value': 120,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Pike:1244065312924504094',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -782,7 +782,7 @@ const cloudyFish = [
 	  'value': 180,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Salmon:1244064602682036234',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -797,7 +797,7 @@ const cloudyFish = [
 	  'value': 130,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Sturgeon:1244066061964283934',
 	  },
 	  'qualities': ['strong'],
 	  'type': 'fish',
@@ -812,7 +812,7 @@ const cloudyFish = [
 	  'value': 65,
 	  'icon': {
 		'animated': false,
-		'data': 'rawfish:1209352519726276648',
+		'data': 'Carp:1244064525859422228',
 	  },
 	  'qualities': ['weak'],
 	  'type': 'fish',

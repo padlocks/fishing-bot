@@ -711,7 +711,7 @@ function generateFishIcon() {
 // size in cm, weight in kg
 function getFishStats(name) {
 	const stats = {
-		'Seabass': { minSize: 30, maxSize: 70, minWeight: 1, maxWeight: 5, baseValue: 100 },
+		'Seabass': { minSize: 30, maxSize: 70, minWeight: 1, maxWeight: 5, baseValue: 5 },
 		'Sardine': { minSize: 10, maxSize: 20, minWeight: 0.02, maxWeight: 0.1, baseValue: 5 },
 		'Tuna': { minSize: 100, maxSize: 200, minWeight: 30, maxWeight: 100, baseValue: 50 },
 		'Anchovy': { minSize: 10, maxSize: 20, minWeight: 0.02, maxWeight: 0.1, baseValue: 10 },

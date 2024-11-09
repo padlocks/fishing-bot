@@ -1,4 +1,5 @@
 const { WeatherPattern: WeatherPatternSchema } = require('../schemas/WeatherPatternSchema');
+const { WeatherType } = require('../schemas/WeatherTypeSchema');
 
 class WeatherPattern {
 	constructor(data) {
@@ -18,7 +19,8 @@ class WeatherPattern {
 	}
 
 	async getIcon() {
-		return this.weather.icon;
+		const icon = `<${this.weather.icon?.animated ? 'a' : ''}:${this.weather.icon?.data}>`;
+		return icon;
 	}
 
 	async getType() {
@@ -79,6 +81,11 @@ class WeatherPattern {
 		}
 
 		return forecast;
+	}
+
+	static async getWeatherTypeByName(name) {
+		const weatherType = await WeatherType.findOne({ weather: name.toLowerCase(), type: 'weather' });
+		return new WeatherPattern(weatherType);
 	}
 }
 

@@ -27,7 +27,7 @@ module.exports = {
 					season: 'Spring',
 					icon: {
 						animated: false,
-						data: 'rawfish:1209352519726276648',
+						data: 'Spring:1304870493882548304',
 					},
 					startMonth: 'March',
 					startDay: '20',
@@ -37,7 +37,7 @@ module.exports = {
 					season: 'Summer',
 					icon: {
 						animated: false,
-						data: 'rawfish:1209352519726276648',
+						data: 'Summer:1304870481987637402',
 					},
 					startMonth: 'June',
 					startDay: '21',
@@ -47,7 +47,7 @@ module.exports = {
 					season: 'Fall',
 					icon: {
 						animated: false,
-						data: 'rawfish:1209352519726276648',
+						data: 'Fall:1304870471430570174',
 					},
 					startMonth: 'September',
 					startDay: '22',
@@ -57,7 +57,7 @@ module.exports = {
 					season: 'Winter',
 					icon: {
 						animated: false,
-						data: 'rawfish:1209352519726276648',
+						data: 'Winter:1304870462441918504',
 					},
 					startMonth: 'December',
 					startDay: '1',
@@ -79,7 +79,7 @@ module.exports = {
 
 				const isActive = currentDate >= seasonStartDate && currentDate < nextSeasonStartDate;
 
-				const newSeason = new Season({
+				const newSeason = new SeasonSchema({
 					season: season.season,
 					icon: season.icon,
 					startMonth: season.startMonth,
@@ -96,7 +96,6 @@ module.exports = {
 		}
 
 		// If there is no WeatherPattern in the database, create them
-		const weatherTypes = await WeatherType.find({ type: 'weather' });
 		await WeatherPatternSchema.findOne({ type: 'weather' }).then(async (weather) => {
 			if (!weather) {
 				let previousWeatherPattern = null;
@@ -108,12 +107,14 @@ module.exports = {
 					endDate.setDate(startDate.getDate() + 1);
 
 					const randomWeather = new WeatherPattern(await Season.getSeasonalWeather(await Season.getCurrentSeason()));
-				
+					const icon = await WeatherType.findOne({ type: 'weather', weather: await randomWeather.getWeather() }).then((weatherType) => weatherType.icon);
+
 					const newWeatherPattern = new WeatherPattern({
 						weather: await randomWeather.getWeather(),
 						dateStart: startDate,
 						dateEnd: endDate,
 						type: 'weather',
+						icon : icon,
 						active: i === 0, // Only the first pattern is active
 						nextWeatherPattern: null,
 					});
