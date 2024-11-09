@@ -3,6 +3,8 @@ const { Utils } = require('../../class/Utils');
 const { WeatherPattern: WeatherPatternSchema } = require('../../schemas/WeatherPatternSchema');
 const { WeatherPattern } = require('../../class/WeatherPattern');
 const { WeatherType } = require('../../schemas/WeatherTypeSchema');
+const { Season: SeasonSchema } = require('../../schemas/SeasonSchema');
+const { Season } = require('../../class/Season');
 
 module.exports = {
 	event: 'ready',
@@ -17,7 +19,83 @@ module.exports = {
 
 		Utils.log('Logged in as: ' + client.user.tag, 'done');
 
-		// If there is no WeatherPattern in the database, create one
+		// If there is no Season in the database, create them
+		const seasons = await SeasonSchema.find({ type: 'season' });
+		if (seasons.length === 0) {
+			const seasonData = [
+				{
+					season: 'Spring',
+					icon: {
+						animated: false,
+						data: 'rawfish:1209352519726276648',
+					},
+					startMonth: 'March',
+					startDay: '20',
+					commonWeatherTypes: ['Rainy', 'Cloudy'],
+				},
+				{
+					season: 'Summer',
+					icon: {
+						animated: false,
+						data: 'rawfish:1209352519726276648',
+					},
+					startMonth: 'June',
+					startDay: '21',
+					commonWeatherTypes: ['Sunny', 'Windy'],
+				},
+				{
+					season: 'Fall',
+					icon: {
+						animated: false,
+						data: 'rawfish:1209352519726276648',
+					},
+					startMonth: 'September',
+					startDay: '22',
+					commonWeatherTypes: ['Rainy', 'Cloudy'],
+				},
+				{
+					season: 'Winter',
+					icon: {
+						animated: false,
+						data: 'rawfish:1209352519726276648',
+					},
+					startMonth: 'December',
+					startDay: '1',
+					commonWeatherTypes: ['Snowy', 'Cloudy'],
+				},
+			];
+
+			const currentDate = new Date();
+			seasonData.forEach(async (season) => {
+				const seasonStartDate = new Date(currentDate.getFullYear(), new Date(season.startMonth + ' ' + season.startDay).getMonth(), season.startDay);
+				const nextSeasonIndex = (seasonData.indexOf(season) + 1) % seasonData.length;
+				const nextSeason = seasonData[nextSeasonIndex];
+				const nextSeasonStartDate = new Date(currentDate.getFullYear(), new Date(nextSeason.startMonth + ' ' + nextSeason.startDay).getMonth(), nextSeason.startDay);
+
+				// Adjust for year transition
+				if (nextSeasonStartDate < seasonStartDate) {
+					nextSeasonStartDate.setFullYear(nextSeasonStartDate.getFullYear() + 1);
+				}
+
+				const isActive = currentDate >= seasonStartDate && currentDate < nextSeasonStartDate;
+
+				const newSeason = new Season({
+					season: season.season,
+					icon: season.icon,
+					startMonth: season.startMonth,
+					startDay: season.startDay,
+					type: 'season',
+					active: isActive,
+					commonWeatherTypes: season.commonWeatherTypes,
+				});
+
+				await newSeason.save();
+			});
+
+			Utils.log('Created new Seasons', 'done');
+		}
+
+		// If there is no WeatherPattern in the database, create them
 		const weatherTypes = await WeatherType.find({ type: 'weather' });
 		await WeatherPatternSchema.findOne({ type: 'weather' }).then(async (weather) => {
 			if (!weather) {
@@ -28,9 +106,11 @@ module.exports = {
 					const startDate = previousWeatherPattern ? new Date(await previousWeatherPattern.getDateEnd()) : new Date();
 					const endDate = new Date(startDate);
 					endDate.setDate(startDate.getDate() + 1);
+
+					const randomWeather = new WeatherPattern(await Season.getSeasonalWeather(await Season.getCurrentSeason()));
 				
 					const newWeatherPattern = new WeatherPattern({
-						weather: weatherTypes[Math.floor(Math.random() * weatherTypes.length)].weather,
+						weather: await randomWeather.getWeather(),
 						dateStart: startDate,
 						dateEnd: endDate,
 						type: 'weather',

@@ -10,6 +10,7 @@ const { Command } = require('../../schemas/CommandSchema')
 const { WeatherType } = require('../../schemas/WeatherTypeSchema');
 const { WeatherPattern } = require('../../class/WeatherPattern');
 const { WeatherPattern: WeatherPatternSchema } = require('../../schemas/WeatherPatternSchema');
+const { Season } = require('../../class/Season');
 
 const cooldown = new Map();
 
@@ -212,10 +213,14 @@ module.exports = {
 			console.error(error);
 		}
 
+		const currentDateTime = new Date();
+
+		// Update season data
+		await Season.updateCurrentSeason();
+
 		// Update weather data
 
 		// Get the current weather pattern
-		const currentDateTime = new Date();
 		const currentWeatherPattern = new WeatherPattern(await WeatherPatternSchema.findOne({
 			type: 'weather',
 			active: true,
@@ -237,7 +242,7 @@ module.exports = {
 
 				// Create a new weather pattern, for after 6 days
 				const weatherTypes = await WeatherType.find({ type: 'weather' });
-				const randomWeatherType = weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
+				const randomWeatherType = Season.getSeasonalWeather(await Season.getCurrentSeason())
 				const newWeatherPattern = new WeatherPattern({
 					weather: randomWeatherType.weather,
 					dateStart: new Date(nextWeatherPattern.getDateEnd().getTime() + 6 * 24 * 3600000),

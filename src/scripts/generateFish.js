@@ -717,7 +717,7 @@ function getFishStats(name) {
 		'Anchovy': { minSize: 10, maxSize: 20, minWeight: 0.02, maxWeight: 0.1, baseValue: 10 },
 		'Swordfish': { minSize: 150, maxSize: 300, minWeight: 50, maxWeight: 200, baseValue: 35 },
 		'Pufferfish': { minSize: 20, maxSize: 50, minWeight: 0.5, maxWeight: 2, baseValue: 30 },
-		'Azure Marlin': { minSize: 200, maxSize: 400, minWeight: 100, maxWeight: 300, baseValue: 150 },
+		'Azure Marlin': { minSize: 200, maxSize: 400, minWeight: 100, maxWeight: 300, baseValue: 30 },
 		'Giant Shrimp': { minSize: 20, maxSize: 30, minWeight: 0.1, maxWeight: 0.3, baseValue: 200 },
 		'Albacore': { minSize: 50, maxSize: 100, minWeight: 5, maxWeight: 20, baseValue: 300 },
 		'Super Cucumber': { minSize: 30, maxSize: 60, minWeight: 1, maxWeight: 3, baseValue: 450 },

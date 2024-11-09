@@ -4,6 +4,7 @@ const { BuffData } = require('../schemas/BuffSchema');
 const { Utils } = require('./Utils');
 const { User } = require('../class/User');
 const { WeatherPattern } = require('./WeatherPattern');
+const { Season } = require('./Season');
 
 class Fish {
 	// constructor(data) {
@@ -27,19 +28,20 @@ class Fish {
 		}
 
 		const weather = await WeatherPattern.getCurrentWeather();
+		const season = await Season.getCurrentSeason();
 	
-		return await this.sendToUser(capabilities, rarities, weights, guild, user, weather);
+		return await this.sendToUser(capabilities, rarities, weights, guild, user, weather, season);
 	};
 
-	static async sendToUser(capabilities, choices, weights, guild, user, weather) {
+	static async sendToUser(capabilities, choices, weights, guild, user, weather, season) {
 		let fishArray = [];
 		const numberCapability = capabilities.find(capability => !isNaN(capability));
 
 		if (!isNaN(numberCapability)) {
-			fishArray = await this.generateFish(numberCapability, capabilities, choices, weights, user, weather);
+			fishArray = await this.generateFish(numberCapability, capabilities, choices, weights, user, weather, season);
 		}
 		else {
-			fishArray = await this.generateFish(1, capabilities, choices, weights, user, weather);
+			fishArray = await this.generateFish(1, capabilities, choices, weights, user, weather, season);
 		}
 
 		const uniqueFishArray = [];
@@ -83,7 +85,7 @@ class Fish {
 		return await uniqueFishArray.map(element => element.item);
 	};
 	
-	static async generateFish(number, capabilities, choices, weights, user, weather) {
+	static async generateFish(number, capabilities, choices, weights, user, weather, season) {
 		const choice = [];
 		for (let i = 0; i < number; i++) {
 		
@@ -94,10 +96,13 @@ class Fish {
 
 			const currentWeather = await weather.getWeather();
 			const weatherType = currentWeather.charAt(0).toUpperCase() + currentWeather.slice(1);
+			const currentSeason = season.season;
 		
-			let weatherFish = await FishSchema.find({ rarity: draw, biome: biome, weather: weatherType });
-			let weatherlessFish = await FishSchema.find({ rarity: draw, biome: biome, weather: 'all' });
-			let f = weatherFish.concat(weatherlessFish);
+			let weatherFish = await FishSchema.find({ rarity: draw, biome: biome, weather: weatherType, season: currentSeason }) || [];
+			let weatherlessFish = await FishSchema.find({ rarity: draw, biome: biome, weather: 'all', season: currentSeason}) || [];
+			let seasonlessFish = await FishSchema.find({ rarity: draw, biome: biome, weather: weatherType, season: 'all' }) || [];
+			let globalFish = await FishSchema.find({ rarity: draw, biome: biome, weather: 'all', season: 'all' }) || [];
+			let f = weatherFish.concat(weatherlessFish, seasonlessFish, globalFish);
 
 			if (draw === 'Lucky') {
 				const itemFind = await Utils.getWeightedChoice(['fish', 'item'], [80, 20]);
@@ -124,7 +129,7 @@ class Fish {
 			const validChoices = filteredChoices.filter(choice => choice !== null);
 		
 			if (validChoices.length === 0) {
-				return await this.generateFish(number, capabilities, choices, weights, user, weather);
+				return await this.generateFish(number, capabilities, choices, weights, user, weather, season);
 			}
 		
 			choice.push(validChoices[Math.floor(Math.random() * validChoices.length)]);

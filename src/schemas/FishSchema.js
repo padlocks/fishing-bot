@@ -97,6 +97,10 @@ const FishSchema = new Schema({
 		type: String,
 		default: 'all',
 	},
+	season: {
+		type: String,
+		default: 'all',
+	},
 }, { timestamps: true });
 
 const Fish = model('Fish', FishSchema);

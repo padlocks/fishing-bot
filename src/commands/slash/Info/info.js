@@ -3,6 +3,7 @@ const { User } = require('../../../class/User');
 const { ItemData } = require('../../../schemas/ItemSchema');
 const { WeatherPattern } = require('../../../class/WeatherPattern');
 const buttonPagination = require('../../../buttonPagination');
+const { Season } = require('../../../class/Season');
 
 module.exports = {
 	structure: new SlashCommandBuilder()
@@ -19,7 +20,11 @@ module.exports = {
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('forecast')
-				.setDescription('Check the weather forecast.')),
+				.setDescription('Check the weather forecast.'))
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('season')
+				.setDescription('Check the current season.')),
 	options: {
 		cooldown: 10_000,
 	},
@@ -90,6 +95,19 @@ module.exports = {
 			}));
 
 			await buttonPagination(interaction, pages);
+		}
+		else if (subcommand === 'season') {
+			const season = await Season.getCurrentSeason();
+			const embed = new EmbedBuilder()
+				.setTitle('Current Season')
+				.addFields(
+					{ name: 'Season', value: season.season, inline: false },
+					{ name: 'Start Date', value: `${season.startMonth} ${season.startDay}`, inline: true },
+					{ name: 'Common Weather Types', value: season.commonWeatherTypes.join(', '), inline: true },
+				)
+				.setColor('Blue');
+
+			await interaction.reply({ embeds: [embed] });
 		}
 	},
 };
