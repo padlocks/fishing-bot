@@ -8,6 +8,8 @@ const { BaitData } = require('../schemas/BaitSchema');
 const { User } = require('../schemas/UserSchema');
 const { StringSelectMenuOptionBuilder } = require('discord.js');
 const { LicenseData } = require('../schemas/LicenseSchema');
+const { WeatherType } = require('../schemas/WeatherTypeSchema');
+const { Season } = require('../schemas/SeasonSchema');
 
 class Utils {
 	/**
@@ -376,7 +378,6 @@ class Utils {
 		const jitter = (Math.random() - 0.5) * (range * 0.1); // Add some jitter for variety
 		return min + scaled + jitter;
 	}
-	
 }
 
 module.exports = { Utils };

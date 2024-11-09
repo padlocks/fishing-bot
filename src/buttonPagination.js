@@ -42,7 +42,7 @@ module.exports = async (interaction, pages, analyticsObject = null, deferred = f
 
 			await i.deferUpdate({});
 
-			if (process.env.ANALYTICS || config.client.analytics) {
+			if ((process.env.ANALYTICS || config.client.analytics) && analyticsObject) {
 				await Interaction.generateCommandObject(i, analyticsObject);
 			}
 
