@@ -29,7 +29,7 @@ module.exports = {
 		// 	return;
 		// }
 
-		const fishArray = (await userData.getFish()).filter(fish => fish.catchId === catchId);
+		const fishArray = (await userData.getFish()).filter(fish => fish.catchId == catchId);
 		// let newFish = (await userData.getInventory()).fish;
 
 		if (fishArray.length === 0) {

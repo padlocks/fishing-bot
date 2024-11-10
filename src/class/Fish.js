@@ -44,6 +44,16 @@ class Fish {
 			fishArray = await this.generateFish(1, capabilities, choices, weights, user, weather, season);
 		}
 
+		// Get the latest catchId once for the entire catch, treating both strings and numbers as integers, incrementing by 1
+		const latestCatch = await FishData.aggregate([
+			{ $match: { catchId: { $exists: true } } }, // Only include documents with a catchId field
+			{ $addFields: { catchIdAsInt: { $toInt: "$catchId" } } }, // Convert catchId to integer
+			{ $sort: { catchIdAsInt: -1 } }, // Sort in descending order by the integer-converted catchId
+			{ $limit: 1 } // Get the highest catchId
+		]);
+
+		const catchId = latestCatch.length > 0 ? latestCatch[0].catchIdAsInt + 1 : 1;
+				
 		const uniqueFishArray = [];
 		fishArray.forEach(async oneFish => {
 			const countCapability = capabilities.find(capability => capability.toLowerCase().includes('count'));
@@ -59,10 +69,6 @@ class Fish {
 			else {
 				uniqueFishArray.push(oneFish);
 			}
-
-			// Get the latest catchId and increment it by 1
-			const latestCatchId = await FishData.findOne().sort({ catchId: -1 });
-			const catchId = latestCatchId ? (parseInt(latestCatchId.catchId, 10) + 1).toString() : '1';
 
 			// Weight, size and value calculations
 			const trials = 10;

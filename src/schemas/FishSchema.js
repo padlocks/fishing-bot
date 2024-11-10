@@ -90,8 +90,8 @@ const FishSchema = new Schema({
 		required: true,
 	},
 	catchId : {
-		type: String,
-		default: '0',
+		type: Number,
+		default: 0,
 	},
 	weather: {
 		type: String,

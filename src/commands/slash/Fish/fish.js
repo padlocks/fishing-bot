@@ -225,7 +225,7 @@ const followUpMessage = async (interaction, user, fishArray, completedQuests, xp
 					.setStyle(ButtonStyle.Primary)
 					.setDisabled(fishAgainDisabled),
 				new ButtonBuilder()
-					.setCustomId(`sell-one-fish:${catchId || '0'}`)
+					.setCustomId(`sell-one-fish:${catchId || 0}`)
 					.setLabel('Sell')
 					.setStyle(ButtonStyle.Danger)
 					.setDisabled(fishArray.length === 0),
