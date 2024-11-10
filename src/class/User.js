@@ -321,72 +321,69 @@ class User {
 		return baits;
 	}
 
-	async openBox(name) {
+	async openBox(name, quantity = 1) {
 		const user = this.user;
 		// uppercase the first letter of each word in name
 		name = name.split(' ').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
 		const gachaBoxes = await Promise.all(user.inventory.gacha.map(async (boxId) => await ItemData.findById(boxId)));
-		const boxes = gachaBoxes.filter((box) => !box.opened && box.name === name);
+		const boxes = gachaBoxes.filter((box) => box.name === name);
 		if (boxes.length === 0) return null;
 
+		const generatedItems = [];
 		const box = await ItemData.findById(boxes[0]);
-		if (!box.opened) {
-			box.count--;
-			await box.save();
+		if (box.count <= 0) return [];
+		if (box.count - quantity < 0) return [];
+		box.count -= quantity;
+		await box.save();
 
-			const stats = await this.getStats();
-			stats.gachaBoxesOpened++;
-			await this.setStats(stats);
+		const stats = await this.getStats();
+		stats.gachaBoxesOpened += quantity;
+		await this.setStats(stats);
 
-			// remove box from user inventory
-			if (box.count <= 0) {
-				user.inventory.gacha = user.inventory.gacha.filter((i) => i.valueOf() !== box.id);
-				await this.save();
-			}
-
-			// check box capabilities to generate items
-			const capabilities = box.capabilities;
-			const weights = box.weights;
-			let items = [...await Item.find({ type: { $in: capabilities } })];
-			if (capabilities.includes('fish')) {
-				items = [...items, ...await Fish.find()];
-			}
-
-			// check for active buffs
-			const activeBuffs = await BuffData.find({ user: await this.getUserId(), active: true });
-			const gachaBuff = activeBuffs.find((buff) => buff.capabilities.includes('gacha'));
-			const gachaMultiplier = gachaBuff ? parseFloat(gachaBuff.capabilities[1]) : 1;
-
-			// multiply rare+ item weights by gachaMultiplier
-			const weightValues = Object.values(weights);
-			for (let i = 0; i < weightValues.length; i++) {
-				if (i > 1) {
-					weightValues[i] *= gachaMultiplier;
-				}
-			}
-
-			// generate random items from box
-			let filteredItems = [];
-			while (filteredItems.length === 0) {
-				let draw = await Utils.getWeightedChoice(Object.keys(box.weights), weightValues);
-				draw = draw.charAt(0).toUpperCase() + draw.slice(1);
-				filteredItems = items.filter((item) => item.rarity.toLowerCase() === draw.toLowerCase());
-			}
-
-			const numItems = box.items || 1;
-			const generatedItems = [];
-			for (let i = 0; i < numItems; i++) {
-				const random = Math.floor(Math.random() * filteredItems.length);
-				const item = filteredItems[random];
-				generatedItems.push(await this.sendToInventory(item));
-			}
-
-			return generatedItems;
+		// remove box from user inventory
+		if (box.count <= 0) {
+			user.inventory.gacha = user.inventory.gacha.filter((i) => i.valueOf() !== box.id);
+			await this.save();
 		}
-		else {
-			return null;
+
+		// check box capabilities to generate items
+		const capabilities = box.capabilities;
+		const weights = box.weights;
+		let items = [...await Item.find({ type: { $in: capabilities } })];
+		if (capabilities.includes('fish')) {
+			items = [...items, ...await Fish.find()];
 		}
+
+		// check for active buffs
+		const activeBuffs = await BuffData.find({ user: await this.getUserId(), active: true });
+		const gachaBuff = activeBuffs.find((buff) => buff.capabilities.includes('gacha'));
+		const gachaMultiplier = gachaBuff ? parseFloat(gachaBuff.capabilities[1]) : 1;
+
+		// multiply rare+ item weights by gachaMultiplier
+		const weightValues = Object.values(weights);
+		for (let i = 0; i < weightValues.length; i++) {
+			if (i > 1) {
+				weightValues[i] *= gachaMultiplier;
+			}
+		}
+
+		// generate random items from box
+		let filteredItems = [];
+		while (filteredItems.length === 0) {
+			let draw = await Utils.getWeightedChoice(Object.keys(box.weights), weightValues);
+			draw = draw.charAt(0).toUpperCase() + draw.slice(1);
+			filteredItems = items.filter((item) => item.rarity.toLowerCase() === draw.toLowerCase());
+		}
+
+		const numItems = (box.items || 1) * quantity;
+		for (let i = 0; i < numItems; i++) {
+			const random = Math.floor(Math.random() * filteredItems.length);
+			const item = filteredItems[random];
+			generatedItems.push(await this.sendToInventory(item));
+		}
+
+		return generatedItems;
 	}
 
 	async removeItems(itemIds) {

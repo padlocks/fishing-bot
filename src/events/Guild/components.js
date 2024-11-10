@@ -38,9 +38,9 @@ module.exports = {
 		}
 
 		if (interaction.isButton()) {
-			// If customId has a : it means it's passing a unique property
-			const prop = interaction.customId.split(':').pop();
-			const component = client.collection.components.buttons.get(interaction.customId.split(':')[0]);
+			// If customId has a : it means it's passing unique properties
+			const props = interaction.customId.split(':');
+			const component = client.collection.components.buttons.get(props[0]);
 
 			if (!component) return;
 
@@ -50,7 +50,11 @@ module.exports = {
 				if (process.env.ANALYTICS || config.client.analytics) {
 					await Interaction.generateCommandObject(interaction, analyticsObject);
 				}
-				component.run(client, interaction, analyticsObject, prop);
+				if (props.length === 2) {
+					component.run(client, interaction, analyticsObject, props[1]);
+				} else {
+					component.run(client, interaction, analyticsObject, ...props.slice(1));
+				}
 			}
 			catch (error) {
 				Utils.log(error, 'error');
