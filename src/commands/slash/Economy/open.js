@@ -89,6 +89,10 @@ const createButtonRow = () => {
 const handleOpenBox = async (client, interaction, analyticsObject, user, selectedBox, quantity) => {
 	const opened = await user.openBox(selectedBox, quantity);
 	if (opened.length === 0) {
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await analyticsObject.setStatus('failed');
+			await analyticsObject.setStatusMessage('Opening failed. User may not have enough crates.');
+		}
 		await interaction.editReply({ content: 'Opening failed. You may not have enough crates.', components: [] });
 		return;
 	}
@@ -144,12 +148,22 @@ const handleOpenBox = async (client, interaction, analyticsObject, user, selecte
 			}
 		});
 
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await analyticsObject.setStatus('completed');
+			await analyticsObject.setStatusMessage('Successfully opened box: ' + selectedBox + ' x' + quantity + '\n' + uniqueOpened.map((item) => `${item.count}x ${item.item.name}`).join('\n'));
+		}
+
 		await interaction.editReply({
 			content: '',
 			embeds: [embed],
 			components: [openAgainRow],
 		});
 	} else {
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await analyticsObject.setStatus('failed');
+			await analyticsObject.setStatusMessage('User does not have enough boxes to open again.');
+		}
+
 		await interaction.editReply({
 			content: 'You do not have enough boxes to open again.',
 			embeds: [embed],
@@ -175,6 +189,10 @@ module.exports = {
 		if (!selectedBox) {
 			const options = await selectionOptions('gacha', user, false);
 			if (options.length === 0) {
+				if (process.env.ANALYTICS || config.client.analytics) {
+					await analyticsObject.setStatus('failed');
+					await analyticsObject.setStatusMessage('User does not have any boxes to open.');
+				}
 				await interaction.editReply({ content: 'You do not have any boxes to open.' });
 				return;
 			}
