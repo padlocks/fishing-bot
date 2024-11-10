@@ -127,10 +127,28 @@ module.exports = {
 				items[itemObject.name] = `x${count} <${itemObject.icon?.animated ? 'a' : ''}:${itemObject.icon?.data || ''}> ${itemObject.name || ''}\n`;
 			}
 
-			if (Object.keys(items).length > 0) {
-				fields.push({ name: 'Items', value: Object.values(items).join('') });
+			const itemChunks = [];
+			let currentItemChunk = '';
+
+			for (const item in items) {
+				const itemString = items[item];
+				if ((currentItemChunk + itemString).length > 1024) {
+					itemChunks.push(currentItemChunk);
+					currentItemChunk = itemString;
+				} else {
+					currentItemChunk += itemString;
+				}
 			}
-			else {
+
+			if (currentItemChunk) {
+				itemChunks.push(currentItemChunk);
+			}
+
+			if (itemChunks.length > 0) {
+				itemChunks.forEach((chunk, index) => {
+					fields.push({ name: `Items Page ${index + 1}`, value: chunk });
+				});
+			} else {
 				fields.push({ name: 'Items', value: 'You have no items in your inventory.' });
 			}
 
