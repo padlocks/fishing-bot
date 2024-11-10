@@ -19,7 +19,7 @@ module.exports = {
 	async run(client, interaction, analyticsObject, user = null) {
 		if (user === null) user = interaction.user;
 
-		const questOptions = await QuestSchema.find({ daily: false });
+		const questOptions = await QuestSchema.find({ daily: false, repeatable: true, hiddenUntilEvent: false, fishable: false });
 		const uniqueValues = new Set();
 
 		let options = [];

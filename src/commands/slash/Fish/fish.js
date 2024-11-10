@@ -6,6 +6,10 @@ const { Item } = require('../../../schemas/ItemSchema');
 const { User } = require('../../../class/User');
 const config = require('../../../config');
 const { Interaction } = require('../../../class/Interaction');
+const { Utils } = require('../../../class/Utils');
+const { WeatherPattern } = require('../../../class/WeatherPattern');
+const { NPC } = require('../../../class/NPC');
+const { Season } = require('../../../class/Season');
 
 const updateUserWithFish = async (interaction, userId) => {
 	const user = new User(await User.get(userId));
@@ -215,6 +219,18 @@ const followUpMessage = async (interaction, user, fishArray, completedQuests, xp
 		const random = Math.floor(Math.random() * 75);
 		if (random === 1) {
 			fields.push({ name: 'Enjoying FishingRPG?', value: 'If you enjoy the bot, please consider leaving a review on top.gg! Go to https://top.gg/bot/1209026334970482698#reviews to leave a review!' });
+		}
+
+		// Rare chance for NPC encounter
+		const npcRandom = Math.floor(Math.random() * 500);
+		if (npcRandom === 1) {
+			const npc = await NPC.getRandomNPC(await userObj.getCurrentBiome(), await (await WeatherPattern.getCurrentWeather()).getWeather(), 'any', await Season.getCurrentSeason().season);
+			const quest = await npc.getRandomQuest();
+			const addedQuest = await userObj.startQuest(quest);
+
+			if (addedQuest) {
+				fields.push({ name: `You encountered ${await npc.getName()}!`, value: `${(await npc.getDialogue()).initial}\n\nQuest Obtained: **${await quest.getTitle()}**\n${await quest.getDescription()}` });
+			}
 		}
 	}
 	else {

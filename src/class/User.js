@@ -660,8 +660,21 @@ class User {
 
 	async startQuest(originalQuest) {
 		const userId = await this.getUserId();
-		const cloned = await originalQuest.clone(userId);
+		const existingQuests = await this.getQuests();
 
+		let questExists = false;
+		for (const quest of existingQuests) {
+			if (quest.title === await originalQuest.getTitle()) {
+				if (quest.status !== 'completed' || !originalQuest.repeatable) {
+					questExists = true;
+					break;
+				}
+			}
+		}
+		
+		if (questExists) return;
+
+		const cloned = await originalQuest.clone(userId);
 		await this.addQuest(await cloned.getId());
 		return cloned;
 	};

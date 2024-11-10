@@ -21,6 +21,10 @@ class Quest {
 		return this.quest.title;
 	}
 
+	async getDescription() {
+		return this.quest.description;
+	}
+
 	async getLevelRequirement() {
 		return this.quest.requirements.level;
 	}
@@ -94,6 +98,64 @@ class Quest {
 		return this.save();
 	}
 
+	async fail() {
+		this.quest.status = 'failed';
+		this.quest.endDate = Date.now();
+		return this.save();
+	}
+
+	async isDaily() {
+		return this.quest.daily;
+	}
+
+	async isRepeatable() {
+		return this.quest.repeatable;
+	}
+
+	async isFishable() {
+		return this.quest.fishable;
+	}
+
+	async getStartDate() {
+		return this.quest.startDate;
+	}
+
+	async getEndDate() {
+		return this.quest.endDate;
+	}
+
+	async getSpecialConditions() {
+		return this.quest.requirements.specialConditions;
+	}
+
+	async getRequiredWeather() {
+		return this.quest.requirements.weather;
+	}
+
+	async getRequiredTimeOfDay() {
+		return this.quest.requirements.timeOfDay;
+	}
+
+	async getEventTrigger() {
+		return this.quest.eventTrigger;
+	}
+
+	async getHiddenTitle() {
+		return this.quest.hiddenTitle;
+	}
+
+	async getHiddenUntilEvent() {
+		return this.quest.hiddenUntilEvent;
+	}
+
+	async getNpcs() {
+		return this.quest.npcs;
+	}
+
+	async getQuestType() {
+		return this.quest.questType;
+	}
+
 	static async generateDailyQuest(userId) {
 		const user = new User(await User.get(userId));
 		const inventory = await user.getInventory();
@@ -151,6 +213,45 @@ class Quest {
 	static async get(questId) {
 		const quest = await QuestSchema.findById(questId);
 		return quest;
+	}
+
+	static async reelRandomQuest(userId) {
+		const user = new User(await User.get(userId));
+		const inventory = await user.getInventory();
+	
+		const quests = await QuestSchema.find({ daily: false, fishable: true });
+		const randomIndex = Math.floor(Math.random() * quests.length);
+		const originalQuest = new Quest(quests[randomIndex]);
+	
+		if (!user) {
+			throw new Error('User not found');
+		}
+		if (inventory.quests.includes(await originalQuest.getId())) {
+			return await this.reelRandomQuest(userId);
+		}
+		else {
+			// check requirements
+			const level = await user.getLevel();
+			if (originalQuest.requirements.level > level) {
+				return await this.reelRandomQuest(userId);
+			}
+	
+			if (originalQuest.requirements.previous.length > 0) {
+				const existingQuests = await QuestSchema.find({ user: userId }) || [];
+				const hasPrevious = existingQuests.some(quest => originalQuest.requirements.previous.includes(quest.title) && quest.status === 'completed');
+				if (!hasPrevious) {
+					return await this.reelRandomQuest(userId);
+				}
+			}
+	
+			const quest = await Utils.clone(originalQuest);
+			quest.status = 'in_progress';
+			quest.user = userId;
+			quest.startDate = Date.now();
+			await quest.save();
+			await user.addQuest(quest._id);
+			return quest;
+		}
 	}
 }
 

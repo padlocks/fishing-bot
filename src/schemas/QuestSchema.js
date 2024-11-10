@@ -33,6 +33,20 @@ const questSchema = new Schema({
 			type: String,
 			default: '',
 		}],
+		weather: {
+			type: String,
+			enum: ['sunny', 'rainy', 'snowy', 'windy', 'cloudy', 'any'],
+			default: 'any',
+		},
+		timeOfDay: {
+			type: String,
+			enum: ['morning', 'afternoon', 'evening', 'night', 'any'],
+			default: 'any',
+		},
+		specialConditions: {
+			type: [String],
+			default: [],
+		},
 	},
 	startDate: {
 		type: Number,
@@ -85,6 +99,34 @@ const questSchema = new Schema({
 			type: String,
 			default: 'any',
 		},
+	},
+	questType: {
+		type: String,
+		enum: ['quest', 'mystery', 'npc_event'],
+		default: 'quest',
+	},
+	hiddenUntilEvent: {
+		type: Boolean,
+		default: false,
+	},
+	hiddenTitle: {
+		type: String,
+	},
+	eventTrigger: {
+		type: String,
+	},
+	npcs: {
+		type: [{
+			type: Schema.Types.ObjectId,
+		}]
+	},
+	repeatable: {
+		type: Boolean,
+		default: false,
+	},
+	fishable: {
+		type: Boolean,
+		default: false,
 	},
 	type: {
 		type: String,

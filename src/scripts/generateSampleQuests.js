@@ -38,6 +38,7 @@ async function generateSampleQuests() {
 			},
 			progressMax: 15,
 			daily: false,
+			repeatable: true,
 			type: 'quest',
 		},
 		{
@@ -58,6 +59,7 @@ async function generateSampleQuests() {
 			},
 			progressMax: 15,
 			daily: false,
+			repeatable: true,
 			type: 'quest',
 		},
 		{
@@ -78,6 +80,7 @@ async function generateSampleQuests() {
 			},
 			progressMax: 1,
 			daily: false,
+			repeatable: true,
 			type: 'quest',
 		},
 		{
@@ -98,6 +101,7 @@ async function generateSampleQuests() {
 			},
 			progressMax: 30,
 			daily: false,
+			repeatable: true,
 			type: 'quest',
 		},
 		{
@@ -118,8 +122,11 @@ async function generateSampleQuests() {
 			},
 			progressMax: 25,
 			daily: false,
+			repeatable: true,
 			type: 'quest',
 		},
+
+		// Daily quests
 		{
 			title: 'Catch 100 Fish',
 			description: 'Catch 100 fish a day.',
@@ -280,6 +287,33 @@ async function generateSampleQuests() {
 			daily: true,
 			type: 'quest',
 		},
+
+		// Advanced quests
+		{
+			"title": "Storm Chaser",
+			"description": "During a fierce storm, rare fish are rumored to appear. Prove your skills by catching the elusive \"Flashfin Salmon\" in the rain.",
+			"reward": [],
+			"cash": 5000,
+			"xp": 1000,
+			"requirements": {
+				"level": 10,
+				"previous": [],
+				"weather": "rainy",
+				"timeOfDay": "any",
+			},
+			"progressType": {
+				"fish": ["Flashfin Salmon"],
+				"rarity": ["Ultra"],
+				"rod": "any",
+				"qualities": ["any"],
+			},
+			"progressMax": 1,
+			"daily": false,
+			"repeatable": false,
+			"fishable": false,
+			"type": "quest"
+			
+		}
 	];
 
 	// Loop through the sample quests and create new quest documents
