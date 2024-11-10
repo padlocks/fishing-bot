@@ -66,7 +66,7 @@ const selectionOptions = async (inventoryPath, userData, allowNone = true) => {
 
 const checkItemRequirements = async (item, userData) => {
 	const requirements = item.requirements;
-	if (requirements.level && userData.level < requirements.level) {
+	if (requirements.level && await userData.getLevel() < requirements.level) {
 		return false;
 	}
 
@@ -183,7 +183,10 @@ module.exports = {
 						embeds: [
 							new EmbedBuilder()
 								.setTitle('Equipment')
-								.setDescription('You do not meet the requirements to equip this item.'),
+								.setDescription('You do not meet the requirements to equip this item.')
+								.addFields([
+									{ name: 'Requirements', value: item.requirements.toString() },
+								]),
 						],
 						components: [],
 					});
