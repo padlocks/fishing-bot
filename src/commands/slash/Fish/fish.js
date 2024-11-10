@@ -210,6 +210,12 @@ const followUpMessage = async (interaction, user, fishArray, completedQuests, xp
 		if (levelUp) {
 			fields.push({ name: 'Level Up!', value: `${user.globalName} has leveled up to level **${await userObj.getLevel()}**!` });
 		}
+
+		// Random chance to get a message asking for a review or vote
+		const random = Math.floor(Math.random() * 75);
+		if (random === 1) {
+			fields.push({ name: 'Enjoying FishingRPG?', value: 'If you enjoy the bot, please consider leaving a review on top.gg! Go to https://top.gg/bot/1209026334970482698#reviews to leave a review!' });
+		}
 	}
 	else {
 		fields.push({ name: 'Uh oh!', value: message });

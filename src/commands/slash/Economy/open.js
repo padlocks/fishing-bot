@@ -8,7 +8,6 @@ const {
 	ButtonStyle,
 } = require('discord.js');
 const { User } = require('../../../class/User');
-const config = require('../../../config');
 const { ItemData } = require('../../../schemas/ItemSchema');
 
 const selectionOptions = async (inventoryPath, userData, allowNone = true) => {
@@ -90,7 +89,7 @@ const createButtonRow = () => {
 const handleOpenBox = async (client, interaction, analyticsObject, user, selectedBox, quantity) => {
 	const opened = await user.openBox(selectedBox, quantity);
 	if (opened.length === 0) {
-		await interaction.editReply({ content: 'Opening failed. You may not have enough boxes.', components: [] });
+		await interaction.editReply({ content: 'Opening failed. You may not have enough crates.', components: [] });
 		return;
 	}
 
