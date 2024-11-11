@@ -122,7 +122,7 @@ module.exports = {
 					await newWeatherPattern.save();
 				
 					if (previousWeatherPattern) {
-						previousWeatherPattern.setNextWeatherPattern(newWeatherPattern);
+						await previousWeatherPattern.setNextWeatherPattern(newWeatherPattern);
 					}
 				
 					// Set the new pattern as the previous one for the next iteration

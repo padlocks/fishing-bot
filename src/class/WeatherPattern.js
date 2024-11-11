@@ -50,6 +50,11 @@ class WeatherPattern {
 		return this.weather.dateStart <= now && now <= this.weather.dateEnd;
 	}
 
+	async setActive(active) {
+		this.weather.active = active;
+		await this.save();
+	}
+
 	async getNextWeatherPattern() {
 		return new WeatherPattern(await WeatherPatternSchema.findById(this.weather.nextWeatherPattern));
 	}

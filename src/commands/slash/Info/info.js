@@ -61,10 +61,10 @@ module.exports = {
 				const dateStart = new Date(await weather.getDateStart());
 				const dateEnd = new Date(await weather.getDateEnd());
 
-				const nextWeatherPatten = await weather.getNextWeatherPattern();
-				const nextWeather = await nextWeatherPatten.getWeather();
+				const nextWeatherPattern = await weather.getNextWeatherPattern();
+				const nextWeather = await nextWeatherPattern.getWeather();
 				const nextWeatherCapitalized = nextWeather.charAt(0).toUpperCase() + nextWeather.slice(1);
-				const nextWeatherIcon = await nextWeatherPatten.getIcon();
+				const nextWeatherIcon = await nextWeatherPattern.getIcon();
 
 
 				const embed = new EmbedBuilder()
