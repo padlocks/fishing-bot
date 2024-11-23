@@ -99,6 +99,10 @@ const questSchema = new Schema({
 			type: String,
 			default: 'any',
 		},
+		special: [{
+			type: String,
+			default: 'any',
+		}],
 	},
 	questType: {
 		type: String,

@@ -97,6 +97,13 @@ class Quest {
 		return questRewards;
 	}
 
+	async getRewardString() {
+		const questRewards = await this.getRewards();
+		const string = `${await this.getXP()} XP, $${await this.getCash()}\n ${questRewards.length > 0 ? questRewards.join(', ') : ''}`;
+		console.log(string);
+		return string;
+	}
+
 	async getXP() {
 		return this.quest.xp;
 	}

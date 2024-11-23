@@ -450,7 +450,7 @@ async function generateSampleQuests() {
 				"qualities": ["any"],
 				"special": ["/equip"],
 			},
-			"progressMax": 10,
+			"progressMax": 1,
 			"daily": false,
 			"repeatable": false,
 			"fishable": false,

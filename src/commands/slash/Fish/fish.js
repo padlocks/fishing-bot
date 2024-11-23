@@ -15,7 +15,7 @@ const updateUserWithFish = async (interaction, userId) => {
 	const user = new User(await User.get(userId));
 	const pond = await Pond.findOne({ id: interaction.channel.id });
 	if (pond && pond.count <= 0) {
-		return { fish: [], questsCompleted: [], xp: 0, rodState: '', success: false, message: 'The pond is empty!' };
+		return { fish: [], questsCompleted: [], xp: 0, rodState: '', startedQuests: [], success: false, message: 'The pond is empty!' };
 	}
 	let rod = await user.getEquippedRod();
 	const bait = await user.getEquippedBait();
@@ -46,6 +46,8 @@ const updateUserWithFish = async (interaction, userId) => {
 				await user.removeBait(bait._id);
 			}
 		}
+
+		const startedQuests = [];
 		for (let i = 0; i < fishArray.length; i++) {
 			const f = fishArray[i];
 			if (!f.count) f.count = 1;
@@ -66,7 +68,7 @@ const updateUserWithFish = async (interaction, userId) => {
 			}
 
 			if (rod.state === 'broken' || rod.state === 'destroyed') {
-				return { fish: [], questsCompleted: [], xp: 0, rodState: rod.state, success: false, message: message };
+				return { fish: [], questsCompleted: [], xp: 0, rodState: rod.state, startedQuests: [], success: false, message: message };
 			}
 			else {
 				rod = await user.decreaseRodDurability(f.count || 1);
@@ -114,6 +116,7 @@ const updateUserWithFish = async (interaction, userId) => {
 					qualities: false,
 					size: false,
 					weight: false,
+					special: false,
 				};
 
 				const progressType = await quest.getProgressType();
@@ -124,8 +127,9 @@ const updateUserWithFish = async (interaction, userId) => {
 				if (progressType.qualities.includes('any') || progressType.qualities.some(q => f.qualities.map(quality => quality.toLowerCase()).includes(q))) questProgress.qualities = true;
 				if (progressType.size === 'any' || parseFloat(progressType.size).toFixed(3) <= f.size.toFixed(3)) questProgress.size = true;
 				if (progressType.weight === 'any' || parseFloat(progressType.weight).toFixed(3) <= f.weight.toFixed(3)) questProgress.weight = true;
+				if (progressType.special.length <= 0 || progressType.special.includes('any')) questProgress.special = true;
 
-				if (questProgress.fish && questProgress.rarity && questProgress.rod && questProgress.qualities && questProgress.size && questProgress.weight) {
+				if (questProgress.fish && questProgress.rarity && questProgress.rod && questProgress.qualities && questProgress.size && questProgress.weight && questProgress.special) {
 					const currentProgress = await quest.getProgress();
 					await quest.setProgress(currentProgress + (f.count || 1));
 				}
@@ -147,6 +151,7 @@ const updateUserWithFish = async (interaction, userId) => {
 						const nextQuest = await quest.getNextQuest();
 						if (nextQuest) {
 							await user.startQuest(new Quest(nextQuest));
+							startedQuests.push(nextQuest);
 						}
 					}
 
@@ -163,11 +168,11 @@ const updateUserWithFish = async (interaction, userId) => {
 		await rod.save();
 		if (bait) await bait.save();
 		// await user.save();
-		return { fish: fishArray, questsCompleted: completedQuests.filter((quest, index, self) => self.findIndex(async q => await q.getTitle() === await quest.getTitle()) === index), xp: xp, rodState: rod.state, bait: bait, levelUp: levelUp, success: true, message: '' };
+		return { fish: fishArray, questsCompleted: completedQuests.filter((quest, index, self) => self.findIndex(async q => await q.getTitle() === await quest.getTitle()) === index), xp: xp, rodState: rod.state, bait: bait, levelUp: levelUp, startedQuests: startedQuests, success: true, message: '' };
 	}
 };
 
-const followUpMessage = async (interaction, user, fishArray, completedQuests, xp, rodState, bait, levelUp, success, message) => {
+const followUpMessage = async (interaction, user, fishArray, completedQuests, xp, rodState, bait, levelUp, startedQuests, success, message) => {
 	const fields = [];
 	let fishString = '';
 	let questString = '';
@@ -223,26 +228,32 @@ const followUpMessage = async (interaction, user, fishArray, completedQuests, xp
 			fields.push({ name: 'Level Up!', value: `${user.globalName} has leveled up to level **${await userObj.getLevel()}**!` });
 		}
 
+		if (startedQuests.length > 0) {
+			for await (const quest of startedQuests) {
+				fields.push({ name: 'Quest Started!', value: `**${quest.title}** started! ${quest.description}\n\n${await new Quest(quest).getRewardString()}` });
+			}
+		}
+
+		// Rare chance for NPC encounter
+		// const npcRandom = Math.floor(Math.random() * 500);
+		// if (npcRandom === 1) {
+		// 	const npc = await NPC.getRandomNPC(await userObj.getCurrentBiome(), await (await WeatherPattern.getCurrentWeather()).getWeather(), 'any', await Season.getCurrentSeason().season);
+		// 	const quest = await npc.getRandomQuest();
+		// 	const addedQuest = await userObj.startQuest(quest);
+
+		// 	if (addedQuest) {
+		// 		fields.push({ name: `You encountered ${await npc.getName()}!`, value: `${(await npc.getDialogue()).initial}\n\nQuest Obtained: **${await quest.getTitle()}**\n${await quest.getDescription()}` });
+		// 	}
+		// }
+
 		// Random chance to get a message asking for a review or vote
 		const random = Math.floor(Math.random() * 75);
 		if (random === 1) {
 			fields.push({ name: 'Enjoying FishingRPG?', value: 'If you enjoy the bot, please consider leaving a review on top.gg! Go to https://top.gg/bot/1209026334970482698#reviews to leave a review!' });
 		}
-
-		// Rare chance for NPC encounter
-		const npcRandom = Math.floor(Math.random() * 500);
-		if (npcRandom === 1) {
-			const npc = await NPC.getRandomNPC(await userObj.getCurrentBiome(), await (await WeatherPattern.getCurrentWeather()).getWeather(), 'any', await Season.getCurrentSeason().season);
-			const quest = await npc.getRandomQuest();
-			const addedQuest = await userObj.startQuest(quest);
-
-			if (addedQuest) {
-				fields.push({ name: `You encountered ${await npc.getName()}!`, value: `${(await npc.getDialogue()).initial}\n\nQuest Obtained: **${await quest.getTitle()}**\n${await quest.getDescription()}` });
-			}
-		}
 	}
 	else {
-		fields.push({ name: 'Uh oh!', value: message });
+		fields.push({ name: 'Uh oh!', value: `${message}` });
 		fishAgainDisabled = true;
 	}
 
@@ -273,7 +284,6 @@ const followUpMessage = async (interaction, user, fishArray, completedQuests, xp
 				),
 		];
 	}
-
 	return await interaction.followUp({
 		embeds: [
 			new EmbedBuilder()
@@ -310,6 +320,7 @@ module.exports = {
 		const rodState = object.rodState;
 		const bait = object.bait;
 		const levelUp = object.levelUp;
+		const startedQuests = object.startedQuests;
 		const success = object.success;
 		const message = object.message;
 
@@ -318,7 +329,7 @@ module.exports = {
 			await analyticsObject.setStatusMessage(message || 'Fished.');
 		}
 
-		const followUp = await followUpMessage(interaction, user, newFish, completedQuests, xp, rodState, bait, levelUp, success, message);
+		const followUp = await followUpMessage(interaction, user, newFish, completedQuests, xp, rodState, bait, levelUp, startedQuests, success, message);
 
 		// const filter = () => interaction.user.id === interaction.message.author.id;
 
