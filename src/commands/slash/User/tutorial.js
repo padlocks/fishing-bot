@@ -29,12 +29,17 @@ module.exports = {
 		await user.startQuest(new Quest(tutorialQuest));
 
 		// Send the tutorial message
+		const questRewards = await new Quest(tutorialQuest).getRewards();
+		const rewardsString = `${tutorialQuest.xp} XP, $${tutorialQuest.cash}\n ${questRewards.length > 0 ? questRewards.join(', ') : ''}`;
 		const embed = new EmbedBuilder()
 			.setTitle('Tutorial')
 			.setDescription(
 				`Welcome to the tutorial! You have received the quest **${tutorialQuest.title}**.`
 			)
-			.addFields({name: "Dialogue", value: tutorialQuest.description})
+			.addFields(
+				{name: "Dialogue", value: tutorialQuest.description},
+				{name: "Rewards", value: rewardsString}
+			)
 			.setFooter({ text: 'Good luck! 🎣' });
 
 		await interaction.reply({ embeds: [embed], ephemeral: false });

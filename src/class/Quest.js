@@ -84,6 +84,19 @@ class Quest {
 		return this.quest.reward;
 	}
 
+	async getRewards() {
+		const questRewards = [];
+		const reward = await this.getReward();
+		if (reward && reward.length > 0) {
+			for await (const rew of reward) {
+				const r = await Item.findById(rew);
+				questRewards.push(r.name);
+			}
+		}
+
+		return questRewards;
+	}
+
 	async getXP() {
 		return this.quest.xp;
 	}
@@ -154,6 +167,15 @@ class Quest {
 
 	async getQuestType() {
 		return this.quest.questType;
+	}
+
+	async getContinuous() {
+		return this.quest.continuous;
+	}
+
+	async getNextQuest() {
+		const nextQuest = await QuestSchema.findOne({ 'requirements.previous': await this.getTitle() });
+		return nextQuest;
 	}
 
 	static async generateDailyQuest(userId) {

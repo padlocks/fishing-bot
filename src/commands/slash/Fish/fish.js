@@ -142,6 +142,14 @@ const updateUserWithFish = async (interaction, userId) => {
 						}
 					}
 
+					// check for continuous property
+					if (await quest.getContinuous()) {
+						const nextQuest = await quest.getNextQuest();
+						if (nextQuest) {
+							await user.startQuest(new Quest(nextQuest));
+						}
+					}
+
 					quest.end();
 					completedQuests.push(quest);
 				}

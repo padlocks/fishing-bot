@@ -209,7 +209,7 @@ module.exports = {
 				if (quest.continuous) {
 					const nextQuest = await Quest.findOne({ 'requirements.previous': quest.title });
 					if (nextQuest) {
-						await user.sendToInventory(nextQuest);
+						await user.startQuest(new Quest(nextQuest));
 					}
 				}
 			}
