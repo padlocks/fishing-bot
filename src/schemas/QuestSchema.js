@@ -128,6 +128,15 @@ const questSchema = new Schema({
 		type: Boolean,
 		default: false,
 	},
+	continuous: {
+		type: Boolean,
+		default: false,
+	},
+	questType: {
+		type: String,
+		enum: ['quest', 'tutorial'],
+		default: 'quest',
+	},
 	type: {
 		type: String,
 		default: 'quest',

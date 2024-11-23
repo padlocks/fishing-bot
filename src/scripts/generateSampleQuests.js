@@ -312,8 +312,234 @@ async function generateSampleQuests() {
 			"repeatable": false,
 			"fishable": false,
 			"type": "quest"
-			
-		}
+		},
+		/*
+		+----------------------+---------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------+--------------------------------------------------------------------------------------------------+-------------------------------------------------------+
+| Source Material      | Title               | Description                                                                                                                                                                                                | Completion Conditions  | Reward                                                                                           | Notes                                                 |
++----------------------+---------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------+--------------------------------------------------------------------------------------------------+-------------------------------------------------------+
+| Game reference (MHW) | Capture the Ancient | A certain researcher is searching for a fish thought to be long since extinct.                                                                                                                             | Catch petricanth x1    | Exorbitant amount of money or rare fishing rod part.                                             | - Not repeatable                                      |
+|                      |                     |                                                                                                                                                                                                            |                        |                                                                                                  | - Any season, weather, time of day                    |
+|                      |                     |                                                                                                                                                                                                            |                        |                                                                                                  | - Swamp biome                                         |
+|                      |                     |                                                                                                                                                                                                            |                        |                                                                                                  | - Always available after lvl 40                       |
+|                      |                     |                                                                                                                                                                                                            |                        |                                                                                                  | - Special condition: MUST CATCH AFTER ACCEPTING QUEST |
++----------------------+---------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------+--------------------------------------------------------------------------------------------------+-------------------------------------------------------+
+| Original             | Hard DAYS Work      | You've been offered a contract: catch 100 King Salmon for the upcoming summer festival!                                                                                                                    | Catch king salmon x100 | Fresh sashimi (just make this a booster that increases odds of catching king salmon rarity fish) | - Repeatable once a day, but MUST be summer           |
+|                      |                     | Who knows? You might even be offered a bite of the sashimi they're preparing.                                                                                                                              |                        |                                                                                                  | - Always available, no lvl requirements               |
+|                      |                     |                                                                                                                                                                                                            |                        |                                                                                                  | - Special condition: can turn in fish from inventory  |
++----------------------+---------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------+--------------------------------------------------------------------------------------------------+-------------------------------------------------------+
+| Original             | My First Rod I      | Hey, there! Haven't seen you around these docks before. Why don't I show you the ropes and get you started with a trusty rod? Go ahead and /fish for a bit. When you've caught ten, come talk to me again. | Catch any fish x10     | Basic rod piece x1                                                                               | - Not repeatable                                      |
+|                      |                     |                                                                                                                                                                                                            |                        | Shrimp x10                                                                                       | - Any season, weather, time of day                    |
+|                      |                     |                                                                                                                                                                                                            |                        |                                                                                                  | - Ocean biome                                         |
+|                      |                     |                                                                                                                                                                                                            |                        |                                                                                                  | - Always available (tutorial quest)                   |
++----------------------+---------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------+--------------------------------------------------------------------------------------------------+-------------------------------------------------------+
+| Original             | My First Rod II     | Wow, you got the hang of things real quick! Why don't you try to /equip some bait? The shrimp I gave you should attract a few more types of fish!                                                          | Catch any fish x10     | Basic handle x1                                                                                  | - Not repeatable                                      |
+|                      |                     |                                                                                                                                                                                                            |                        | Tutorial box x1                                                                                  | - Any season, weather, time of day                    |
+|                      |                     |                                                                                                                                                                                                            |                        |                                                                                                  | - Ocean biome                                         |
+|                      |                     |                                                                                                                                                                                                            |                        |                                                                                                  | - Available after completing My First Rod I           |
++----------------------+---------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------+--------------------------------------------------------------------------------------------------+-------------------------------------------------------+
+| Original             | My First Rod III    | You're doing great! Go ahead and /open the box I gave you!                                                                                                                                                 | Open tutorial box      | Basic reel x1 (from box)                                                                         | - Not repeatable                                      |
+|                      |                     |                                                                                                                                                                                                            |                        | $750                                                                                             | - Any season, weather, time of day                    |
+|                      |                     |                                                                                                                                                                                                            |                        |                                                                                                  | - Ocean biome                                         |
+|                      |                     |                                                                                                                                                                                                            |                        |                                                                                                  | - Available after completing My First Rod II          |
++----------------------+---------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------+--------------------------------------------------------------------------------------------------+-------------------------------------------------------+
+| Original             | My First Rod IV     | You can get some more neat things to open from the shop. Why don't you go visit the /shop and purchase a Fishing Crate?                                                                                    | Buy fishing crate x1   | Basic hook x1                                                                                    | - Not repeatable                                      |
+|                      |                     |                                                                                                                                                                                                            |                        |                                                                                                  | - Any season, weather, time of day                    |
+|                      |                     |                                                                                                                                                                                                            |                        |                                                                                                  | - Ocean biome                                         |
+|                      |                     |                                                                                                                                                                                                            |                        |                                                                                                  | - Available after completing My First Rod III         |
++----------------------+---------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------+--------------------------------------------------------------------------------------------------+-------------------------------------------------------+
+| Original             | My First Rod V      | All right! You have everything you need to make your own rod now! What? 'It's not built for you?' Of course, it's not! A good fisherman should know how to /craft their own rod!                           | Craft basic rod x1     | $2000                                                                                            | - Not repeatable                                      |
+|                      |                     |                                                                                                                                                                                                            |                        | 1000 XP                                                                                          | - Any season, weather, time of day                    |
+|                      |                     |                                                                                                                                                                                                            |                        |                                                                                                  | - Ocean biome                                         |
+|                      |                     |                                                                                                                                                                                                            |                        |                                                                                                  | - Available after completing My First Rod IV          |
++----------------------+---------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------+--------------------------------------------------------------------------------------------------+-------------------------------------------------------+
+*/
+		{
+			"title": "Capture the Ancient",
+			"description": "A certain researcher is searching for a fish thought to be long since extinct.",
+			"reward": [],
+			"cash": 10000,
+			"xp": 5000,
+			"requirements": {
+				"level": 40,
+				"previous": [],
+				"weather": "any",
+				"timeOfDay": "any",
+			},
+			"progressType": {
+				"fish": ["Petricanth"],
+				"rarity": ["Legendary"],
+				"rod": "any",
+				"qualities": ["any"],
+				"special": [],
+			},
+			"progressMax": 1,
+			"daily": false,
+			"repeatable": false,
+			"fishable": false,
+			"type": "quest"
+		},
+		{
+			"title": "Hard DAYS Work",
+			"description": "You've been offered a contract: catch 100 King Salmon for the upcoming summer festival!",
+			"reward": [],
+			"cash": 5000,
+			"xp": 1000,
+			"requirements": {
+				"level": 0,
+				"previous": [],
+				"weather": "summer",
+				"timeOfDay": "any",
+				"specialConditions": ["once a day"],
+			},
+			"progressType": {
+				"fish": ["King Salmon"],
+				"rarity": ["any"],
+				"rod": "any",
+				"qualities": ["any"],
+				"special": [],
+			},
+			"progressMax": 100,
+			"daily": false,
+			"repeatable": true,
+			"fishable": false,
+			"type": "quest"
+		},
+		{
+			"title": "My First Rod I",
+			"description": "Hey, there! Haven't seen you around these docks before. Why don't I show you the ropes and get you started with a trusty rod? Go ahead and /fish for a bit. When you've caught ten, come talk to me again.",
+			"reward": [],
+			"cash": 100,
+			"xp": 50,
+			"requirements": {
+				"level": 0,
+				"previous": [],
+				"weather": "any",
+				"timeOfDay": "any",
+			},
+			"progressType": {
+				"fish": ["any"],
+				"rarity": ["any"],
+				"rod": "any",
+				"qualities": ["any"],
+				"special": [],
+			},
+			"progressMax": 10,
+			"daily": false,
+			"repeatable": false,
+			"fishable": false,
+			"continuous": true,
+			"type": "quest",
+			"questType": "tutorial",
+		},
+		{
+			"title": "My First Rod II",
+			"description": "Wow, you got the hang of things real quick! Why don't you try to /equip some bait? The shrimp I gave you should attract a few more types of fish!",
+			"reward": [],
+			"cash": 100,
+			"xp": 50,
+			"requirements": {
+				"level": 0,
+				"previous": ["My First Rod I"],
+				"weather": "any",
+				"timeOfDay": "any",
+			},
+			"progressType": {
+				"fish": ["any"],
+				"rarity": ["any"],
+				"rod": "any",
+				"qualities": ["any"],
+				"special": ["/equip"],
+			},
+			"progressMax": 10,
+			"daily": false,
+			"repeatable": false,
+			"fishable": false,
+			"continuous": true,
+			"type": "quest",
+			"questType": "tutorial",
+		},
+		{
+			"title": "My First Rod III",
+			"description": "You're doing great! Go ahead and /open the box I gave you!",
+			"reward": [],
+			"cash": 750,
+			"xp": 50,
+			"requirements": {
+				"level": 0,
+				"previous": ["My First Rod II"],
+				"weather": "any",
+				"timeOfDay": "any",
+			},
+			"progressType": {
+				"fish": ["any"],
+				"rarity": ["any"],
+				"rod": "any",
+				"qualities": ["any"],
+				"special": ["/open"],
+			},
+			"progressMax": 1,
+			"daily": false,
+			"repeatable": false,
+			"fishable": false,
+			"continuous": true,
+			"type": "quest",
+			"questType": "tutorial",
+		},
+		{
+			"title": "My First Rod IV",
+			"description": "You can get some more neat things to open from the shop. Why don't you go visit the /shop and purchase a Fishing Crate?",
+			"reward": [],
+			"cash": 750,
+			"xp": 50,
+			"requirements": {
+				"level": 0,
+				"previous": ["My First Rod III"],
+				"weather": "any",
+				"timeOfDay": "any",
+			},
+			"progressType": {
+				"fish": ["any"],
+				"rarity": ["any"],
+				"rod": "any",
+				"qualities": ["any"],
+				"special": ["/shop"],
+			},
+			"progressMax": 1,
+			"daily": false,
+			"repeatable": false,
+			"fishable": false,
+			"continuous": true,
+			"type": "quest",
+			"questType": "tutorial",
+		},
+		{
+			"title": "My First Rod V",
+			"description": "All right! You have everything you need to make your own rod now! What? 'It's not built for you?' Of course, it's not! A good fisherman should know how to /craft their own rod!",
+			"reward": [],
+			"cash": 2000,
+			"xp": 1000,
+			"requirements": {
+				"level": 0,
+				"previous": ["My First Rod IV"],
+				"weather": "any",
+				"timeOfDay": "any",
+			},
+			"progressType": {
+				"fish": ["any"],
+				"rarity": ["any"],
+				"rod": "any",
+				"qualities": ["any"],
+				"special": ["/craft"],
+			},
+			"progressMax": 1,
+			"daily": false,
+			"repeatable": false,
+			"fishable": false,
+			"continuous": false,
+			"type": "quest",
+			"questType": "tutorial",
+		},
+
 	];
 
 	// Loop through the sample quests and create new quest documents

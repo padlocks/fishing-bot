@@ -14,6 +14,10 @@ const GuildSchema = new Schema({
 		type: [String],
 		default: [],
 	},
+	channels: {
+		type: [String],
+		default: [],
+	}
 }, { timestamps: true });
 
 

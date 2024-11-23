@@ -675,6 +675,10 @@ class User {
 		if (questExists) return;
 
 		const cloned = await originalQuest.clone(userId);
+		if (!cloned) {
+			throw new Error('Failed to clone the quest');
+		}
+
 		await this.addQuest(await cloned.getId());
 		return cloned;
 	};

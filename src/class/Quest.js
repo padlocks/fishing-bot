@@ -215,6 +215,11 @@ class Quest {
 		return quest;
 	}
 
+	static async getByTitle(title) {
+		const quest = await QuestSchema.findOne({ title });
+		return quest;
+	}
+
 	static async reelRandomQuest(userId) {
 		const user = new User(await User.get(userId));
 		const inventory = await user.getInventory();
