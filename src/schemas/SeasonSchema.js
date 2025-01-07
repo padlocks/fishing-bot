@@ -31,6 +31,14 @@ const seasonSchema = new Schema({
 		type: String,
 		required: true,
 	},
+	endMonth: {
+		type: String,
+		required: true,
+	},
+	endDay: {
+		type: String,
+		required: true,
+	},
 	commonWeatherTypes: {
 		type: Array,
 		default: [],

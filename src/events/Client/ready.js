@@ -31,6 +31,9 @@ module.exports = {
 					},
 					startMonth: 'March',
 					startDay: '20',
+					endMonth: 'June',
+					endDay: '21',
+					active: false,
 					commonWeatherTypes: ['Rainy', 'Cloudy'],
 				},
 				{
@@ -41,6 +44,9 @@ module.exports = {
 					},
 					startMonth: 'June',
 					startDay: '21',
+					endMonth: 'September',
+					endDay: '22',
+					active: false,
 					commonWeatherTypes: ['Sunny', 'Windy'],
 				},
 				{
@@ -51,6 +57,9 @@ module.exports = {
 					},
 					startMonth: 'September',
 					startDay: '22',
+					endMonth: 'December',
+					endDay: '1',
+					active: false,
 					commonWeatherTypes: ['Rainy', 'Cloudy'],
 				},
 				{
@@ -61,6 +70,9 @@ module.exports = {
 					},
 					startMonth: 'December',
 					startDay: '1',
+					endMonth: 'March',
+					endDay: '20',
+					active: true,
 					commonWeatherTypes: ['Snowy', 'Cloudy'],
 				},
 			];

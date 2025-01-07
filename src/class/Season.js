@@ -41,57 +41,54 @@ class Season {
 
 	static async updateCurrentSeason() {
 		const today = new Date();
+		const currentYear = today.getFullYear();
 		const currentMonth = today.getMonth();
 		const currentDay = today.getDate();
 	
-		const isSeasonBeforeToday = (season) => {
-			const seasonMonthNum = new Date(`${season.startMonth} 1, ${today.getFullYear()}`).getMonth();
-			return (
-				seasonMonthNum < currentMonth ||
-				(seasonMonthNum === currentMonth && season.startDay <= currentDay)
-			);
+		const getAdjustedDate = (month, day, adjustYear = 0) => {
+			const date = new Date(`${month} ${day}, ${currentYear + adjustYear}`);
+			return date;
 		};
 	
-		// Find the most recent season whose start date is on or before today
-		const seasons = await SeasonSchema.find();
-		const recentSeason = seasons
-			.filter(isSeasonBeforeToday)
-			.reduce((latest, season) => {
-				const seasonMonthNum = new Date(`${season.startMonth} 1, ${today.getFullYear()}`).getMonth();
-				const latestMonthNum = new Date(`${latest.startMonth} 1, ${today.getFullYear()}`).getMonth();
-				if (
-					seasonMonthNum > latestMonthNum ||
-					(seasonMonthNum === latestMonthNum && season.startDay > latest.startDay)
-				) {
-					return season;
-				}
-				return latest;
-			}, seasons[0]);
+		const isDateInSeason = (season) => {
+			let startDate = getAdjustedDate(season.startMonth, season.startDay);
+			let endDate = getAdjustedDate(season.endMonth, season.endDay);
 	
-		// Fetch the active season from the database
+			// Handle Winter's year transition
+			if (season.season === 'Winter') {
+				if (currentMonth < 2) { // Jan-Feb
+					startDate = getAdjustedDate(season.startMonth, season.startDay, -1);
+					endDate = getAdjustedDate(season.endMonth, season.endDay, 0);
+				} else if (currentMonth === 11) { // December
+					startDate = getAdjustedDate(season.startMonth, season.startDay, 0);
+					endDate = getAdjustedDate(season.endMonth, season.endDay, 1);
+				}
+			}
+	
+			return today >= startDate && today < endDate;
+		};
+	
+		const seasons = await SeasonSchema.find();
+		const currentSeason = seasons.find(isDateInSeason);
+	
+		if (!currentSeason) return;
+	
 		const activeSeason = await SeasonSchema.findOne({ active: true });
 	
-		// Check if the correct season is already active
-		if (!activeSeason || activeSeason.season !== recentSeason.season) {
-			// Deactivate the current season
+		if (!activeSeason || activeSeason.season !== currentSeason.season) {
 			if (activeSeason) {
 				activeSeason.active = false;
 				await activeSeason.save();
 			}
 	
-			// Find and activate the correct season in the database
-			let newSeason = await SeasonSchema.findOne({ season: recentSeason.season });
+			let newSeason = await SeasonSchema.findOne({ season: currentSeason.season });
 			if (!newSeason) {
-				// If the season doesn't exist in the database, create it
-				newSeason = new SeasonSchema({ ...recentSeason, active: true });
+				newSeason = new SeasonSchema({ ...currentSeason, active: true });
 			} else {
-				// Activate the found season
 				newSeason.active = true;
 			}
 			await newSeason.save();
 			console.log(`Season updated to ${newSeason.season}`);
-		} else {
-			// console.log(`The current season (${activeSeason.season}) is still active.`);
 		}
 	}
 }
