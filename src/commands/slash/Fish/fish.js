@@ -174,7 +174,7 @@ const followUpMessage = async (interaction, user, fishArray, completedQuests, xp
 		});
 
 		fishString += `+ ${xp} XP\n`;
-		fields.push({ name: `${user.globalName} Caught:`, value: fishString });
+		fields.push({ name: `${user.displayName} Caught:`, value: fishString });
 
 		if (completedQuests.length > 0) {
 			for await (const quest of completedQuests) {
