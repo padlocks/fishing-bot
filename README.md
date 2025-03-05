@@ -11,6 +11,7 @@ Did you like my project? Click on the star button (⭐️) right above your scre
 - Gacha system
 - Code redemption
 - Unique biomes with unique fish
+- Season and weather system
 - Inventory system
 - Leaderboard system
 - Pet / fish care / aquarium system
@@ -25,6 +26,10 @@ Did you like my project? Click on the star button (⭐️) right above your scre
 ## Commands
 ### Info Commands
 - **/help**: Lists all commands.
+- **/info rod**: Check information about your current fishing rod.
+- **/info weather**: Check the current weather conditions.
+- **/info forecast**: Check the 7-day weather forecast.
+- **/info season**: Check information about the current season.
 - **/leaderboard**: Shows monthly leaderboard of fish caught.
 
 ### Economy Commands

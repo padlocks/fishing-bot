@@ -27,6 +27,7 @@ module.exports = {
 	 * @param {ChatInputCommandInteraction} interaction
 	 */
 	run: async (client, interaction, analyticsObject) => {
+		await interaction.deferReply();
 		const subcommand = interaction.options.getSubcommand();
 		
 		if (subcommand === 'fish-caught') {
@@ -83,7 +84,7 @@ module.exports = {
 					await analyticsObject.setStatusMessage('Displayed leaderboard.');
 				}
 	
-				await buttonPagination(interaction, embeds, analyticsObject);
+				await buttonPagination(interaction, embeds, analyticsObject, true);
 			}
 			catch (err) {
 				if (process.env.ANALYTICS || config.client.analytics) {
@@ -147,7 +148,7 @@ module.exports = {
 					await analyticsObject.setStatusMessage('Displayed leaderboard.');
 				}
 	
-				await buttonPagination(interaction, embeds, analyticsObject);
+				await buttonPagination(interaction, embeds, analyticsObject, true);
 			}
 			catch (err) {
 				if (process.env.ANALYTICS || config.client.analytics) {
@@ -211,7 +212,7 @@ module.exports = {
 					await analyticsObject.setStatusMessage('Displayed leaderboard.');
 				}
 	
-				await buttonPagination(interaction, embeds, analyticsObject);
+				await buttonPagination(interaction, embeds, analyticsObject, true);
 			}
 			catch (err) {
 				if (process.env.ANALYTICS || config.client.analytics) {

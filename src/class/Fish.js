@@ -35,10 +35,22 @@ class Fish {
 
 	static async sendToUser(capabilities, choices, weights, guild, user, weather, season) {
 		let fishArray = [];
-		const numberCapability = capabilities.find(capability => !isNaN(capability));
+		let numberCapability = capabilities.find(capability => !isNaN(capability));
+		
+		if (!numberCapability) {
+			const countCapability = capabilities.find(capability => 
+				typeof capability === 'string' && capability.toLowerCase().includes('count'));
+			
+			if (countCapability) {
+				const countMatch = countCapability.match(/^(\d+)/);
+				if (countMatch && countMatch[1]) {
+					numberCapability = countMatch[1];
+				}
+			}
+		}
 
-		if (!isNaN(numberCapability)) {
-			fishArray = await this.generateFish(numberCapability, capabilities, choices, weights, user, weather, season);
+		if (numberCapability) {
+			fishArray = await this.generateFish(Number(numberCapability), capabilities, choices, weights, user, weather, season);
 		}
 		else {
 			fishArray = await this.generateFish(1, capabilities, choices, weights, user, weather, season);
@@ -56,7 +68,9 @@ class Fish {
 				
 		const uniqueFishArray = [];
 		fishArray.forEach(async oneFish => {
-			const countCapability = capabilities.find(capability => capability.toLowerCase().includes('count'));
+			const countCapability = capabilities.find(capability => 
+				typeof capability === 'string' && capability.toLowerCase().includes('count'));
+				
 			if (countCapability !== undefined) {
 				const count = Number(countCapability.split(' ')[0]);
 				oneFish.count = count;

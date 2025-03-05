@@ -4,9 +4,11 @@ const { Interaction } = require('./class/Interaction');
 
 module.exports = async (interaction, pages, analyticsObject = null, deferred = false, components = [], time = 90_000) => {
 	try {
-		if (!interaction || !pages || !pages.length > 0) throw new Error('Invalid arguments');
+		if (!interaction || !pages || !Array.isArray(pages) || pages.length === 0) throw new Error('Invalid arguments');
 
-		if (!deferred) await interaction.deferReply();
+		if (!deferred) {
+			await interaction.deferReply();
+		}
 
 		if (pages.length === 1) {
 			return await interaction.editReply({
