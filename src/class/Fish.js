@@ -36,6 +36,7 @@ class Fish {
 	static async sendToUser(capabilities, choices, weights, guild, user, weather, season) {
 		let fishArray = [];
 		let numberCapability = capabilities.find(capability => !isNaN(capability));
+		let count = 1;
 		
 		if (!numberCapability) {
 			const countCapability = capabilities.find(capability => 
@@ -44,16 +45,16 @@ class Fish {
 			if (countCapability) {
 				const countMatch = countCapability.match(/^(\d+)/);
 				if (countMatch && countMatch[1]) {
-					numberCapability = countMatch[1];
+					count = countMatch[1];
 				}
 			}
 		}
 
 		if (numberCapability) {
-			fishArray = await this.generateFish(Number(numberCapability), capabilities, choices, weights, user, weather, season);
+			fishArray = await this.generateFish(Number(numberCapability), count, capabilities, choices, weights, user, weather, season);
 		}
 		else {
-			fishArray = await this.generateFish(1, capabilities, choices, weights, user, weather, season);
+			fishArray = await this.generateFish(1, count, capabilities, choices, weights, user, weather, season);
 		}
 
 		// Get the latest catchId once for the entire catch, treating both strings and numbers as integers, incrementing by 1
@@ -105,7 +106,7 @@ class Fish {
 		return await uniqueFishArray.map(element => element.item);
 	};
 	
-	static async generateFish(number, capabilities, choices, weights, user, weather, season) {
+	static async generateFish(number, count, capabilities, choices, weights, user, weather, season) {
 		const choice = [];
 		for (let i = 0; i < number; i++) {
 		
@@ -149,7 +150,7 @@ class Fish {
 			const validChoices = filteredChoices.filter(choice => choice !== null);
 		
 			if (validChoices.length === 0) {
-				return await this.generateFish(number, capabilities, choices, weights, user, weather, season);
+				return await this.generateFish(number, count, capabilities, choices, weights, user, weather, season);
 			}
 		
 			choice.push(validChoices[Math.floor(Math.random() * validChoices.length)]);
@@ -163,7 +164,9 @@ class Fish {
 				existingFish.count++;
 			}
 			else {
-				uniqueChoices.push({ ...fish._doc });
+				fish = { ...fish._doc };
+				fish.count = count;
+				uniqueChoices.push(fish);
 			}
 		});
 
