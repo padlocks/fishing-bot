@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 const config = require('../config');
 const { Quest } = require('../schemas/QuestSchema');
 const { Rod } = require('../schemas/RodSchema');
+const { Bait } = require('../schemas/BaitSchema');
+const { Item } = require('../schemas/ItemSchema');
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -107,7 +109,10 @@ async function generateSampleQuests() {
 		{
 			title: 'Lucky Fisher',
 			description: 'Catch 25 lucky fish.',
-			reward: [await Rod.findOne({ name: 'Lucky Rod' })],
+			reward: [{
+				item: await Rod.findOne({ name: 'Lucky Rod' }),
+				amount: 1,
+			}],
 			cash: 3000,
 			xp: 3000,
 			requirements: {
@@ -363,6 +368,7 @@ async function generateSampleQuests() {
 				"level": 40,
 				"previous": [],
 				"weather": "any",
+				"season": "any",
 				"timeOfDay": "any",
 			},
 			"progressType": {
@@ -387,7 +393,8 @@ async function generateSampleQuests() {
 			"requirements": {
 				"level": 0,
 				"previous": [],
-				"weather": "summer",
+				"weather": "any",
+				"season": "summer",
 				"timeOfDay": "any",
 				"specialConditions": ["once a day"],
 			},
@@ -407,13 +414,17 @@ async function generateSampleQuests() {
 		{
 			"title": "My First Rod I",
 			"description": "Hey, there! Haven't seen you around these docks before. Why don't I show you the ropes and get you started with a trusty rod? Go ahead and /fish for a bit. When you've caught ten, come talk to me again.",
-			"reward": [],
+			"reward": [{
+				item: await Bait.findOne({ name: 'Shrimp' }),
+				amount: 10,
+			}],
 			"cash": 100,
 			"xp": 50,
 			"requirements": {
 				"level": 0,
 				"previous": [],
 				"weather": "any",
+				"season": "any",
 				"timeOfDay": "any",
 			},
 			"progressType": {
@@ -434,13 +445,17 @@ async function generateSampleQuests() {
 		{
 			"title": "My First Rod II",
 			"description": "Wow, you got the hang of things real quick! Why don't you try to /equip some bait? The shrimp I gave you should attract a few more types of fish!",
-			"reward": [],
+			"reward": [{
+				item: await Item.findOne({ name: 'Tutorial Crate' }),
+				amount: 1,
+			}],
 			"cash": 100,
 			"xp": 50,
 			"requirements": {
 				"level": 0,
 				"previous": ["My First Rod I"],
 				"weather": "any",
+				"season": "any",
 				"timeOfDay": "any",
 			},
 			"progressType": {
@@ -468,6 +483,7 @@ async function generateSampleQuests() {
 				"level": 0,
 				"previous": ["My First Rod II"],
 				"weather": "any",
+				"season": "any",
 				"timeOfDay": "any",
 			},
 			"progressType": {
@@ -495,6 +511,7 @@ async function generateSampleQuests() {
 				"level": 0,
 				"previous": ["My First Rod III"],
 				"weather": "any",
+				"season": "any",
 				"timeOfDay": "any",
 			},
 			"progressType": {
@@ -522,6 +539,7 @@ async function generateSampleQuests() {
 				"level": 0,
 				"previous": ["My First Rod IV"],
 				"weather": "any",
+				"season": "any",
 				"timeOfDay": "any",
 			},
 			"progressType": {

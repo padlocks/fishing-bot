@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { Utils } = require('../class/Utils');
 const { User } = require('../class/User');
+const { Item } = require('../schemas/ItemSchema');
 const { Quest: QuestSchema, QuestData } = require('../schemas/QuestSchema');
 const { Gacha } = require('../schemas/GachaSchema');
 
@@ -36,14 +37,20 @@ class Quest {
 	async clone(userId) {
 		if (!userId) return null;
 		try {
+			const questObject = this.quest.toObject();
+			
 			const clonedObject = new Quest({
-				...this.quest.toObject(),
+				...questObject,
 				_id: new mongoose.Types.ObjectId(),
 				user: userId,
 				startDate: Date.now(),
 				status: 'in_progress',
 				__t: 'QuestData',
 			});
+
+			if (questObject.reward && questObject.reward.length > 0) {
+				clonedObject.quest.reward = [...questObject.reward];
+			}
 
 			await clonedObject.save();
 			return clonedObject;
@@ -89,19 +96,58 @@ class Quest {
 		const reward = await this.getReward();
 		if (reward && reward.length > 0) {
 			for await (const rew of reward) {
-				const r = await Item.findById(rew);
-				questRewards.push(r.name);
+				try {
+					const r = await Item.findById(rew.item);
+					if (r) {
+						r.count = rew.amount;
+						questRewards.push({ name: r.name, count: r.count });
+					} else {
+						Utils.log(`Warning: Failed to find reward item by ID: ${rew.item}`, 'warn');
+					}
+				} catch (error) {
+					Utils.log(`Error retrieving reward: ${error}`, 'err');
+				}
 			}
 		}
 
 		return questRewards;
 	}
 
+	async grantRewards() {
+		const user = new User(await User.get(await this.getUserId()));
+		if (!user) throw new Error('User not found');
+		const questRewards = await this.getRewards();
+		const rewards = [];
+
+		if (questRewards.length === 0) {
+			return rewards;
+		}
+		
+		for (const reward of questRewards) {
+			try {
+				const item = await Item.findOne({ name: reward.name });
+				if (item) {
+					const newItem = await user.sendToInventory(item, reward.count);
+					rewards.push({ name: newItem.item.name, count: newItem.count });
+				} else {
+					Utils.log(`Warning: Could not find item with name ${reward.name} to grant as reward`, 'warn');
+				}
+			} catch (error) {
+				Utils.log(`Error granting reward ${reward.name}: ${error}`, 'err');
+			}
+		}
+		return rewards;
+	}
+
 	async getRewardString() {
 		const questRewards = await this.getRewards();
-		const string = `${await this.getXP()} XP, $${await this.getCash()}\n ${questRewards.length > 0 ? questRewards.join(', ') : ''}`;
-		console.log(string);
+		const questRewardsString = questRewards.map(reward => `${reward.count}x ${reward.name}`).join(', ');
+		const string = `${await this.getXP()} XP, $${await this.getCash()}\n ${questRewards.length > 0 ? questRewardsString : ''}`;
 		return string;
+	}
+
+	async getUserId() {
+		return this.quest.user;
 	}
 
 	async getXP() {
@@ -229,7 +275,10 @@ class Quest {
 			quest.user = userId;
 			quest.startDate = Date.now();
 			quest.reward = [];
-			quest.reward.push(await Gacha.findOne({ name: 'Daily Box' }));
+			quest.reward.push({
+				item: await Gacha.findOne({ name: 'Daily Box' }),
+				amount: 1,
+			});
 			await quest.save();
 			await user.addQuest(quest._id);
 	

@@ -37,18 +37,17 @@ module.exports = {
 
 				if (q.reward.length > 0) {
 					for (const reward of q.reward) {
-						const rewardObject = await Item.findById(reward);
+						const rewardObject = await Item.findById(reward.item);
 						if (rewardObject) {
-							rewards.push(rewardObject.name);
+							rewards.push({ name: rewardObject.name, count: reward.amount });
 						}
 					}
 				}
 				
-
 				fields.push({
 					name: q.title,
 					value: `${q.description}\n
-						**Rewards:** $${q.cash}, ${q.xp} XP ${', ' + rewards.join(', ')}
+						**Rewards:** $${q.cash}, ${q.xp} XP ${rewards.map(r => `${r.count}x ${r.name}`).join(', ')}
 						**Progress:** ${q.progress}/${q.progressMax}
 						---------`,
 					inline: true,

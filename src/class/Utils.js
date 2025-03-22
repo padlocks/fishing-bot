@@ -6,7 +6,7 @@ const { RodData } = require('../schemas/RodSchema');
 const { Item, ItemData } = require('../schemas/ItemSchema');
 const { BaitData } = require('../schemas/BaitSchema');
 const { User } = require('../schemas/UserSchema');
-const { StringSelectMenuOptionBuilder } = require('discord.js');
+const { StringSelectMenuOptionBuilder, BaseInteraction } = require('discord.js');
 const { LicenseData } = require('../schemas/LicenseSchema');
 const { WeatherType } = require('../schemas/WeatherTypeSchema');
 const { Season } = require('../schemas/SeasonSchema');
@@ -377,7 +377,7 @@ class Utils {
 		const scaled = (successes / n) * range;
 		const jitter = (Math.random() - 0.5) * (range * 0.1); // Add some jitter for variety
 		return min + scaled + jitter;
-	}
+	};
 }
 
 module.exports = { Utils };

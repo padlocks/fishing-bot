@@ -13,6 +13,7 @@ const { WeatherPattern: WeatherPatternSchema } = require('../../schemas/WeatherP
 const { Season } = require('../../class/Season');
 const Quest = require('../../schemas/QuestSchema');
 const { EmbedBuilder } = require('discord.js');
+const { Utils } = require('../../class/Utils');
 
 const cooldown = new Map();
 
@@ -152,77 +153,6 @@ module.exports = {
 				else {
 					cooldown.set(cooldownKey, [interaction.commandName]);
 					cooldownFunction();
-				}
-			}
-
-			// check for special progress types
-			const user = new User(await User.get(interaction.user.id));
-			const quests = await user.getQuests();
-			let questString = '';
-			let totalQuestXp = 0;
-			let totalQuestCash = 0;
-			const questRewards = [];
-			const completedQuests = [];
-
-			for (const quest of quests) {
-				// check if quest is active, and has special conditions and progressType
-				if (quest.status === 'in_progress' && quest.progressType && quest.progressType.special && quest.progressType.special.length > 0) {
-					for (const progressType of quest.progressType.special) {
-						if (progressType === "/" + interaction.commandName) {
-							// check if the command is a valid progression
-							if (quest.progress < quest.progressMax) {
-								quest.progress += 1;
-								await quest.save();
-							} else {
-								// quest is completed
-								quest.status = 'completed';
-								await quest.save();
-								completedQuests.push(quest);
-							}
-							break;
-						}
-					}
-				}
-			}
-
-			// distribute rewards
-			if (completedQuests.length > 0) {
-				for await (const quest of completedQuests) {
-					questString += `**${await quest.getTitle()}** completed\n`;
-					totalQuestXp += await quest.getXP();
-					totalQuestCash += await quest.getCash();
-
-					const reward = await quest.getReward();
-					if (reward && reward.length > 0) {
-						for await (const rew of reward) {
-							const r = await Item.findById(rew);
-							questRewards.push(r.name);
-						}
-					}
-				}
-				questString += `+ ${totalQuestXp} XP, + $${totalQuestCash}\n ${questRewards.length > 0 ? questRewards.join(', ') : ''}`;
-				fields.push({ name: 'Quest complete:', value: questString });
-			}
-
-			// check if quest is continuous, if so assign the next quest
-			for (const quest of completedQuests) {
-				if (quest.continuous) {
-					const nextQuest = await Quest.findOne({ 'requirements.previous': quest.title });
-					if (nextQuest) {
-						await user.startQuest(new Quest(nextQuest));
-					}
-				}
-			}
-
-			if (questString.length > 0) {
-				const embed = new EmbedBuilder()
-					.setTitle('Quests Completed')
-					.setDescription(questString)
-					.setColor('Green');
-
-				// send a message mentioning the user if they have completed a quest, not using reply
-				if (completedQuests.length > 0) {
-					await interaction.channel.send({ content: `<@${interaction.user.id}>`, embeds: [embed] });
 				}
 			}
 

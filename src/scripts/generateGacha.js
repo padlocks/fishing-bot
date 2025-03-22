@@ -20,6 +20,28 @@ async function generateGacha() {
 	// Define an array of sample gacha data
 	const sampleGacha = [
 		{
+			name: 'Tutorial Crate',
+			description: 'A crate containing some fishing supplies to help you get started.',
+			rarity: 'Common',
+			capabilities: ['tutorial'],
+			shopItem: false,
+			price: 750,
+			items: 3,
+			icon: {
+				animated: false,
+				data: 'Treasure_Chest:1244066065751867423',
+			},
+			weights: {
+				common: 7000,
+				uncommon: 2500,
+				rare: 500,
+				ultra: 100,
+				giant: 50,
+				legendary: 20,
+				lucky: 1,
+			},
+		},
+		{
 			name: 'Fishing Crate',
 			description: 'A crate containing a random assortment of fishing supplies.',
 			rarity: 'Common',
@@ -102,15 +124,19 @@ async function generateGacha() {
 		},
 	];
 
-	// Loop through the sample gacha and create new gacha documents
-	sampleGacha.forEach((gachaData) => {
+	// Loop through the sample gacha and create new gacha documents if they don't already exist
+	for (const gachaData of sampleGacha) {
+		const existingGacha = await Gacha.findOne({ name: gachaData.name });
+		if (existingGacha) {
+			console.log(`Box "${gachaData.name}" already exists`);
+			continue;
+		}
 		const gacha = new Gacha(gachaData);
-		gacha.save()
-			.then(() => {
-				console.log(`Box "${gacha.name}" created successfully`);
-			})
-			.catch((error) => {
-				console.error(`Error creating box "${gacha.name}":`, error);
-			});
-	});
+		try {
+			await gacha.save();
+			console.log(`Box "${gacha.name}" created successfully`);
+		} catch (error) {
+			console.error(`Error creating box "${gacha.name}":`, error);
+		}
+	}
 }

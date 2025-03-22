@@ -11,7 +11,13 @@ const questSchema = new Schema({
 	},
 	reward: {
 		type: [{
-			type: Schema.Types.ObjectId,
+			item: {
+				type: Schema.Types.ObjectId,
+			},
+			amount: {
+				type: Number,
+				default: 1,
+			},
 		}],
 	},
 	cash: {
@@ -36,6 +42,11 @@ const questSchema = new Schema({
 		weather: {
 			type: String,
 			enum: ['sunny', 'rainy', 'snowy', 'windy', 'cloudy', 'any'],
+			default: 'any',
+		},
+		season: {
+			type: String,
+			enum: ['spring', 'summer', 'fall', 'winter', 'any'],
 			default: 'any',
 		},
 		timeOfDay: {

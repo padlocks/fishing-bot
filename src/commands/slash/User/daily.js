@@ -48,12 +48,12 @@ module.exports = {
 			const rewards = [];
 			if (quest.reward.length > 0) {
 				for await (const reward of quest.reward) {
-					const rewardObject = await Item.findById(reward);
-					rewards.push(rewardObject.name);
+					const rewardObject = await Item.findById(reward.item);
+					rewards.push({ name: rewardObject.name, count: reward.amount });
 				}
 			}
 
-			const rewardsString = rewards.join(', ');
+			const rewardsString = rewards.map(reward => `${reward.count}x ${reward.name}`).join(', ');
 			if (rewards.length > 0) {
 				value = `$${quest.cash}, ${quest.xp} XP, ${rewardsString}`;
 			}

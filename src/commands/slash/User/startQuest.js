@@ -30,9 +30,12 @@ module.exports = {
 				if (!uniqueValues.has(value)) {
 					uniqueValues.add(value);
 
+					const quest = new Quest(await Quest.get(value));
+					const reward = await quest.getRewardString();
+
 					return new StringSelectMenuOptionBuilder()
 						.setLabel(q.title)
-						.setDescription(`$${q.cash}, ${q.xp} XP ${q.reward.length > 0 ? q.reward.join(', ') : ''} | ${q.description}`)
+						.setDescription(`${reward} | ${q.description}`)
 						// .setEmoji(q.toJSON().icon.data.split(':')[1])
 						.setValue(value);
 				}

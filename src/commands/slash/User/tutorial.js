@@ -22,15 +22,30 @@ module.exports = {
 		// Check if the user already has the quest
 		const inventory = await user.getQuests();
 		if (inventory.some(q => q.title === tutorialQuest.title)) {
-			return await interaction.reply({ content: "You already have the tutorial quest!", ephemeral: true });
+			const content = "You already have the tutorial quest!";
+			if (tutorialQuest.status === 'completed') {
+				content = "You have already completed the tutorial!";
+			}
+
+			if (process.env.ANALYTICS || config.client.analytics) {
+				await analyticsObject.setStatus('failed');
+				await analyticsObject.setStatusMessage(content);
+			}
+
+			return await interaction.reply({ content, ephemeral: true });
 		}
 
 		// Add the quest to the user's inventory
 		await user.startQuest(new Quest(tutorialQuest));
 
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await analyticsObject.setStatus('completed');
+			await analyticsObject.setStatusMessage('Tutorial quest started.');
+		}
+
 		// Send the tutorial message
-		const questRewards = await new Quest(tutorialQuest).getRewards();
-		const rewardsString = `${tutorialQuest.xp} XP, $${tutorialQuest.cash}\n ${questRewards.length > 0 ? questRewards.join(', ') : ''}`;
+		const questRewards = await new Quest(tutorialQuest).getRewardString();
+		const rewardsString = `${questRewards}`;
 		const embed = new EmbedBuilder()
 			.setTitle('Tutorial')
 			.setDescription(

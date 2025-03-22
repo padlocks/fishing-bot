@@ -3,6 +3,7 @@ const { User } = require('../../../class/User');
 const { ItemData } = require('../../../schemas/ItemSchema');
 const config = require('../../../config');
 const { Interaction } = require('../../../class/Interaction');
+const ExpandableMessage = require('../../../class/ExpandableMessage');
 
 const selectionOptions = async (inventoryPath, userData, allowNone = true) => {
 	const uniqueValues = new Set();
@@ -111,15 +112,24 @@ module.exports = {
 		const buttonRow = new ActionRowBuilder()
 			.addComponents(cancel, equipRod, equipBait, equipBooster);
 
-		const buttonResponse = await interaction.reply({
-			embeds: [
-				new EmbedBuilder()
-					.setTitle('Equipment')
-					.setDescription('Choose an item type to equip!'),
-			],
-			fetchReply: true,
-			components: [buttonRow],
-		});
+		// const buttonResponse = await interaction.reply({
+		// 	embeds: [
+		// 		new EmbedBuilder()
+		// 			.setTitle('Equipment')
+		// 			.setDescription('Choose an item type to equip!'),
+		// 	],
+		// 	fetchReply: true,
+		// 	components: [buttonRow],
+		// });
+		const buttonEmbed = new EmbedBuilder()
+			.setTitle('Equipment')
+			.setDescription('Choose an item type to equip!');
+
+		const buttonResponse = await new ExpandableMessage(analyticsObject, interaction)
+			.setSendType(ExpandableMessage.SendType.REPLY)
+			.addEmbed(buttonEmbed)
+			.addComponents([buttonRow])
+			.send();
 
 		const collectorFilter = i => {
 			return i.user.id === user.id;
@@ -135,7 +145,7 @@ module.exports = {
 
 			if (choice.customId === 'equip-rod') {
 				let options = [];
-				options = await Promise.all(await selectionOptions('rods', userData, true));
+				options = await Promise.all(await selectionOptions('rods', userData, false));
 				options = options.filter((option) => option !== undefined);
 
 				if (process.env.ANALYTICS || config.client.analytics) {
@@ -144,14 +154,23 @@ module.exports = {
 				}
 
 				if (options.length === 0) {
-					return await choice.update({
-						embeds: [
-							new EmbedBuilder()
-								.setTitle('Equipment')
-								.setDescription('You do not have any fishing rods to equip!'),
-						],
-						components: [],
-					});
+					const embed = new EmbedBuilder()
+						.setTitle('Equipment')
+						.setDescription('You do not have any fishing rods to equip!');
+					return await new ExpandableMessage(analyticsObject, choice)
+						.setSendType(ExpandableMessage.SendType.UPDATE)
+						.addEmbed(embed)
+						.clearComponents()
+						.send();
+
+					// return await choice.update({
+					// 	embeds: [
+					// 		new EmbedBuilder()
+					// 			.setTitle('Equipment')
+					// 			.setDescription('You do not have any fishing rods to equip!'),
+					// 	],
+					// 	components: [],
+					// });
 				}
 
 				const select = new StringSelectMenuBuilder()
@@ -162,14 +181,23 @@ module.exports = {
 				const row = new ActionRowBuilder()
 					.addComponents(select);
 
-				const response = await choice.update({
-					embeds: [
-						new EmbedBuilder()
-							.setTitle('Equipment')
-							.setDescription('Choose your fishing rod!'),
-					],
-					components: [row],
-				});
+				// const response = await choice.update({
+				// 	embeds: [
+				// 		new EmbedBuilder()
+				// 			.setTitle('Equipment')
+				// 			.setDescription('Choose your fishing rod!'),
+				// 	],
+				// 	components: [row],
+				// });
+
+				const embed = new EmbedBuilder()
+						.setTitle('Equipment')
+						.setDescription('Choose your fishing rod!');
+				const response = await new ExpandableMessage(analyticsObject, choice)
+						.setSendType(ExpandableMessage.SendType.UPDATE)
+						.addEmbed(embed)
+						.addComponents([row])
+						.send();
 
 				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 90_000 });
 				const rodChoice = selection.values[0];
@@ -179,17 +207,29 @@ module.exports = {
 						await analyticsObject.setStatus('failed');
 						await analyticsObject.setStatusMessage('Requirements not met.');
 					}
-					return await selection.update({
-						embeds: [
-							new EmbedBuilder()
-								.setTitle('Equipment')
-								.setDescription('You do not meet the requirements to equip this item.')
-								.addFields([
-									{ name: 'Requirements', value: item.requirements.toString() },
-								]),
-						],
-						components: [],
-					});
+					// return await selection.update({
+					// 	embeds: [
+					// 		new EmbedBuilder()
+					// 			.setTitle('Equipment')
+					// 			.setDescription('You do not meet the requirements to equip this item.')
+					// 			.addFields([
+					// 				{ name: 'Requirements', value: item.requirements.toString() },
+					// 			]),
+					// 	],
+					// 	components: [],
+					// });
+
+					const embed = new EmbedBuilder()
+						.setTitle('Equipment')
+						.setDescription('You do not meet the requirements to equip this item.')
+						.addFields([
+							{ name: 'Requirements', value: item.requirements.toString() },
+						]);
+					return await new ExpandableMessage(analyticsObject, selection)
+						.setSendType(ExpandableMessage.SendType.UPDATE)
+						.addEmbed(embed)
+						.clearComponents()
+						.send();
 				}
 
 				const newRod = await userData.setEquippedRod(rodChoice);
@@ -199,28 +239,45 @@ module.exports = {
 						await analyticsObject.setStatus('completed');
 						await analyticsObject.setStatusMessage('Unequipped fishing rod.');
 					}
-					return await selection.update({
-						embeds: [
-							new EmbedBuilder()
-								.setTitle('Equipment')
-								.setDescription('Unequipped fishing rod.'),
-						],
-						components: [],
-					});
+					// return await selection.update({
+					// 	embeds: [
+					// 		new EmbedBuilder()
+					// 			.setTitle('Equipment')
+					// 			.setDescription('Unequipped fishing rod.'),
+					// 	],
+					// 	components: [],
+					// });
+
+					const embed = new EmbedBuilder()
+						.setTitle('Equipment')
+						.setDescription('Unequipped fishing rod.');
+					return await new ExpandableMessage(analyticsObject, selection)
+						.setSendType(ExpandableMessage.SendType.UPDATE)
+						.addEmbed(embed)
+						.clearComponents()
+						.send();
 				}
 				else {
 					if (process.env.ANALYTICS || config.client.analytics) {
 						await analyticsObject.setStatus('completed');
 						await analyticsObject.setStatusMessage('Equipped fishing rod.');
 					}
-					await selection.update({
-						components: [],
-						embeds: [
-							new EmbedBuilder()
-								.setTitle('Equipment')
-								.setDescription(`Equipped fishing rod: **${newRod.name}**`),
-						],
-					});
+					// await selection.update({
+					// 	components: [],
+					// 	embeds: [
+					// 		new EmbedBuilder()
+					// 			.setTitle('Equipment')
+					// 			.setDescription(`Equipped fishing rod: **${newRod.name}**`),
+					// 	],
+					// });
+					const embed = new EmbedBuilder()
+						.setTitle('Equipment')
+						.setDescription(`Equipped fishing rod: **${newRod.name}**`);
+					await new ExpandableMessage(analyticsObject, selection)
+						.setSendType(ExpandableMessage.SendType.UPDATE)
+						.addEmbed(embed)
+						.clearComponents()
+						.send();
 				}
 			}
 			else if (choice.customId === 'equip-bait') {
@@ -233,14 +290,23 @@ module.exports = {
 						await analyticsObject.setStatus('failed');
 						await analyticsObject.setStatusMessage('No bait found.');
 					}
-					return await choice.update({
-						embeds: [
-							new EmbedBuilder()
-								.setTitle('Equipment')
-								.setDescription('You do not have any bait to equip!'),
-						],
-						components: [],
-					});
+					// return await choice.update({
+					// 	embeds: [
+					// 		new EmbedBuilder()
+					// 			.setTitle('Equipment')
+					// 			.setDescription('You do not have any bait to equip!'),
+					// 	],
+					// 	components: [],
+					// });
+
+					const embed = new EmbedBuilder()
+						.setTitle('Equipment')
+						.setDescription('You do not have any bait to equip!');
+					return await new ExpandableMessage(analyticsObject, choice)
+						.setSendType(ExpandableMessage.SendType.UPDATE)
+						.addEmbed(embed)
+						.clearComponents()
+						.send();
 				}
 
 				const select = new StringSelectMenuBuilder()
@@ -251,14 +317,23 @@ module.exports = {
 				const row = new ActionRowBuilder()
 					.addComponents(select);
 
-				const response = await choice.update({
-					embeds: [
-						new EmbedBuilder()
-							.setTitle('Equipment')
-							.setDescription('Choose your bait!'),
-					],
-					components: [row],
-				});
+				// const response = await choice.update({
+				// 	embeds: [
+				// 		new EmbedBuilder()
+				// 			.setTitle('Equipment')
+				// 			.setDescription('Choose your bait!'),
+				// 	],
+				// 	components: [row],
+				// });
+
+				const embed = new EmbedBuilder()
+						.setTitle('Equipment')
+						.setDescription('Choose your bait!');
+				const response = await new ExpandableMessage(analyticsObject, choice)
+						.setSendType(ExpandableMessage.SendType.UPDATE)
+						.addEmbed(embed)
+						.addComponents([row])
+						.send();
 
 				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 90_000 });
 				const chosenBait = selection.values[0];
@@ -267,20 +342,30 @@ module.exports = {
 					await Interaction.generateCommandObject(selection, analyticsObject);
 				}
 
-				const item = await ItemData.findById(chosenBait);
-				if (!await checkItemRequirements(item, userData)) {
-					if (process.env.ANALYTICS || config.client.analytics) {
-						await analyticsObject.setStatus('failed');
-						await analyticsObject.setStatusMessage('Requirements not met.');
+				if (chosenBait !== 'none') {
+					const item = await ItemData.findById(chosenBait);
+					if (!await checkItemRequirements(item, userData)) {
+						if (process.env.ANALYTICS || config.client.analytics) {
+							await analyticsObject.setStatus('failed');
+							await analyticsObject.setStatusMessage('Requirements not met.');
+						}
+						// return await selection.update({
+						// 	embeds: [
+						// 		new EmbedBuilder()
+						// 			.setTitle('Equipment')
+						// 			.setDescription('You do not meet the requirements to equip this item.'),
+						// 	],
+						// 	components: [],
+						// });
+						const embed = new EmbedBuilder()
+							.setTitle('Equipment')
+							.setDescription('You do not meet the requirements to equip this item.');
+						return await new ExpandableMessage(analyticsObject, selection)
+							.setSendType(ExpandableMessage.SendType.UPDATE)
+							.addEmbed(embed)
+							.clearComponents()
+							.send();
 					}
-					return await selection.update({
-						embeds: [
-							new EmbedBuilder()
-								.setTitle('Equipment')
-								.setDescription('You do not meet the requirements to equip this item.'),
-						],
-						components: [],
-					});
 				}
 
 				let newBait = {};
@@ -299,14 +384,22 @@ module.exports = {
 					await analyticsObject.setStatusMessage('Equipped bait.');
 				}
 
-				await selection.update({
-					embeds: [
-						new EmbedBuilder()
-							.setTitle('Equipment')
-							.setDescription(description),
-					],
-					components: [],
-				});
+				// await selection.update({
+				// 	embeds: [
+				// 		new EmbedBuilder()
+				// 			.setTitle('Equipment')
+				// 			.setDescription(description),
+				// 	],
+				// 	components: [],
+				// });
+				const updateEmbed = new EmbedBuilder()
+						.setTitle('Equipment')
+						.setDescription(description);
+				await new ExpandableMessage(analyticsObject, selection)
+						.setSendType(ExpandableMessage.SendType.UPDATE)
+						.addEmbed(updateEmbed)
+						.clearComponents()
+						.send();
 			}
 			else if (choice.customId === 'equip-booster') {
 				let options = [];
@@ -318,14 +411,23 @@ module.exports = {
 						await analyticsObject.setStatus('failed');
 						await analyticsObject.setStatusMessage('No boosters found.');
 					}
-					return await choice.update({
-						embeds: [
-							new EmbedBuilder()
-								.setTitle('Equipment')
-								.setDescription('You do not have any boosters to equip!'),
-						],
-						components: [],
-					});
+					// return await choice.update({
+					// 	embeds: [
+					// 		new EmbedBuilder()
+					// 			.setTitle('Equipment')
+					// 			.setDescription('You do not have any boosters to equip!'),
+					// 	],
+					// 	components: [],
+					// });
+
+					const embed = new EmbedBuilder()
+						.setTitle('Equipment')
+						.setDescription('You do not have any boosters to equip!');
+					return await new ExpandableMessage(analyticsObject, choice)
+						.setSendType(ExpandableMessage.SendType.UPDATE)
+						.addEmbed(embed)
+						.clearComponents()
+						.send();
 				}
 
 				const select = new StringSelectMenuBuilder()
@@ -336,14 +438,23 @@ module.exports = {
 				const row = new ActionRowBuilder()
 					.addComponents(select);
 
-				const response = await choice.update({
-					embeds: [
-						new EmbedBuilder()
-							.setTitle('Equipment')
-							.setDescription('Choose your booster!'),
-					],
-					components: [row],
-				});
+				// const response = await choice.update({
+				// 	embeds: [
+				// 		new EmbedBuilder()
+				// 			.setTitle('Equipment')
+				// 			.setDescription('Choose your booster!'),
+				// 	],
+				// 	components: [row],
+				// });
+
+				const embed = new EmbedBuilder()
+						.setTitle('Equipment')
+						.setDescription('Choose your booster!');
+				const response = await new ExpandableMessage(analyticsObject, choice)
+						.setSendType(ExpandableMessage.SendType.UPDATE)
+						.addEmbed(embed)
+						.addComponents([row])
+						.send();
 
 				const selection = await response.awaitMessageComponent({ filter: collectorFilter, time: 90_000 });
 				const chosenBooster = selection.values[0];
@@ -362,28 +473,46 @@ module.exports = {
 					await analyticsObject.setStatusMessage('Equipped booster.');
 				}
 
-				await selection.update({
-					embeds: [
-						new EmbedBuilder()
-							.setTitle('Equipment')
-							.setDescription(description),
-					],
-					components: [],
-				});
+				// await selection.update({
+				// 	embeds: [
+				// 		new EmbedBuilder()
+				// 			.setTitle('Equipment')
+				// 			.setDescription(description),
+				// 	],
+				// 	components: [],
+				// });
+
+				const updateEmbed = new EmbedBuilder()
+						.setTitle('Equipment')
+						.setDescription(description);
+				await new ExpandableMessage(analyticsObject, selection)
+						.setSendType(ExpandableMessage.SendType.UPDATE)
+						.addEmbed(updateEmbed)
+						.clearComponents()
+						.send();
 			}
-			else if (choice.customId === 'cancel') {
+			else if (choice.customId === 'equip-cancel') {
 				if (process.env.ANALYTICS || config.client.analytics) {
 					await analyticsObject.setStatus('completed');
 					await analyticsObject.setStatusMessage('Cancelled equip.');
 				}
-				await choice.update({
-					embeds: [
-						new EmbedBuilder()
-							.setTitle('Equipment')
-							.setDescription('Equip has been cancelled.'),
-					],
-					components: [],
-				});
+				// await choice.update({
+				// 	embeds: [
+				// 		new EmbedBuilder()
+				// 			.setTitle('Equipment')
+				// 			.setDescription('Equip has been cancelled.'),
+				// 	],
+				// 	components: [],
+				// });
+
+				const embed = new EmbedBuilder()
+						.setTitle('Equipment')
+						.setDescription('Equip has been cancelled.');
+				await new ExpandableMessage(analyticsObject, choice)
+						.setSendType(ExpandableMessage.SendType.UPDATE)
+						.addEmbed(embed)
+						.clearComponents()
+						.send();
 			}
 		}
 		catch (e) {
@@ -392,14 +521,23 @@ module.exports = {
 				await analyticsObject.setStatusMessage(e);
 			}
 
-			await interaction.editReply({
-				embeds: [
-					new EmbedBuilder()
-						.setTitle('Timed Out')
-						.setDescription('Response not received within 1 minute, cancelling.'),
-				],
-				components: [],
-			});
+			// await interaction.editReply({
+			// 	embeds: [
+			// 		new EmbedBuilder()
+			// 			.setTitle('Timed Out')
+			// 			.setDescription('Response not received within 1 minute, cancelling.'),
+			// 	],
+			// 	components: [],
+			// });
+
+			const embed = new EmbedBuilder()
+				.setTitle('Timed Out')
+				.setDescription('Response not received within 1 minute, cancelling.');
+			await new ExpandableMessage(analyticsObject, interaction)
+				.setSendType(ExpandableMessage.SendType.EDIT)
+				.addEmbed(embed)
+				.clearComponents()
+				.send();
 		}
 	},
 };

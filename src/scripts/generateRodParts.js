@@ -333,9 +333,60 @@ function generateItems() {
 				data: 'Stick:1247950254360363078',
 			},
 		},
+
+		// Tutorial parts
+		{
+			name: 'Tutorial Rod Piece',
+			type: 'part_rod',
+			description: 'A tutorial rod',
+			qualities: ['weak', '1', '1 count', '500 durability', 'tutorial'],
+			rarity: 'Common',
+			icon: {
+				animated: false,
+				data: 'Stick:1247950254360363078',
+			},
+		},
+		{
+			name: 'Tutorial Reel',
+			type: 'part_reel',
+			description: 'A tutorial reel',
+			qualities: ['weak', '500 durability', 'tutorial'],
+			rarity: 'Common',
+			icon: {
+				animated: false,
+				data: 'Lead_Bobber:1244066505755459674',
+			},
+		},
+		{
+			name: 'Tutorial Hook',
+			type: 'part_hook',
+			description: 'A tutorial hook',
+			qualities: ['weak', '500 durability', 'tutorial'],
+			rarity: 'Common',
+			icon: {
+				animated: false,
+				data: 'Barbed_Hook:1244066488969596949',
+			},
+		},
+		{
+			name: 'Tutorial Handle',
+			type: 'part_handle',
+			description: 'A tutorial handle',
+			qualities: ['weak', '500 durability', 'tutorial'],
+			rarity: 'Common',
+			icon: {
+				animated: false,
+				data: 'Stick:1247950254360363078',
+			},
+		},
 	];
 
-	parts.forEach((partData) => {
+	parts.forEach(async (partData) => {
+		const existingPart = await Item.findOne({ name: partData.name });
+		if (existingPart) {
+			console.log(`Part "${partData.name}" already exists`);
+			return;
+		}
 		const part = new Item(partData);
 		part.save()
 			.then(() => {

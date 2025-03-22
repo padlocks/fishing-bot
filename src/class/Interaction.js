@@ -43,7 +43,8 @@ class Interaction {
 	}
 
 	async getCommand() {
-		return this.interaction.command;
+		const id = this.interaction.command.valueOf();
+		return Command.findById(id);
 	}
 
 	async setCommand(command) {

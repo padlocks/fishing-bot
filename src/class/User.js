@@ -349,6 +349,16 @@ class User {
 
 		// check box capabilities to generate items
 		const capabilities = box.capabilities;
+
+		// check for tutorial capability
+		if (capabilities.includes('tutorial')) {
+			const tutorialItems = await Item.find({ qualities: 'tutorial' });
+			tutorialItems.forEach(async (item) => {
+				generatedItems.push(await this.sendToInventory(item));
+			});
+			return generatedItems;
+		}
+
 		const weights = box.weights;
 		let items = [...await Item.find({ type: { $in: capabilities } })];
 		if (capabilities.includes('fish')) {
