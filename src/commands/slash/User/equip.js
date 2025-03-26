@@ -248,12 +248,15 @@ module.exports = {
 					// 	components: [],
 					// });
 
+					const questData = { rod: true };
+					questData[item.name] = false;
 					const embed = new EmbedBuilder()
 						.setTitle('Equipment')
 						.setDescription('Unequipped fishing rod.');
 					return await new ExpandableMessage(analyticsObject, selection)
 						.setSendType(ExpandableMessage.SendType.UPDATE)
 						.addEmbed(embed)
+						.addQuestData(questData)
 						.clearComponents()
 						.send();
 				}
@@ -273,9 +276,14 @@ module.exports = {
 					const embed = new EmbedBuilder()
 						.setTitle('Equipment')
 						.setDescription(`Equipped fishing rod: **${newRod.name}**`);
+					
+					const questData = { rod: true };
+					questData[newRod.name] = true;
+					
 					await new ExpandableMessage(analyticsObject, selection)
 						.setSendType(ExpandableMessage.SendType.UPDATE)
 						.addEmbed(embed)
+						.addQuestData(questData)
 						.clearComponents()
 						.send();
 				}
@@ -373,33 +381,40 @@ module.exports = {
 				if (chosenBait === 'none') {
 					newBait = await userData.setEquippedBait(null);
 					description = 'Unequipped bait.';
+					
+					const updateEmbed = new EmbedBuilder()
+						.setTitle('Equipment')
+						.setDescription(description);
+					await new ExpandableMessage(analyticsObject, selection)
+						.setSendType(ExpandableMessage.SendType.UPDATE)
+						.addEmbed(updateEmbed)
+						.addQuestData({ bait: true })
+						.clearComponents()
+						.send();
 				}
 				else {
 					newBait = await userData.setEquippedBait(chosenBait);
 					description = `Equipped bait: **${newBait.name}**`;
-				}
-
-				if (process.env.ANALYTICS || config.client.analytics) {
-					await analyticsObject.setStatus('completed');
-					await analyticsObject.setStatusMessage('Equipped bait.');
-				}
-
-				// await selection.update({
-				// 	embeds: [
-				// 		new EmbedBuilder()
-				// 			.setTitle('Equipment')
-				// 			.setDescription(description),
-				// 	],
-				// 	components: [],
-				// });
-				const updateEmbed = new EmbedBuilder()
+					
+					// Create standardized quest data with consistent lowercase keys
+					const baitName = newBait.name;
+					const questData = { 
+						bait: true,
+						[baitName.toLowerCase()]: true  // Always use lowercase for quest flags
+					};
+					
+					console.log(`Adding quest data for bait ${baitName}:`, JSON.stringify(questData));
+					
+					const updateEmbed = new EmbedBuilder()
 						.setTitle('Equipment')
 						.setDescription(description);
-				await new ExpandableMessage(analyticsObject, selection)
+					await new ExpandableMessage(analyticsObject, selection)
 						.setSendType(ExpandableMessage.SendType.UPDATE)
 						.addEmbed(updateEmbed)
+						.addQuestData(questData)
 						.clearComponents()
 						.send();
+				}
 			}
 			else if (choice.customId === 'equip-booster') {
 				let options = [];
@@ -468,28 +483,22 @@ module.exports = {
 				newBooster = await userData.startBooster(chosenBooster);
 				description = `Equipped booster: **${newBooster.name}**`;
 
-				if (process.env.ANALYTICS || config.client.analytics) {
-					await analyticsObject.setStatus('completed');
-					await analyticsObject.setStatusMessage('Equipped booster.');
-				}
+				const questData = { 
+					booster: true,
+					[newBooster.name.toLowerCase()]: true  // Always use lowercase for quest flags
+				};
 
-				// await selection.update({
-				// 	embeds: [
-				// 		new EmbedBuilder()
-				// 			.setTitle('Equipment')
-				// 			.setDescription(description),
-				// 	],
-				// 	components: [],
-				// });
+				console.log("Adding quest data for booster:", JSON.stringify(questData));
 
 				const updateEmbed = new EmbedBuilder()
-						.setTitle('Equipment')
-						.setDescription(description);
+					.setTitle('Equipment')
+					.setDescription(description);
 				await new ExpandableMessage(analyticsObject, selection)
-						.setSendType(ExpandableMessage.SendType.UPDATE)
-						.addEmbed(updateEmbed)
-						.clearComponents()
-						.send();
+					.setSendType(ExpandableMessage.SendType.UPDATE)
+					.addEmbed(updateEmbed)
+					.addQuestData(questData)
+					.clearComponents()
+					.send();
 			}
 			else if (choice.customId === 'equip-cancel') {
 				if (process.env.ANALYTICS || config.client.analytics) {

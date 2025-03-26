@@ -23,6 +23,14 @@ class ExpandableMessage {
 		this.sendType = ExpandableMessage.SendType.REPLY;
 		this.sentMessage = null;
 		this.questData = {};
+		
+		// Store original command information
+		this.originalCommand = interaction.commandName || null;
+		
+		// Check if this is a button continuation
+		if (interaction.message && interaction.message.interaction) {
+			this.originalCommand = interaction.message.interaction.commandName || null;
+		}
 	}
 
 	static SendType = {
@@ -62,33 +70,43 @@ class ExpandableMessage {
 	async send() {
 		const options = {};
 
-		const userId = await this.analyticsObject.getUser();
-		await this.updateQuests(userId);
-
+		// Create message options first
 		if (this.messageContent) {
 			options.content = this.messageContent;
 		}
 
+		// Build the initial embeds
 		if (this.embeds.length > 0) {
-			// Inject fields into the last embed
-			const lastEmbed = this.embeds[this.embeds.length - 1];
-			if (this.fields.length > 0) {
-				lastEmbed.addFields(this.fields);
-			}
-
 			options.embeds = this.embeds;
-		}
-		else {
+		} else {
 			const embed = new EmbedBuilder()
 				.setTitle('Notification')
-				.setColor('BLUE')
-				.addFields(this.fields);
+				.setColor('BLUE');
 			
 			options.embeds = [embed];
 		}
 
+		// Set components
 		options.components = this.components;
 
+		// Process quests AFTER all questData has been configured
+		// This ensures that flags are properly set before checking quests
+		const userId = await this.analyticsObject.getUser();
+		
+		// Log quest data before processing to verify it's set correctly
+		console.log("Processing quests with data:", JSON.stringify(this.questData));
+		
+		// Process quests
+		await this.updateQuests(userId);
+
+		// Now add any fields that were added during quest processing
+		if (this.fields.length > 0) {
+			// Add fields to the last embed
+			const lastEmbed = options.embeds[options.embeds.length - 1];
+			this.fields.forEach(field => lastEmbed.addFields(field));
+		}
+
+		// Now send the message with all data processed
 		if (this.sendType === ExpandableMessage.SendType.EDIT) {
 			this.sentMessage = await this.interaction.editReply(options);
 		} else if (this.sendType === ExpandableMessage.SendType.UPDATE) {
@@ -148,12 +166,112 @@ class ExpandableMessage {
 		return this;
 	}
 
-	addQuestData(questData) {
+	/**
+	 * Adds quest data to the message for processing by the quest system
+	 * Expected structure:
+	 * {
+	 *   commandType: true,           // e.g. 'fish': true, 'bait': true
+	 *   itemName: true,              // e.g. 'shrimp': true
+	 *   fish: [                      // Optional array of caught fish
+	 *     {
+	 *       name: "Common Fish",
+	 *       rarity: "common",
+	 *       qualities: ["fresh", "small"],
+	 *       size: 10.5,
+	 *       weight: 2.3,
+	 *       count: 1
+	 *     }
+	 *   ],
+	 *   rod: {                       // Optional rod information
+	 *     name: "Wooden Rod"
+	 *   }
+	 * }
+	 * @param {Object} questData - The quest data to add
+	 * @param {boolean} merge - Whether to merge with existing data
+	 * @returns {ExpandableMessage} This instance for chaining
+	 */
+	addQuestData(questData, merge = true) {
 		if (!questData || typeof questData !== 'object') {
 			throw new Error('Invalid quest data provided.');
 		}
-		this.questData = questData;
+		
+		console.log("Adding quest data:", JSON.stringify(questData));
+		
+		// Normalize all keys to lowercase for consistent matching
+		const normalizedData = this.normalizeQuestDataKeys(questData);
+		
+		if (merge && Object.keys(this.questData).length > 0) {
+			this.questData = this.deepMergeQuestData(this.questData, normalizedData);
+		} else {
+			this.questData = normalizedData;
+		}
+		
+		console.log("Quest data after adding:", JSON.stringify(this.questData));
 		return this;
+	}
+
+	/**
+	 * Normalizes quest data keys to lowercase for consistent matching
+	 * @param {Object} data - Quest data to normalize
+	 * @returns {Object} Normalized quest data
+	 * @private
+	 */
+	normalizeQuestDataKeys(data) {
+		const normalized = {};
+		
+		for (const key in data) {
+			const lowerKey = key.toLowerCase();
+			
+			// Handle special objects like fish arrays
+			if (Array.isArray(data[key])) {
+				normalized[lowerKey] = data[key];
+			}
+			// Handle nested objects (like rod info)
+			else if (typeof data[key] === 'object' && data[key] !== null) {
+				normalized[lowerKey] = this.normalizeQuestDataKeys(data[key]);
+			}
+			// Handle primitive values
+			else {
+				normalized[lowerKey] = data[key];
+			}
+			
+			// For special item names, keep both cases for backward compatibility
+			// but ensure lowercase is always present
+			if (key !== lowerKey && (data[key] === true || data[key] === false)) {
+				console.log(`Normalizing quest flag: ${key} → ${lowerKey}`);
+			}
+		}
+		
+		return normalized;
+	}
+
+	/**
+	 * Performs a deep merge of quest data objects
+	 * @param {Object} target - Target object to merge into
+	 * @param {Object} source - Source object to merge from
+	 * @returns {Object} Merged object
+	 * @private
+	 */
+	deepMergeQuestData(target, source) {
+		const result = { ...target };
+		
+		for (const key in source) {
+			// If property exists in both objects and they're both objects
+			if (key in result && typeof result[key] === 'object' && 
+				typeof source[key] === 'object' && !Array.isArray(source[key])) {
+				result[key] = this.deepMergeQuestData(result[key], source[key]);
+			}
+			// Handle arrays (concatenate)
+			else if (Array.isArray(result[key]) && Array.isArray(source[key])) {
+				result[key] = [...result[key], ...source[key]];
+			}
+			// Otherwise just assign the source value
+			else {
+				result[key] = source[key];
+			}
+		}
+		
+		return result;
 	}
 
 	async updateQuests(userId) {
@@ -168,29 +286,84 @@ class ExpandableMessage {
 		const startedQuests = [];
 		let levelUp = false;
 	
-		// Process command-based progression
+		 // Debug logging to see what's in questData
+		console.log("Quest Data in updateQuests:", JSON.stringify(this.questData));
+		
+		// Process command-based progression with improved flag checking
 		for (const quest of quests) {
 			if (quest.status === 'in_progress' && quest.progressType && quest.progressType.special && quest.progressType.special.length > 0) {
-				for (const progressType of quest.progressType.special) {
-					if (progressType === "/" + this.interaction.commandName) {
-						if (quest.progress < quest.progressMax) {
-							quest.progress += 1;
-	
-							if (quest.progress >= quest.progressMax) {
-								if (!completedQuestIds.has(quest._id.toString())) {
-									completedQuestIds.add(quest._id.toString());
-									completedQuests.push(quest);
-								}
-							}
-	
-							await quest.save();
+				let shouldIncrement = false;
+				let matchingFlags = [];
+
+				// Log quest information
+				console.log(`Processing quest: "${quest.title}"`);
+				console.log(`Quest progression requirements: ${JSON.stringify(quest.progressType.special)}`);
+				
+				 // Extract command and non-command requirements
+				const commandRequirements = quest.progressType.special.filter(req => req.startsWith('/'));
+				const flagRequirements = quest.progressType.special.filter(req => !req.startsWith('/'));
+				
+				console.log(`Command requirements: ${JSON.stringify(commandRequirements)}`);
+				console.log(`Flag requirements: ${JSON.stringify(flagRequirements)}`);
+				
+				// Check flags first - THIS IS THE MAIN CHANGE
+				// If we have the right flags, we can progress the quest regardless of command context
+				if (flagRequirements.length > 0) {
+					for (const flag of flagRequirements) {
+						const flagLower = flag.toLowerCase();
+						const questDataKeys = Object.keys(this.questData).map(k => k.toLowerCase());
+						
+						console.log(`Checking for flag "${flagLower}" in keys: [${questDataKeys.join(', ')}]`);
+						
+						if (this.questData[flagLower] === true) {
+							console.log(`✓ Flag "${flagLower}" found and is TRUE`);
+							matchingFlags.push(flag);
 						} else {
+							console.log(`✗ Flag "${flagLower}" not found or not TRUE`);
+						}
+					}
+					
+					// If we have any matching flags, consider the quest progressable
+					if (matchingFlags.length > 0) {
+						shouldIncrement = true;
+						console.log(`Quest "${quest.title}" matched flags: ${matchingFlags.join(', ')}`);
+					} else {
+						console.log(`No matching flags found for quest "${quest.title}"`);
+					}
+				}
+				// If there are no flag requirements, check if this is the original command interaction 
+				else if (commandRequirements.length > 0) {
+					// Check both current command and original command
+					const currentCommand = "/" + this.interaction.commandName;
+					const originalCommand = this.originalCommand ? "/" + this.originalCommand : null;
+					
+					if (commandRequirements.some(cmd => cmd === currentCommand || cmd === originalCommand)) {
+						console.log(`✓ Command requirement matched: ${currentCommand || originalCommand}`);
+						shouldIncrement = true;
+					} else {
+						console.log(`✗ No command match: ${currentCommand} or ${originalCommand}`);
+					}
+				}
+				
+				console.log(`Should increment quest progress: ${shouldIncrement}`);
+				
+				if (shouldIncrement) {
+					if (quest.progress < quest.progressMax) {
+						quest.progress += 1;
+
+						if (quest.progress >= quest.progressMax) {
 							if (!completedQuestIds.has(quest._id.toString())) {
 								completedQuestIds.add(quest._id.toString());
 								completedQuests.push(quest);
 							}
 						}
-						break;
+
+						await quest.save();
+					} else {
+						if (!completedQuestIds.has(quest._id.toString())) {
+							completedQuestIds.add(quest._id.toString());
+							completedQuests.push(quest);
+						}
 					}
 				}
 			}

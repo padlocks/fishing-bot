@@ -573,7 +573,7 @@ class User {
 			break;
 		}
 		await finalItem.save();
-		await await this.save();
+	  await this.save();
 
 		return { item: finalItem, count: newItemCount };
 	}

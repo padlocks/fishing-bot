@@ -127,7 +127,7 @@ class Quest {
 			try {
 				const item = await Item.findOne({ name: reward.name });
 				if (item) {
-					const newItem = await user.sendToInventory(item, reward.count);
+					const newItem = await user.sendToInventory(item.id, reward.count);
 					rewards.push({ name: newItem.item.name, count: newItem.count });
 				} else {
 					Utils.log(`Warning: Could not find item with name ${reward.name} to grant as reward`, 'warn');

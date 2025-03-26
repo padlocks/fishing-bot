@@ -463,7 +463,7 @@ async function generateSampleQuests() {
 				"rarity": ["any"],
 				"rod": "any",
 				"qualities": ["any"],
-				"special": ["/equip"],
+				"special": ["/equip", "shrimp"],
 			},
 			"progressMax": 1,
 			"daily": false,
