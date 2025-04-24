@@ -20,6 +20,8 @@ mongoose.connect(process.env.MONGODB_URI || config.handler.mongodb.uri, { useNew
 
 // Function to generate sample quests
 async function generateSampleQuests() {
+	const shrimp = await Bait.findOne({ name: 'Shrimp' });
+	const tutorialCrate = await Item.findOne({ name: 'Tutorial Crate' });
 	// Define an array of sample quest data
 	const sampleQuests = [
 		{
@@ -413,11 +415,11 @@ async function generateSampleQuests() {
 		},
 		{
 			"title": "My First Rod I",
-			"description": "Hey, there! Haven't seen you around these docks before. Why don't I show you the ropes and get you started with a trusty rod? Go ahead and /fish for a bit. When you've caught ten, come talk to me again.",
-			"reward": [{
-				item: await Bait.findOne({ name: 'Shrimp' }),
+			"description": "Hey, there! Haven't seen you around these docks before. Why don't I show you the ropes and get you started with a trusty rod? Go ahead and /fish for a bit. When you've caught ten, come talk to me again. You can check your progress using /quests.",
+			"reward": shrimp ? [{
+				item: shrimp._id,
 				amount: 10,
-			}],
+			}] : [],
 			"cash": 100,
 			"xp": 50,
 			"requirements": {
@@ -445,10 +447,10 @@ async function generateSampleQuests() {
 		{
 			"title": "My First Rod II",
 			"description": "Wow, you got the hang of things real quick! Why don't you try to /equip some bait? The shrimp I gave you should attract a few more types of fish!",
-			"reward": [{
-				item: await Item.findOne({ name: 'Tutorial Crate' }),
+			"reward": tutorialCrate ? [{
+				item: tutorialCrate._id,
 				amount: 1,
-			}],
+			}] : [],
 			"cash": 100,
 			"xp": 50,
 			"requirements": {
@@ -491,7 +493,7 @@ async function generateSampleQuests() {
 				"rarity": ["any"],
 				"rod": "any",
 				"qualities": ["any"],
-				"special": ["/open"],
+				"special": ["/open", "tutorial crate"],
 			},
 			"progressMax": 1,
 			"daily": false,
@@ -519,7 +521,7 @@ async function generateSampleQuests() {
 				"rarity": ["any"],
 				"rod": "any",
 				"qualities": ["any"],
-				"special": ["/shop"],
+				"special": ["/shop", "fishing crate"],
 			},
 			"progressMax": 1,
 			"daily": false,
@@ -547,7 +549,7 @@ async function generateSampleQuests() {
 				"rarity": ["any"],
 				"rod": "any",
 				"qualities": ["any"],
-				"special": ["/craft"],
+				"special": ["/craft", "set", "tutorial rod"],
 			},
 			"progressMax": 1,
 			"daily": false,

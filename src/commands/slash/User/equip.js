@@ -4,6 +4,7 @@ const { ItemData } = require('../../../schemas/ItemSchema');
 const config = require('../../../config');
 const { Interaction } = require('../../../class/Interaction');
 const ExpandableMessage = require('../../../class/ExpandableMessage');
+const QuestTracker = require('../../../class/QuestTracker');
 
 const selectionOptions = async (inventoryPath, userData, allowNone = true) => {
 	const uniqueValues = new Set();
@@ -11,7 +12,6 @@ const selectionOptions = async (inventoryPath, userData, allowNone = true) => {
 	const ids = {};
 	const desc = {};
 
-	// Loop through inventory items
 	for (const objectId of (await userData.getInventory())[inventoryPath]) {
 		try {
 			const item = await ItemData.findById(objectId.valueOf());
@@ -46,7 +46,6 @@ const selectionOptions = async (inventoryPath, userData, allowNone = true) => {
 				.setValue('none'),
 		);
 	}
-	// check if uniqueValues is empty
 	if (uniqueValues.size !== 0) {
 		for (const name of uniqueValues) {
 			const count = counts[name];
@@ -87,8 +86,8 @@ module.exports = {
      */
 	async run(client, interaction, analyticsObject, user = null) {
 		if (user === null) user = interaction.user;
+		const questTracker = new QuestTracker(analyticsObject, interaction);
 
-		// Buttons
 		const cancel = new ButtonBuilder()
 			.setCustomId('equip-cancel')
 			.setLabel('Cancel')
@@ -129,6 +128,7 @@ module.exports = {
 			.setSendType(ExpandableMessage.SendType.REPLY)
 			.addEmbed(buttonEmbed)
 			.addComponents([buttonRow])
+			.attachQuestTracker(questTracker)
 			.send();
 
 		const collectorFilter = i => {
@@ -160,6 +160,7 @@ module.exports = {
 					return await new ExpandableMessage(analyticsObject, choice)
 						.setSendType(ExpandableMessage.SendType.UPDATE)
 						.addEmbed(embed)
+						.attachQuestTracker(questTracker)
 						.clearComponents()
 						.send();
 
@@ -196,6 +197,7 @@ module.exports = {
 				const response = await new ExpandableMessage(analyticsObject, choice)
 						.setSendType(ExpandableMessage.SendType.UPDATE)
 						.addEmbed(embed)
+						.attachQuestTracker(questTracker)
 						.addComponents([row])
 						.send();
 
@@ -228,6 +230,7 @@ module.exports = {
 					return await new ExpandableMessage(analyticsObject, selection)
 						.setSendType(ExpandableMessage.SendType.UPDATE)
 						.addEmbed(embed)
+						.attachQuestTracker(questTracker)
 						.clearComponents()
 						.send();
 				}
@@ -256,6 +259,7 @@ module.exports = {
 					return await new ExpandableMessage(analyticsObject, selection)
 						.setSendType(ExpandableMessage.SendType.UPDATE)
 						.addEmbed(embed)
+						.attachQuestTracker(questTracker)
 						.addQuestData(questData)
 						.clearComponents()
 						.send();
@@ -278,11 +282,12 @@ module.exports = {
 						.setDescription(`Equipped fishing rod: **${newRod.name}**`);
 					
 					const questData = { rod: true };
-					questData[newRod.name] = true;
+					questData[newRod.name.toLowerCase()] = true;
 					
 					await new ExpandableMessage(analyticsObject, selection)
 						.setSendType(ExpandableMessage.SendType.UPDATE)
 						.addEmbed(embed)
+						.attachQuestTracker(questTracker)
 						.addQuestData(questData)
 						.clearComponents()
 						.send();
@@ -313,6 +318,7 @@ module.exports = {
 					return await new ExpandableMessage(analyticsObject, choice)
 						.setSendType(ExpandableMessage.SendType.UPDATE)
 						.addEmbed(embed)
+						.attachQuestTracker(questTracker)
 						.clearComponents()
 						.send();
 				}
@@ -340,6 +346,7 @@ module.exports = {
 				const response = await new ExpandableMessage(analyticsObject, choice)
 						.setSendType(ExpandableMessage.SendType.UPDATE)
 						.addEmbed(embed)
+						.attachQuestTracker(questTracker)
 						.addComponents([row])
 						.send();
 
@@ -371,6 +378,7 @@ module.exports = {
 						return await new ExpandableMessage(analyticsObject, selection)
 							.setSendType(ExpandableMessage.SendType.UPDATE)
 							.addEmbed(embed)
+							.attachQuestTracker(questTracker)
 							.clearComponents()
 							.send();
 					}
@@ -388,6 +396,7 @@ module.exports = {
 					await new ExpandableMessage(analyticsObject, selection)
 						.setSendType(ExpandableMessage.SendType.UPDATE)
 						.addEmbed(updateEmbed)
+						.attachQuestTracker(questTracker)
 						.addQuestData({ bait: true })
 						.clearComponents()
 						.send();
@@ -396,21 +405,19 @@ module.exports = {
 					newBait = await userData.setEquippedBait(chosenBait);
 					description = `Equipped bait: **${newBait.name}**`;
 					
-					// Create standardized quest data with consistent lowercase keys
 					const baitName = newBait.name;
 					const questData = { 
 						bait: true,
-						[baitName.toLowerCase()]: true  // Always use lowercase for quest flags
+						[baitName.toLowerCase()]: true
 					};
-					
-					console.log(`Adding quest data for bait ${baitName}:`, JSON.stringify(questData));
-					
+										
 					const updateEmbed = new EmbedBuilder()
 						.setTitle('Equipment')
 						.setDescription(description);
 					await new ExpandableMessage(analyticsObject, selection)
 						.setSendType(ExpandableMessage.SendType.UPDATE)
 						.addEmbed(updateEmbed)
+						.attachQuestTracker(questTracker)
 						.addQuestData(questData)
 						.clearComponents()
 						.send();
@@ -441,6 +448,7 @@ module.exports = {
 					return await new ExpandableMessage(analyticsObject, choice)
 						.setSendType(ExpandableMessage.SendType.UPDATE)
 						.addEmbed(embed)
+						.attachQuestTracker(questTracker)
 						.clearComponents()
 						.send();
 				}
@@ -468,6 +476,7 @@ module.exports = {
 				const response = await new ExpandableMessage(analyticsObject, choice)
 						.setSendType(ExpandableMessage.SendType.UPDATE)
 						.addEmbed(embed)
+						.attachQuestTracker(questTracker)
 						.addComponents([row])
 						.send();
 
@@ -485,10 +494,8 @@ module.exports = {
 
 				const questData = { 
 					booster: true,
-					[newBooster.name.toLowerCase()]: true  // Always use lowercase for quest flags
+					[newBooster.name.toLowerCase()]: true
 				};
-
-				console.log("Adding quest data for booster:", JSON.stringify(questData));
 
 				const updateEmbed = new EmbedBuilder()
 					.setTitle('Equipment')
@@ -496,6 +503,7 @@ module.exports = {
 				await new ExpandableMessage(analyticsObject, selection)
 					.setSendType(ExpandableMessage.SendType.UPDATE)
 					.addEmbed(updateEmbed)
+					.attachQuestTracker(questTracker)
 					.addQuestData(questData)
 					.clearComponents()
 					.send();
@@ -520,6 +528,7 @@ module.exports = {
 				await new ExpandableMessage(analyticsObject, choice)
 						.setSendType(ExpandableMessage.SendType.UPDATE)
 						.addEmbed(embed)
+						.attachQuestTracker(questTracker)
 						.clearComponents()
 						.send();
 			}
@@ -545,6 +554,7 @@ module.exports = {
 			await new ExpandableMessage(analyticsObject, interaction)
 				.setSendType(ExpandableMessage.SendType.EDIT)
 				.addEmbed(embed)
+				.attachQuestTracker(questTracker)
 				.clearComponents()
 				.send();
 		}

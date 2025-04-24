@@ -10,6 +10,7 @@ const { WeatherPattern } = require('../../../class/WeatherPattern');
 const { NPC } = require('../../../class/NPC');
 const { Season } = require('../../../class/Season');
 const ExpandableMessage = require('../../../class/ExpandableMessage');
+const QuestTracker = require('../../../class/QuestTracker');
 
 const updateUserWithFish = async (analyticsObject, interaction, userId) => {
     const user = new User(await User.get(userId));
@@ -112,6 +113,8 @@ const followUpMessage = async (analyticsObject, interaction, user, fishArray, xp
     let fishAgainDisabled = false;
     const userObj = new User(await User.get(user.id));
 
+    const questTracker = new QuestTracker(analyticsObject, interaction);
+
     let catchId;
     if (success) {
         fishArray.forEach(f => {
@@ -176,12 +179,31 @@ const followUpMessage = async (analyticsObject, interaction, user, fishArray, xp
         .addFields(fields);
 
     const equippedRod = await userObj.getEquippedRod();
+    
+    const processedFishArray = fishArray.map(fish => ({
+        name: fish.name || 'Unknown Fish',
+        rarity: fish.rarity || 'common',
+        qualities: Array.isArray(fish.qualities) ? fish.qualities : [],
+        size: typeof fish.size === 'number' ? fish.size : 1.0,
+        weight: typeof fish.weight === 'number' ? fish.weight : 1.0,
+        count: fish.count || 1
+    }));
+
+    const validRod = equippedRod ? {
+        name: equippedRod.name || 'Unknown Rod',
+        durability: equippedRod.durability || 0,
+        state: equippedRod.state || 'normal'
+    } : null;
 
     return new ExpandableMessage(analyticsObject, interaction)
         .setSendType(ExpandableMessage.SendType.FOLLOW_UP)
         .addEmbed(replyEmbed)
         .addComponents(components)
-        .addQuestData({ fish: fishArray, rod: equippedRod })
+        .attachQuestTracker(questTracker)
+        .addQuestData({ 
+            fish: processedFishArray, 
+            rod: validRod
+        })
         .send();
 }
 

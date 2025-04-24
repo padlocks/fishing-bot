@@ -104,211 +104,85 @@ class Utils {
 		}
 	};
 
-	static async clone(object, userId) {
-		if (!object) return;
+	static async clone(object, userId = null) {
 		try {
-			let originalObject;
-
-			switch (object.type) {
-			case 'fish': {
-				originalObject = await Fish.findById(object.id);
-				break;
+			const obj = typeof object.toObject === 'function' ? object.toObject() : object;
+			
+			if (object._id) delete obj._id;
+			if (object.id) obj.id = new mongoose.Types.ObjectId();
+			
+			obj._id = new mongoose.Types.ObjectId(); 
+			obj.clonedFrom = object._id ? object._id.toString() : null;
+			if (userId) obj.user = userId;
+			
+			if (!obj.obtained) obj.obtained = Date.now();
+			
+			let newObj;
+			
+			switch (obj.type) {
+				case 'fish': {
+					newObj = new FishData(obj);
+					break;
+				}
+				case 'item': {
+					newObj = new ItemData(obj);
+					break;
+				}
+				case 'rod': {
+					newObj = new RodData(obj);
+					break;
+				}
+				case 'user': {
+					newObj = new User(obj);
+					break;
+				}
+				case 'quest': {
+					newObj = new QuestData(obj);
+					break;
+				}
+				case 'bait': {
+					newObj = new BaitData(obj);
+					break;
+				}
+				case 'gacha': {
+					newObj = new ItemData(obj);
+					break;
+				}
+				case 'buff': {
+					newObj = new ItemData(obj);
+					break;
+				}
+				case 'license': {
+					newObj = new LicenseData(obj);
+					break;
+				}
+				case 'customrod': {
+					newObj = new RodData(obj);
+					break;
+				}
+				case 'part_rod': {
+					newObj = new ItemData(obj);
+					break;
+				}
+				case 'part_reel': {
+					newObj = new ItemData(obj);
+					break;
+				}
+				case 'part_hook': {
+					newObj = new ItemData(obj);
+					break;
+				}
+				case 'part_handle': {
+					newObj = new ItemData(obj);
+					break;
+				}
 			}
-			case 'item': {
-				originalObject = await Item.findById(object.id);
-				break;
-			}
-			case 'rod': {
-				originalObject = await Item.findById(object.id);
-				break;
-			}
-			case 'user': {
-				originalObject = await User.findById(object.id);
-				break;
-			}
-			case 'quest': {
-				originalObject = await Quest.findById(object.id);
-				break;
-			}
-			case 'bait': {
-				originalObject = await Item.findById(object.id);
-				break;
-			}
-			case 'gacha': {
-				originalObject = await Item.findById(object.id);
-				break;
-			}
-			case 'buff': {
-				originalObject = await Item.findById(object.id);
-				break;
-			}
-			case 'license': {
-				originalObject = await Item.findById(object.id);
-				break;
-			}
-			default: {
-				originalObject = await Item.findById(object.id);
-				break;
-			}
-			}
-
-			if (!originalObject) {
-				throw new Error('Original object not found');
-			}
-
-			let clonedObject;
-
-			switch (object.type) {
-			case 'fish': {
-				clonedObject = new FishData({
-					...originalObject.toObject(),
-					_id: new mongoose.Types.ObjectId(),
-					user: userId,
-					obtained: Date.now(),
-					count: 1,
-					__t: 'FishData',
-				});
-				break;
-			}
-			case 'item': {
-				clonedObject = new ItemData({
-					...originalObject.toObject(),
-					_id: new mongoose.Types.ObjectId(),
-					user: userId,
-					obtained: Date.now(),
-					__t: 'ItemData',
-				});
-				break;
-			}
-			case 'rod': {
-				clonedObject = new RodData({
-					...originalObject.toObject(),
-					_id: new mongoose.Types.ObjectId(),
-					user: userId,
-					obtained: Date.now(),
-					fishCaught: 0,
-					__t: 'RodData',
-				});
-				break;
-			}
-			case 'user': {
-				clonedObject = new User({
-					...originalObject.toObject(),
-					_id: new mongoose.Types.ObjectId(),
-					__t: 'User',
-				});
-				break;
-			}
-			case 'quest': {
-				clonedObject = new QuestData({
-					...originalObject.toObject(),
-					_id: new mongoose.Types.ObjectId(),
-					user: userId,
-					startDate: Date.now(),
-					__t: 'QuestData',
-				});
-				break;
-			}
-			case 'bait': {
-				clonedObject = new BaitData({
-					...originalObject.toObject(),
-					_id: new mongoose.Types.ObjectId(),
-					user: userId,
-					obtained: Date.now(),
-					count: 1,
-					__t: 'BaitData',
-				});
-				break;
-			}
-			case 'gacha': {
-				clonedObject = new ItemData({
-					...originalObject.toObject(),
-					_id: new mongoose.Types.ObjectId(),
-					user: userId,
-					obtained: Date.now(),
-					__t: 'GachaData',
-				});
-				break;
-			}
-			case 'buff': {
-				clonedObject = new ItemData({
-					...originalObject.toObject(),
-					_id: new mongoose.Types.ObjectId(),
-					user: userId,
-					obtained: Date.now(),
-					__t: 'BuffData',
-				});
-				break;
-			}
-			case 'license': {
-				clonedObject = new LicenseData({
-					...originalObject.toObject(),
-					_id: new mongoose.Types.ObjectId(),
-					user: userId,
-					obtained: Date.now(),
-					__t: 'LicenseData',
-				});
-				break;
-			}
-			case 'customrod': {
-				clonedObject = new RodData({
-					...originalObject.toObject(),
-					_id: new mongoose.Types.ObjectId(),
-					user: userId,
-					obtained: Date.now(),
-					fishCaught: 0,
-					__t: 'CustomRodData',
-				});
-				break;
-			}
-			case 'part_rod': {
-				clonedObject = new ItemData({
-					...originalObject.toObject(),
-					_id: new mongoose.Types.ObjectId(),
-					user: userId,
-					obtained: Date.now(),
-					__t: 'PartRodData',
-				});
-				break;
-			}
-			case 'part_reel': {
-				clonedObject = new ItemData({
-					...originalObject.toObject(),
-					_id: new mongoose.Types.ObjectId(),
-					user: userId,
-					obtained: Date.now(),
-					__t: 'PartReelData',
-				});
-				break;
-			}
-			case 'part_hook': {
-				clonedObject = new ItemData({
-					...originalObject.toObject(),
-					_id: new mongoose.Types.ObjectId(),
-					user: userId,
-					obtained: Date.now(),
-					__t: 'PartHookData',
-				});
-				break;
-			}
-			case 'part_handle': {
-				clonedObject = new ItemData({
-					...originalObject.toObject(),
-					_id: new mongoose.Types.ObjectId(),
-					user: userId,
-					obtained: Date.now(),
-					__t: 'PartHandleData',
-				});
-				break;
-			}
-		}
-
-			await clonedObject.save();
-
-			return clonedObject;
-		}
-		catch (error) {
-			this.log('Error cloning object: ' + error, 'err');
+	
+			await newObj.save();
+	
+			return newObj;
+		} catch (error) {
+			console.error('Error in Utils.clone:', error);
 			throw error;
 		}
 	};

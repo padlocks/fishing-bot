@@ -486,7 +486,7 @@ class User {
 		switch (itemObject.type) {
 		case 'rod':
 			clonedItem = await Utils.clone(itemObject, userId);
-			user.inventory.rods.push(clonedItem);
+			user.inventory.rods.push(clonedItem._id);
 			finalItem = clonedItem;
 			newItemCount = clonedItem.count || 1;
 			break;
@@ -502,7 +502,7 @@ class User {
 			else {
 				clonedItem = await Utils.clone(itemObject, userId);
 				clonedItem.count = count;
-				user.inventory.baits.push(clonedItem);
+				user.inventory.baits.push(clonedItem._id);
 				finalItem = clonedItem;
 				newItemCount = clonedItem.count || 1;
 			}
@@ -510,7 +510,7 @@ class User {
 		case 'fish':
 			clonedItem = await Utils.clone(itemObject, userId);
 			clonedItem.count = count;
-			user.inventory.fish.push(clonedItem);
+			user.inventory.fish.push(clonedItem._id);
 			finalItem = clonedItem;
 			newItemCount = clonedItem.count || 1;
 			break;
@@ -526,7 +526,7 @@ class User {
 			else {
 				clonedItem = await Utils.clone(itemObject, userId);
 				clonedItem.count = count;
-				user.inventory.buffs.push(clonedItem);
+				user.inventory.buffs.push(clonedItem._id);
 				finalItem = clonedItem;
 				newItemCount = clonedItem.count || 1;
 			}
@@ -535,22 +535,22 @@ class User {
 			items = await Promise.all(user.inventory.gacha.map(async (b) => await ItemData.findById(b)));
 			existingItem = items.find((b) => b?.name === itemObject.name);
 			if (existingItem) {
-				existingItem.count += itemObject.count;
+				existingItem.count += itemObject.count || count;
 				await existingItem.save();
 				finalItem = existingItem;
-				newItemCount = itemObject.count || 1;
+				newItemCount = itemObject.count || count;
 			}
 			else {
 				clonedItem = await Utils.clone(itemObject, userId);
 				clonedItem.count = count;
-				user.inventory.gacha.push(clonedItem);
+				user.inventory.gacha.push(clonedItem._id);
 				finalItem = clonedItem;
 				newItemCount = clonedItem.count || 1;
 			}
 			break;
 		case 'quest':
 			clonedItem = await Utils.clone(itemObject, userId);
-			user.inventory.quests.push(clonedItem);
+			user.inventory.quests.push(clonedItem._id);
 			finalItem = clonedItem;
 			newItemCount = clonedItem.count || 1;
 			break;
@@ -566,12 +566,15 @@ class User {
 			else {
 				clonedItem = await Utils.clone(itemObject, userId);
 				clonedItem.count = count;
-				user.inventory.items.push(clonedItem);
+				user.inventory.items.push(clonedItem._id);
 				finalItem = clonedItem;
 				newItemCount = clonedItem.count || 1;
 			}
 			break;
 		}
+
+		console.log(`User ${userId} received ${newItemCount}x ${finalItem.name} (${finalItem.type})`);
+		console.log(user.inventory.gacha);
 		await finalItem.save();
 	  await this.save();
 

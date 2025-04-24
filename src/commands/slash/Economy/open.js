@@ -9,6 +9,9 @@ const {
 } = require('discord.js');
 const { User } = require('../../../class/User');
 const { ItemData } = require('../../../schemas/ItemSchema');
+const ExpandableMessage = require('../../../class/ExpandableMessage');
+const QuestTracker = require('../../../class/QuestTracker');
+const config = require('../../../config');
 
 const selectionOptions = async (inventoryPath, userData, allowNone = true) => {
 	const uniqueValues = new Set();
@@ -86,18 +89,28 @@ const createButtonRow = () => {
 	return new ActionRowBuilder().addComponents(buttons);
 };
 
-const handleOpenBox = async (client, interaction, analyticsObject, user, selectedBox, quantity) => {
+const handleOpenBox = async (client, interaction, analyticsObject, questTracker, user, selectedBox, quantity) => {	
 	const opened = await user.openBox(selectedBox, quantity);
 	if (opened.length === 0) {
 		if (process.env.ANALYTICS || config.client.analytics) {
 			await analyticsObject.setStatus('failed');
 			await analyticsObject.setStatusMessage('Opening failed. User may not have enough crates.');
 		}
-		await interaction.editReply({ content: 'Opening failed. You may not have enough crates.', components: [] });
+		
+		const embed = new EmbedBuilder()
+			.setTitle('Opening Failed')
+			.setDescription('Opening failed. You may not have enough crates.')
+			.setColor('Red');
+			
+		await new ExpandableMessage(analyticsObject, interaction)
+			.setSendType(ExpandableMessage.SendType.EDIT)
+			.addEmbed(embed)
+			.attachQuestTracker(questTracker)
+			.clearComponents()
+			.send();
 		return;
 	}
 
-	// Remove duplicates from array opened and count them together as one element
 	const uniqueOpened = [];
 	opened.forEach((item) => {
 		const index = uniqueOpened.findIndex((uniqueItem) => uniqueItem.item.name === item.item.name);
@@ -116,7 +129,6 @@ const handleOpenBox = async (client, interaction, analyticsObject, user, selecte
 
 	const userInventory = await user.getInventory();
 	const boxes = userInventory.gacha.filter(async (itemId) => {
-		// Search up itemId in database
 		const item = await ItemData.findById(itemId);
 		return item.name === selectedBox;
 	});
@@ -131,6 +143,22 @@ const handleOpenBox = async (client, interaction, analyticsObject, user, selecte
 
 		const openAgainRow = new ActionRowBuilder().addComponents(openAgainButton);
 
+		if (process.env.ANALYTICS || config.client.analytics) {
+			await analyticsObject.setStatus('completed');
+			await analyticsObject.setStatusMessage('Successfully opened box: ' + selectedBox + ' x' + quantity + '\n' + uniqueOpened.map((item) => `${item.count}x ${item.item.name}`).join('\n'));
+		}
+
+		await new ExpandableMessage(analyticsObject, interaction)
+			.setSendType(ExpandableMessage.SendType.EDIT)
+			.addEmbed(embed)
+			.addComponents([openAgainRow])
+			.attachQuestTracker(questTracker)
+			.addQuestData({ 
+				[selectedBox.toLowerCase()]: true,
+				quantity: quantity 
+			})
+			.send();
+			
 		const openAgainCollector = interaction.channel.createMessageComponentCollector({
 			filter: (i) => i.user.id === interaction.user.id && i.customId.includes('open-again'),
 			time: 30000,
@@ -138,7 +166,7 @@ const handleOpenBox = async (client, interaction, analyticsObject, user, selecte
 
 		openAgainCollector.on('collect', async (buttonInteraction) => {
 			openAgainCollector.stop();
-			interaction.editReply({ components: [] });
+			await interaction.editReply({ components: [] });
 			await module.exports.run(client, buttonInteraction, analyticsObject, user, selectedBox, quantity);
 		});
 
@@ -147,28 +175,22 @@ const handleOpenBox = async (client, interaction, analyticsObject, user, selecte
 				await interaction.editReply({ components: [] });
 			}
 		});
-
-		if (process.env.ANALYTICS || config.client.analytics) {
-			await analyticsObject.setStatus('completed');
-			await analyticsObject.setStatusMessage('Successfully opened box: ' + selectedBox + ' x' + quantity + '\n' + uniqueOpened.map((item) => `${item.count}x ${item.item.name}`).join('\n'));
-		}
-
-		await interaction.editReply({
-			content: '',
-			embeds: [embed],
-			components: [openAgainRow],
-		});
 	} else {
 		if (process.env.ANALYTICS || config.client.analytics) {
 			await analyticsObject.setStatus('failed');
 			await analyticsObject.setStatusMessage('User does not have enough boxes to open again.');
 		}
 
-		await interaction.editReply({
-			content: 'You do not have enough boxes to open again.',
-			embeds: [embed],
-			components: [],
-		});
+		await new ExpandableMessage(analyticsObject, interaction)
+			.setSendType(ExpandableMessage.SendType.EDIT)
+			.addEmbed(embed)
+			.attachQuestTracker(questTracker)
+			.addQuestData({ 
+				[selectedBox.toLowerCase()]: true,
+				quantity: quantity
+			})
+			.clearComponents()
+			.send();
 	}
 };
 
@@ -177,13 +199,9 @@ module.exports = {
 	structure: new SlashCommandBuilder()
 		.setName('open')
 		.setDescription('Opens a gacha box.'),
-	/**
-	 * @param {ExtendedClient} client
-	 * @param {ChatInputCommandInteraction<true>} interaction
-	 */
 	run: async (client, interaction, analyticsObject, usr = null, selectedBox, quantity = 0) => {
 		await interaction.deferReply();
-
+		const questTracker = new QuestTracker(analyticsObject, interaction);
 		const user = usr ? usr : new User(await User.get(interaction.user.id));
 
 		if (!selectedBox) {
@@ -193,7 +211,17 @@ module.exports = {
 					await analyticsObject.setStatus('failed');
 					await analyticsObject.setStatusMessage('User does not have any boxes to open.');
 				}
-				await interaction.editReply({ content: 'You do not have any boxes to open.' });
+				
+				const embed = new EmbedBuilder()
+					.setTitle('No Boxes')
+					.setDescription('You do not have any boxes to open.')
+					.setColor('Red');
+					
+				await new ExpandableMessage(analyticsObject, interaction)
+					.setSendType(ExpandableMessage.SendType.EDIT)
+					.addEmbed(embed)
+					.attachQuestTracker(questTracker)
+					.send();
 				return;
 			}
 
@@ -204,10 +232,17 @@ module.exports = {
 
 			const row = new ActionRowBuilder().addComponents(selectMenu);
 
-			await interaction.editReply({
-				content: 'Please select a box to open:',
-				components: [row],
-			});
+			const embed = new EmbedBuilder()
+				.setTitle('Select Box')
+				.setDescription('Please select a box to open:')
+				.setColor('Blue');
+				
+			await new ExpandableMessage(analyticsObject, interaction)
+				.setSendType(ExpandableMessage.SendType.EDIT)
+				.addEmbed(embed)
+				.addComponents([row])
+				.attachQuestTracker(questTracker)
+				.send();
 
 			const filter = (i) => i.user.id === interaction.user.id;
 			const collector = interaction.channel.createMessageComponentCollector({ filter, time: 30000 });
@@ -218,17 +253,25 @@ module.exports = {
 
 				if (quantity === 0) {
 					const buttonRow = createButtonRow();
-					await i.update({
-						content: `How many of ${selectedBox} would you like to open?`,
-						components: [buttonRow],
-					});
+					
+					const embed = new EmbedBuilder()
+						.setTitle('Select Quantity')
+						.setDescription(`How many of ${selectedBox} would you like to open?`)
+						.setColor('Blue');
+						
+					await new ExpandableMessage(analyticsObject, i)
+						.setSendType(ExpandableMessage.SendType.UPDATE)
+						.addEmbed(embed)
+						.addComponents([buttonRow])
+						.attachQuestTracker(questTracker)
+						.send();
 
 					const buttonCollector = interaction.channel.createMessageComponentCollector({ filter, time: 30000 });
 
 					buttonCollector.on('collect', async (buttonInteraction) => {
 						quantity = { 'open-one': 1, 'open-five': 5, 'open-ten': 10, 'open-hundred': 100 }[buttonInteraction.customId];
 						buttonCollector.stop();
-						await handleOpenBox(client, interaction, analyticsObject, user, selectedBox, quantity);
+						await handleOpenBox(client, interaction, analyticsObject, questTracker, user, selectedBox, quantity);
 					});
 
 					buttonCollector.on('end', async (collected) => {
@@ -237,7 +280,7 @@ module.exports = {
 						}
 					});
 				} else {
-					await handleOpenBox(client, interaction, analyticsObject, user, selectedBox, quantity);
+					await handleOpenBox(client, interaction, analyticsObject, questTracker, user, selectedBox, quantity);
 				}
 			});
 
@@ -249,7 +292,18 @@ module.exports = {
 		} else {
 			if (quantity === 0) {
 				const buttonRow = createButtonRow();
-				await interaction.editReply({ components: [buttonRow] });
+				
+				const embed = new EmbedBuilder()
+					.setTitle('Select Quantity')
+					.setDescription(`How many of ${selectedBox} would you like to open?`)
+					.setColor('Blue');
+					
+				await new ExpandableMessage(analyticsObject, interaction)
+					.setSendType(ExpandableMessage.SendType.EDIT)
+					.addEmbed(embed)
+					.addComponents([buttonRow])
+					.attachQuestTracker(questTracker)
+					.send();
 
 				const filter = (i) => i.user.id === interaction.user.id;
 				const buttonCollector = interaction.channel.createMessageComponentCollector({ filter, time: 30000 });
@@ -257,7 +311,7 @@ module.exports = {
 				buttonCollector.on('collect', async (buttonInteraction) => {
 					quantity = { 'open-one': 1, 'open-five': 5, 'open-ten': 10, 'open-hundred': 100 }[buttonInteraction.customId];
 					buttonCollector.stop();
-					await handleOpenBox(client, interaction, analyticsObject, user, selectedBox, quantity);
+					await handleOpenBox(client, interaction, analyticsObject, questTracker, user, selectedBox, quantity);
 				});
 
 				buttonCollector.on('end', async (collected) => {
@@ -266,7 +320,7 @@ module.exports = {
 					}
 				});
 			} else {
-				await handleOpenBox(client, interaction, analyticsObject, user, selectedBox, quantity);
+				await handleOpenBox(client, interaction, analyticsObject, questTracker, user, selectedBox, quantity);
 			}
 		}
 	},

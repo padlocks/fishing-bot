@@ -97,10 +97,16 @@ class Quest {
 		if (reward && reward.length > 0) {
 			for await (const rew of reward) {
 				try {
-					const r = await Item.findById(rew.item);
+					let r = await Item.findById(rew.item);
+					
+					if (!r && rew.item && rew.item._id) {
+						r = await Item.findById(rew.item._id);
+					}
+					
 					if (r) {
-						r.count = rew.amount;
-						questRewards.push({ name: r.name, count: r.count });
+						questRewards.push({ name: r.name, count: rew.amount });
+					} else if (rew.item && rew.item.name) {
+						questRewards.push({ name: rew.item.name, count: rew.amount });
 					} else {
 						Utils.log(`Warning: Failed to find reward item by ID: ${rew.item}`, 'warn');
 					}
@@ -109,13 +115,13 @@ class Quest {
 				}
 			}
 		}
-
 		return questRewards;
 	}
 
 	async grantRewards() {
 		const user = new User(await User.get(await this.getUserId()));
 		if (!user) throw new Error('User not found');
+		
 		const questRewards = await this.getRewards();
 		const rewards = [];
 
@@ -125,10 +131,20 @@ class Quest {
 		
 		for (const reward of questRewards) {
 			try {
-				const item = await Item.findOne({ name: reward.name });
+				let item = await Item.findOne({ name: reward.name });
+				
+				if (!item) {
+					item = await Item.findOne({ name: { $regex: new RegExp('^' + reward.name + '$', 'i') } });
+				}
+				
 				if (item) {
-					const newItem = await user.sendToInventory(item.id, reward.count);
-					rewards.push({ name: newItem.item.name, count: newItem.count });
+					const newItem = await user.sendToInventory(item._id, reward.count);
+					
+					if (newItem && newItem.item) {
+						rewards.push({ name: newItem.item.name, count: newItem.count });
+					} else {
+						Utils.log(`Failed to add ${reward.name} to inventory`, 'warn');
+					}
 				} else {
 					Utils.log(`Warning: Could not find item with name ${reward.name} to grant as reward`, 'warn');
 				}
@@ -136,6 +152,9 @@ class Quest {
 				Utils.log(`Error granting reward ${reward.name}: ${error}`, 'err');
 			}
 		}
+		
+		await user.save();
+		
 		return rewards;
 	}
 
@@ -274,11 +293,17 @@ class Quest {
 			quest.status = 'in_progress';
 			quest.user = userId;
 			quest.startDate = Date.now();
-			quest.reward = [];
-			quest.reward.push({
-				item: await Gacha.findOne({ name: 'Daily Box' }),
-				amount: 1,
-			});
+			
+			const dailyBox = await Gacha.findOne({ name: 'Daily Box' });
+			if (dailyBox) {
+				quest.reward = [{
+					item: dailyBox._id,
+					amount: 1,
+				}];
+			} else {
+				quest.reward = [];
+			}
+			
 			await quest.save();
 			await user.addQuest(quest._id);
 	
