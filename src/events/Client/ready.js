@@ -96,6 +96,8 @@ module.exports = {
 					icon: season.icon,
 					startMonth: season.startMonth,
 					startDay: season.startDay,
+					endMonth: season.endMonth,
+					endDay: season.endDay,
 					type: 'season',
 					active: isActive,
 					commonWeatherTypes: season.commonWeatherTypes,
